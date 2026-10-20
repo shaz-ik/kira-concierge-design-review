@@ -86,6 +86,10 @@ h1, h2, h3, p { margin: 0; }
   padding: 0 var(--sp-5);
   overflow-x: auto;
 }
+/* Phone-frame screens are much narrower than desktop/tablet ones — give them a
+   tighter column centrally so they never read as sparse/empty, instead of each
+   page inventing its own one-off layout. */
+.screen-block:has(.tool-phone-frame) { max-width: 420px; }
 .screen-block h2 { font-size: var(--fs-h2); font-weight: 600; margin-bottom: var(--sp-4); }
 .state-note {
   max-width: 560px;
