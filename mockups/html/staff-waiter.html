@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kira Concierge — Hi-Fi Mockup: Waiter Staff</title>
+<link rel="stylesheet" href="../tokens.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>Staff App — Waiter</h1>
+    <p>Handheld device. Waiter is notified when food is ready, claims the delivery, marks it delivered.</p>
+  </div>
+  <nav class="flow-nav">
+    <a href="index.html">All mockups</a>
+    <a href="staff-kitchen.html">Kitchen</a>
+    <a href="staff-housekeeping.html">Housekeeping</a>
+    <a href="staff-waiter.html" class="current">Waiter</a>
+    <a href="staff-concierge-valet.html">Concierge &amp; Valet</a>
+    <a href="staff-front-desk.html">Front Desk</a>
+    <a href="admin-dashboard.html">Admin Dashboard</a>
+  </nav>
+
+  <!-- Screen 1: Notifications -->
+  <section class="screen-block">
+    <h2>1. Ready-for-delivery notifications</h2>
+    <div class="tool-phone-frame">
+      <div class="tool-phone-status"><span>Waiter app</span><span>9:41</span></div>
+      <div class="tool-phone-header">Ready to deliver (1)</div>
+      <div class="tool-phone-content">
+        <div class="notif-card-tool">
+          <div class="top">Room 301 — #4815<span class="time">just now</span></div>
+          <div class="body">1× Burger. Ready for pickup from kitchen.</div>
+          <div class="phone-btn-row"><button class="btn-tool btn-tool-primary">Claim</button></div>
+        </div>
+        <div class="notif-card-tool">
+          <div class="top">Room 115 — #4819<span class="time">3 min ago</span></div>
+          <div class="body">1× Soup, 1× Salad. Delivered by Faisal.</div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Only unclaimed tickets show an active Claim button; already-claimed ones show who took it, read-only.</p>
+  </section>
+
+  <!-- Screen 2: Claimed -> mark delivered -->
+  <section class="screen-block">
+    <h2>2. Claimed → Mark delivered</h2>
+    <div class="tool-phone-frame">
+      <div class="tool-phone-status"><span>Waiter app</span><span>9:42</span></div>
+      <div class="tool-phone-header">Order #4815 — Room 301</div>
+      <div class="tool-phone-content">
+        <div class="notif-card-tool">
+          <div class="top">Status: out for delivery</div>
+          <div class="body">1× Burger<br>Claimed by you at 9:41</div>
+        </div>
+        <div class="phone-btn-row"><button class="btn-tool btn-tool-primary">Mark delivered</button></div>
+      </div>
+    </div>
+    <p class="state-note">Mark delivered updates the guest's status track to "Delivered".</p>
+  </section>
+</body>
+</html>

@@ -12,8 +12,7 @@
   .gallery-cell .lantern-ring { width: 72px; height: 72px; }
   .gallery-cell .avatar-caption { color: var(--ink-on-dark); font-weight: 600; }
   .gallery-cell p { font-size: 12px; color: var(--muted-on-dark); margin-top: var(--sp-1); }
-  .subtitle-bar { position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); z-index: 2;
-    background: rgba(0,0,0,.35); padding: 6px 16px; border-radius: 999px; font-size: var(--fs-small); max-width: 80%; text-align: center; }
+  .subtitle-bar { position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); z-index: 2; }
 </style>
 </head>
 <body>
@@ -22,8 +21,13 @@
     <p>Guest tablet, dining flow — the first visual design pass, applying the Kira design system (palette, typography, avatar) to the wireframe layout.</p>
   </div>
   <nav class="flow-nav">
+    <a href="index.html">All mockups</a>
     <a href="dining.html" class="current">Dining</a>
-    <span style="color:var(--muted-on-sand)">· housekeeping, checkout extension, valet, staff apps, and the admin dashboard are in progress using this same system</span>
+    <a href="housekeeping.html">Housekeeping</a>
+    <a href="checkout-extension.html">Checkout extension</a>
+    <a href="valet.html">Valet</a>
+    <a href="staff-kitchen.html">Staff: Kitchen</a>
+    <a href="admin-dashboard.html">Admin Dashboard</a>
   </nav>
 
   <!-- Avatar state gallery -->
@@ -108,7 +112,11 @@
   <section class="screen-block">
     <h2>1. Idle</h2>
     <div class="tablet-frame">
-      <div class="tablet-topbar"><span>Room 412</span><span>9:41 PM · 24°C, clear</span></div>
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">9:41 PM · 24°C, clear</div>
       <div class="tablet-body state-idle">
         <div class="lantern-wrap">
           <div class="lantern-glow"></div>
@@ -130,8 +138,21 @@
   <section class="screen-block">
     <h2>2. Menu browse</h2>
     <div class="tablet-frame" style="position:relative;">
-      <div class="tablet-topbar"><span>Room 412</span><span>In-room dining</span></div>
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">In-room dining</div>
       <div class="tablet-body state-listening">
+        <div class="lantern-wrap small">
+          <svg class="lantern-svg" viewBox="0 0 108 140">
+            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
+            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
+            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
+            <circle cx="54" cy="70" r="20" fill="url(#g2b)"/>
+            <defs><radialGradient id="g2b"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+          </svg>
+        </div>
         <div class="subtitle-bar">"two burgers and a coke please"</div>
         <div class="guest-card">
           <div class="menu-item">
@@ -156,7 +177,11 @@
   <section class="screen-block">
     <h2>3. Order summary — confirm</h2>
     <div class="tablet-frame">
-      <div class="tablet-topbar"><span>Room 412</span><span>Review your order</span></div>
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">Review your order</div>
       <div class="tablet-body state-speaking">
         <div class="lantern-wrap">
           <div class="lantern-glow"></div>
@@ -186,8 +211,21 @@
   <section class="screen-block">
     <h2>4. Status track</h2>
     <div class="tablet-frame">
-      <div class="tablet-topbar"><span>Room 412</span><span>Order #4821</span></div>
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">Order #4821</div>
       <div class="tablet-body state-idle">
+        <div class="lantern-wrap small">
+          <svg class="lantern-svg" viewBox="0 0 108 140">
+            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
+            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
+            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
+            <circle cx="54" cy="70" r="20" fill="url(#g4b)"/>
+            <defs><radialGradient id="g4b"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+          </svg>
+        </div>
         <p class="avatar-sub" style="margin-bottom: var(--sp-2);">Your order is being prepared</p>
         <div class="g-stepper">
           <div class="g-step"><div class="g-dot done"></div><div class="g-label">Accepted</div></div>

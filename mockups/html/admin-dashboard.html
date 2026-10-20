@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kira Concierge — Hi-Fi Mockup: Admin Dashboard</title>
+<link rel="stylesheet" href="../tokens.css">
+<style>
+  .kb-layout { display: flex; gap: var(--sp-5); }
+  .kb-list { width: 200px; flex-shrink: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+  .kb-list .dept-chip { text-align: left; cursor: default; }
+  .kb-detail { flex: 1; border-left: 1px dashed rgba(36,31,22,.15); padding-left: var(--sp-5); }
+</style>
+</head>
+<body>
+  <div class="page-header">
+    <h1>Admin Dashboard</h1>
+    <p>Desktop web app. Hotel admin self-service management, plus our team's initial setup. Sidebar stays fixed; only the content panel changes per section.</p>
+  </div>
+  <nav class="flow-nav">
+    <a href="index.html">All mockups</a>
+    <a href="staff-kitchen.html">Kitchen</a>
+    <a href="staff-housekeeping.html">Housekeeping</a>
+    <a href="staff-waiter.html">Waiter</a>
+    <a href="staff-concierge-valet.html">Concierge &amp; Valet</a>
+    <a href="staff-front-desk.html">Front Desk</a>
+    <a href="admin-dashboard.html" class="current">Admin Dashboard</a>
+  </nav>
+
+  <!-- Screen 1: Setup wizard -->
+  <section class="screen-block">
+    <h2>1. Setup wizard — department template by star rating</h2>
+    <div class="tool-frame">
+      <div class="tool-sidebar">
+        <div class="brand">Kira Admin</div>
+        <a class="tool-link active">Setup</a>
+        <a class="tool-link">Menu</a>
+        <a class="tool-link">Knowledge base</a>
+        <a class="tool-link">Staff &amp; departments</a>
+        <a class="tool-link">Rooms</a>
+        <a class="tool-link">Request board</a>
+        <a class="tool-link">Analytics</a>
+      </div>
+      <div class="tool-main">
+        <div class="tool-topbar"><span>Setup wizard</span><span>Grand Marina Hotel</span></div>
+        <div class="tool-content">
+          <div class="wizard-steps">
+            <span class="wizard-step done">1. Hotel info</span>
+            <span class="wizard-step done">2. Star rating</span>
+            <span class="wizard-step done">3. Languages</span>
+            <span class="wizard-step active">4. Departments</span>
+          </div>
+          <p class="panel-title">5★ template loaded — 13 departments. Disable or add as needed.</p>
+          <div class="dept-grid">
+            <span class="dept-chip">Dining</span>
+            <span class="dept-chip">Housekeeping</span>
+            <span class="dept-chip">Concierge</span>
+            <span class="dept-chip">Valet</span>
+            <span class="dept-chip">Front desk</span>
+            <span class="dept-chip">Spa</span>
+            <span class="dept-chip off">Butler service</span>
+            <span class="dept-chip">Maintenance</span>
+            <span class="dept-chip off">Kids club</span>
+            <span class="dept-chip add">+ Add department</span>
+          </div>
+          <div class="panel-actions">
+            <button class="btn-tool btn-tool-secondary">Back</button>
+            <button class="btn-tool btn-tool-primary">Continue</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Template loads from the star rating chosen in step 2; each chip toggles on tap. "+ Add department" opens a small form (name, icon, routing target).</p>
+  </section>
+
+  <!-- Screen 2: Menu editor -->
+  <section class="screen-block">
+    <h2>2. Menu editor</h2>
+    <div class="tool-frame">
+      <div class="tool-sidebar">
+        <div class="brand">Kira Admin</div>
+        <a class="tool-link">Setup</a>
+        <a class="tool-link active">Menu</a>
+        <a class="tool-link">Knowledge base</a>
+        <a class="tool-link">Staff &amp; departments</a>
+        <a class="tool-link">Rooms</a>
+        <a class="tool-link">Request board</a>
+        <a class="tool-link">Analytics</a>
+      </div>
+      <div class="tool-main">
+        <div class="tool-topbar"><span>Menu editor</span><span>Grand Marina Hotel</span></div>
+        <div class="tool-content">
+          <div class="panel-actions" style="justify-content:flex-start; margin: 0 0 14px;">
+            <button class="btn-tool btn-tool-primary">+ Add item</button>
+          </div>
+          <table class="data-table">
+            <tr><th>Photo</th><th>Name</th><th>Category</th><th>Price</th><th>Allergens</th><th></th></tr>
+            <tr><td>—</td><td>Wagyu smash burger</td><td>Mains</td><td>AED 68.00</td><td>Gluten, dairy</td><td><button class="btn-tool btn-tool-secondary">Edit</button></td></tr>
+            <tr><td>—</td><td>Chicken shawarma plate</td><td>Mains</td><td>AED 54.00</td><td>Gluten</td><td><button class="btn-tool btn-tool-secondary">Edit</button></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Edit opens a form panel (photo upload, modifiers, allergen tags) — same shape as the Add item flow.</p>
+  </section>
+
+  <!-- Screen 3: Knowledge base editor -->
+  <section class="screen-block">
+    <h2>3. Knowledge-base editor</h2>
+    <div class="tool-frame">
+      <div class="tool-sidebar">
+        <div class="brand">Kira Admin</div>
+        <a class="tool-link">Setup</a>
+        <a class="tool-link">Menu</a>
+        <a class="tool-link active">Knowledge base</a>
+        <a class="tool-link">Staff &amp; departments</a>
+        <a class="tool-link">Rooms</a>
+        <a class="tool-link">Request board</a>
+        <a class="tool-link">Analytics</a>
+      </div>
+      <div class="tool-main">
+        <div class="tool-topbar"><span>Knowledge base</span><span>Grand Marina Hotel</span></div>
+        <div class="tool-content">
+          <div class="kb-layout">
+            <div class="kb-list">
+              <span class="dept-chip">Pool hours</span>
+              <span class="dept-chip">Spa policies</span>
+              <span class="dept-chip">Wifi info</span>
+              <span class="dept-chip add">+ Add article</span>
+            </div>
+            <div class="kb-detail">
+              <p class="panel-title">Pool hours</p>
+              <div class="tool-form-row"><label>Content</label><input class="tool-input" value="Open 6am–10pm daily. Rooftop pool, level 8."></div>
+              <div class="panel-actions"><button class="btn-tool btn-tool-primary">Save</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Edits here feed the AI's answers directly — list + detail editor pattern, same as the menu editor's row + edit panel.</p>
+  </section>
+
+  <!-- Screen 4: Staff & department management -->
+  <section class="screen-block">
+    <h2>4. Staff &amp; department management</h2>
+    <div class="tool-frame">
+      <div class="tool-sidebar">
+        <div class="brand">Kira Admin</div>
+        <a class="tool-link">Setup</a>
+        <a class="tool-link">Menu</a>
+        <a class="tool-link">Knowledge base</a>
+        <a class="tool-link active">Staff &amp; departments</a>
+        <a class="tool-link">Rooms</a>
+        <a class="tool-link">Request board</a>
+        <a class="tool-link">Analytics</a>
+      </div>
+      <div class="tool-main">
+        <div class="tool-topbar"><span>Staff &amp; departments</span><span>Grand Marina Hotel</span></div>
+        <div class="tool-content">
+          <div class="panel-actions" style="justify-content:flex-start; margin: 0 0 14px;">
+            <button class="btn-tool btn-tool-primary">+ Add staff</button>
+          </div>
+          <table class="data-table">
+            <tr><th>Name</th><th>Department</th><th>Routing</th><th>Status</th><th></th></tr>
+            <tr><td>Ahmed R.</td><td>Kitchen</td><td>KDS screen + printer</td><td><span class="badge badge-ok">Active</span></td><td><button class="btn-tool btn-tool-secondary">Edit</button></td></tr>
+            <tr><td>Faisal K.</td><td>Waiter</td><td>Mobile app</td><td><span class="badge badge-ok">Active</span></td><td><button class="btn-tool btn-tool-secondary">Edit</button></td></tr>
+            <tr><td>Fatima S.</td><td>Front desk</td><td>Desktop</td><td><span class="badge badge-ok">Active</span></td><td><button class="btn-tool btn-tool-secondary">Edit</button></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">The Routing column is where each department's delivery channel (printer, tablet, mobile, screen) is configured, part of the onboarding flow.</p>
+  </section>
+
+  <!-- Screen 5: Room registration -->
+  <section class="screen-block">
+    <h2>5. Room registration</h2>
+    <div class="tool-frame">
+      <div class="tool-sidebar">
+        <div class="brand">Kira Admin</div>
+        <a class="tool-link">Setup</a>
+        <a class="tool-link">Menu</a>
+        <a class="tool-link">Knowledge base</a>
+        <a class="tool-link">Staff &amp; departments</a>
+        <a class="tool-link active">Rooms</a>
+        <a class="tool-link">Request board</a>
+        <a class="tool-link">Analytics</a>
+      </div>
+      <div class="tool-main">
+        <div class="tool-topbar"><span>Rooms</span><span>Grand Marina Hotel · 120 rooms</span></div>
+        <div class="tool-content">
+          <div class="panel-actions" style="justify-content:flex-start; margin: 0 0 14px;">
+            <button class="btn-tool btn-tool-primary">+ Register tablet</button>
+          </div>
+          <table class="data-table">
+            <tr><th>Room</th><th>Tablet ID</th><th>Status</th><th></th></tr>
+            <tr><td>412</td><td>KIRA-TB-0412</td><td><span class="badge badge-ok">Bound, online</span></td><td><button class="btn-tool btn-tool-secondary">Unbind</button></td></tr>
+            <tr><td>413</td><td>—</td><td><span class="badge badge-warn">Not registered</span></td><td><button class="btn-tool btn-tool-primary">Bind tablet</button></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">"Bind tablet" pairs a physical device to a room number — part of the floor-by-floor rollout step in onboarding.</p>
+  </section>
+
+  <!-- Screen 6: Live request board -->
+  <section class="screen-block">
+    <h2>6. Live request board</h2>
+    <div class="tool-frame">
+      <div class="tool-sidebar">
+        <div class="brand">Kira Admin</div>
+        <a class="tool-link">Setup</a>
+        <a class="tool-link">Menu</a>
+        <a class="tool-link">Knowledge base</a>
+        <a class="tool-link">Staff &amp; departments</a>
+        <a class="tool-link">Rooms</a>
+        <a class="tool-link active">Request board</a>
+        <a class="tool-link">Analytics</a>
+      </div>
+      <div class="tool-main">
+        <div class="tool-topbar"><span>Request board</span><span>All departments · 3 open</span></div>
+        <div class="tool-content">
+          <table class="data-table">
+            <tr><th>Room</th><th>Department</th><th>Request</th><th>SLA</th><th>Status</th><th>Escalation</th></tr>
+            <tr><td>412</td><td>Dining</td><td>#4821</td><td><span class="badge badge-warn">4 min</span></td><td>Preparing</td><td>—</td></tr>
+            <tr><td>208</td><td>Housekeeping</td><td>#HK-203</td><td><span class="badge badge-ok">18 min</span></td><td>In progress</td><td>—</td></tr>
+            <tr><td>301</td><td>Valet</td><td>#V-57</td><td><span class="badge badge-warn">overdue 2 min</span></td><td>Bringing car</td><td>Manager notified</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Same table shape as front desk's oversight view, but hotel-wide and with escalation status visible — this is where SLA thresholds get configured (a settings sub-panel, not shown here).</p>
+  </section>
+
+  <!-- Screen 7: Analytics -->
+  <section class="screen-block">
+    <h2>7. Analytics</h2>
+    <div class="tool-frame">
+      <div class="tool-sidebar">
+        <div class="brand">Kira Admin</div>
+        <a class="tool-link">Setup</a>
+        <a class="tool-link">Menu</a>
+        <a class="tool-link">Knowledge base</a>
+        <a class="tool-link">Staff &amp; departments</a>
+        <a class="tool-link">Rooms</a>
+        <a class="tool-link">Request board</a>
+        <a class="tool-link active">Analytics</a>
+      </div>
+      <div class="tool-main">
+        <div class="tool-topbar"><span>Analytics</span><span>Last 7 days</span></div>
+        <div class="tool-content">
+          <div class="stat-grid">
+            <div class="stat-tile"><div class="value">342</div><div class="label">Total requests</div></div>
+            <div class="stat-tile"><div class="value">94%</div><div class="label">SLA compliance</div></div>
+            <div class="stat-tile"><div class="value">6</div><div class="label">Languages used</div></div>
+            <div class="stat-tile"><div class="value">2.1s</div><div class="label">Avg. response time</div></div>
+          </div>
+          <p class="panel-title" style="font-size: var(--fs-small); color: var(--muted-on-sand);">Requests by department</p>
+          <div class="bar-chart">
+            <div class="bar" style="height:80%;"></div>
+            <div class="bar" style="height:55%;"></div>
+            <div class="bar" style="height:40%;"></div>
+            <div class="bar" style="height:25%;"></div>
+            <div class="bar" style="height:15%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Placeholder bars only — the real chart and exact metric set (by department/language) are finalized separately.</p>
+  </section>
+</body>
+</html>

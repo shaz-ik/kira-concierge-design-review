@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kira Concierge — Hi-Fi Mockup: Front Desk Staff</title>
+<link rel="stylesheet" href="../tokens.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>Staff App — Front Desk</h1>
+    <p>Desktop workstation screen. Handles approvals (checkout extension) plus an oversight view across all departments.</p>
+  </div>
+  <nav class="flow-nav">
+    <a href="index.html">All mockups</a>
+    <a href="staff-kitchen.html">Kitchen</a>
+    <a href="staff-housekeeping.html">Housekeeping</a>
+    <a href="staff-waiter.html">Waiter</a>
+    <a href="staff-concierge-valet.html">Concierge &amp; Valet</a>
+    <a href="staff-front-desk.html" class="current">Front Desk</a>
+    <a href="admin-dashboard.html">Admin Dashboard</a>
+  </nav>
+
+  <!-- Screen 1: Approval requests -->
+  <section class="screen-block">
+    <h2>1. Incoming approval requests</h2>
+    <div class="tool-frame">
+      <div class="tool-sidebar">
+        <div class="brand">Front Desk</div>
+        <a class="tool-link active">Approvals</a>
+        <a class="tool-link">All departments</a>
+      </div>
+      <div class="tool-main">
+        <div class="tool-topbar"><span>Approvals</span><span>Fatima S. · 1 new</span></div>
+        <div class="tool-content">
+          <table class="data-table">
+            <tr><th>Room</th><th>Request</th><th>Requested</th><th>Fee</th><th></th></tr>
+            <tr><td>412</td><td>Checkout extension → 5:00 PM</td><td>2 min ago</td><td>AED 90.00</td>
+              <td><button class="btn-tool btn-tool-secondary">Deny</button> <button class="btn-tool btn-tool-primary">Approve</button></td></tr>
+            <tr><td>208</td><td>Checkout extension → 2:00 PM</td><td>14 min ago</td><td>No fee (within policy)</td>
+              <td><button class="btn-tool btn-tool-secondary">Deny</button> <button class="btn-tool btn-tool-primary">Approve</button></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Approve/Deny are inline row actions here rather than a separate detail screen — front desk handles these at volume.</p>
+  </section>
+
+  <!-- Screen 2: Deny reason -->
+  <section class="screen-block">
+    <h2>2. Deny — reason required</h2>
+    <div class="tool-frame">
+      <div class="tool-sidebar">
+        <div class="brand">Front Desk</div>
+        <a class="tool-link active">Approvals</a>
+        <a class="tool-link">All departments</a>
+      </div>
+      <div class="tool-main">
+        <div class="tool-topbar"><span>Approvals</span><span>Fatima S. · 1 new</span></div>
+        <div class="tool-content">
+          <p class="panel-title">Deny — Room 412, checkout extension</p>
+          <div class="tool-form-row"><label>Reason</label><input class="tool-input" value="Room needed for incoming guest at 1:00 PM"></div>
+          <div class="panel-actions">
+            <button class="btn-tool btn-tool-secondary">Cancel</button>
+            <button class="btn-tool btn-tool-primary">Confirm deny</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Reason text is required and shown to the guest verbatim.</p>
+  </section>
+
+  <!-- Screen 3: Oversight -->
+  <section class="screen-block">
+    <h2>3. Oversight — all departments' SLA timers</h2>
+    <div class="tool-frame">
+      <div class="tool-sidebar">
+        <div class="brand">Front Desk</div>
+        <a class="tool-link">Approvals</a>
+        <a class="tool-link active">All departments</a>
+      </div>
+      <div class="tool-main">
+        <div class="tool-topbar"><span>All departments</span><span>Fatima S. · 1 new</span></div>
+        <div class="tool-content">
+          <table class="data-table">
+            <tr><th>Room</th><th>Department</th><th>Request</th><th>SLA</th><th>Status</th></tr>
+            <tr><td>412</td><td>Dining</td><td>#4821</td><td><span class="badge badge-warn">4 min</span></td><td>Preparing</td></tr>
+            <tr><td>208</td><td>Housekeeping</td><td>#HK-203</td><td><span class="badge badge-ok">18 min</span></td><td>In progress</td></tr>
+            <tr><td>301</td><td>Valet</td><td>#V-57</td><td><span class="badge badge-warn">overdue 2 min</span></td><td>Bringing car</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Read-only for front desk — escalation routing/thresholds are configured in the admin dashboard, not here.</p>
+  </section>
+</body>
+</html>

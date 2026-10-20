@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kira Concierge — Hi-Fi Mockup: Housekeeping</title>
+<link rel="stylesheet" href="../tokens.css">
+<style>
+  .subtitle-bar { position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); z-index: 2; }
+</style>
+</head>
+<body>
+  <div class="page-header">
+    <h1>Housekeeping — Hi-Fi Mockup</h1>
+    <p>Guest tablet, housekeeping flow — lighter weight than dining, no payment step.</p>
+  </div>
+  <nav class="flow-nav">
+    <a href="index.html">All mockups</a>
+    <a href="dining.html">Dining</a>
+    <a href="housekeeping.html" class="current">Housekeeping</a>
+    <a href="checkout-extension.html">Checkout extension</a>
+    <a href="valet.html">Valet</a>
+    <a href="staff-housekeeping.html">Staff: Housekeeping</a>
+    <a href="admin-dashboard.html">Admin Dashboard</a>
+  </nav>
+
+  <!-- Screen 1: Request + confirm -->
+  <section class="screen-block">
+    <h2>1. Request + confirm</h2>
+    <div class="tablet-frame" style="position:relative;">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">Housekeeping request</div>
+      <div class="tablet-body state-speaking">
+        <div class="lantern-wrap small">
+          <svg class="lantern-svg" viewBox="0 0 108 140">
+            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
+            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
+            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
+            <circle cx="54" cy="70" r="20" fill="url(#h1)"/>
+            <defs><radialGradient id="h1"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+          </svg>
+        </div>
+        <div class="subtitle-bar">"Want me to send that to housekeeping?"</div>
+        <div class="quick-grid">
+          <span class="quick-chip">Extra towels</span>
+          <span class="quick-chip">Extra pillows</span>
+          <span class="quick-chip">Clean room</span>
+          <span class="quick-chip">Toiletries</span>
+          <span class="quick-chip">Other…</span>
+        </div>
+        <div class="guest-card">
+          <div class="g-field-row"><span class="label">You asked for</span><span class="value">2 extra towels</span></div>
+        </div>
+        <button class="btn btn-brass">Confirm request</button>
+      </div>
+    </div>
+    <p class="state-note">Single confirm, no price/total section — intentionally lighter than dining's chargeable confirm.</p>
+  </section>
+
+  <!-- Screen 2: Status track -->
+  <section class="screen-block">
+    <h2>2. Status track (Received → In progress → Done)</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">Request #HK-203</div>
+      <div class="tablet-body state-idle">
+        <div class="lantern-wrap small">
+          <svg class="lantern-svg" viewBox="0 0 108 140">
+            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
+            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
+            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
+            <circle cx="54" cy="70" r="20" fill="url(#h2)"/>
+            <defs><radialGradient id="h2"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+          </svg>
+        </div>
+        <p class="avatar-sub">2 extra towels — expected within 20 min</p>
+        <div class="g-stepper">
+          <div class="g-step"><div class="g-dot done"></div><div class="g-label">Received</div></div>
+          <div class="g-line done"></div>
+          <div class="g-step"><div class="g-dot active"></div><div class="g-label active">In progress</div></div>
+          <div class="g-line"></div>
+          <div class="g-step"><div class="g-dot"></div><div class="g-label">Done</div></div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Same stepper component as dining/valet/checkout, three steps instead of four. SLA/ETA shown as plain text, not a countdown timer, to avoid alarming the guest.</p>
+    <p class="state-note">Fulfilled on the staff side via the housekeeping staff app — same Kanban pattern as the kitchen display.</p>
+  </section>
+</body>
+</html>

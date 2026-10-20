@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kira Concierge — Hi-Fi Mockup: Concierge &amp; Valet Staff</title>
+<link rel="stylesheet" href="../tokens.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>Staff App — Concierge &amp; Valet</h1>
+    <p>Shared app, tab-switched between the two queues — same request shape, different department.</p>
+  </div>
+  <nav class="flow-nav">
+    <a href="index.html">All mockups</a>
+    <a href="staff-kitchen.html">Kitchen</a>
+    <a href="staff-housekeeping.html">Housekeeping</a>
+    <a href="staff-waiter.html">Waiter</a>
+    <a href="staff-concierge-valet.html" class="current">Concierge &amp; Valet</a>
+    <a href="staff-front-desk.html">Front Desk</a>
+    <a href="admin-dashboard.html">Admin Dashboard</a>
+  </nav>
+
+  <!-- Screen 1: Incoming requests -->
+  <section class="screen-block">
+    <h2>1. Incoming requests</h2>
+    <div class="tool-phone-frame">
+      <div class="tool-phone-status"><span>Concierge/Valet app</span><span>9:41</span></div>
+      <div class="tool-phone-header" style="padding-bottom: var(--sp-2);">
+        <div class="tabs-row">
+          <span class="tab-chip active">Valet (1)</span>
+          <span class="tab-chip">Concierge (2)</span>
+        </div>
+      </div>
+      <div class="tool-phone-content">
+        <div class="notif-card-tool">
+          <div class="top">Room 412 — Car request<span class="time">1 min ago</span></div>
+          <div class="body">Toyota Camry — plate ABC 123</div>
+          <div class="phone-btn-row"><button class="btn-tool btn-tool-primary">Accept</button></div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Same card/notification pattern as the waiter app. Tab badge counts update live.</p>
+  </section>
+
+  <!-- Screen 2: Status actions -->
+  <section class="screen-block">
+    <h2>2. Status actions (Accept → In progress → Done)</h2>
+    <div class="tool-phone-frame">
+      <div class="tool-phone-status"><span>Concierge/Valet app</span><span>9:43</span></div>
+      <div class="tool-phone-header">Valet #V-57 — Room 412</div>
+      <div class="tool-phone-content">
+        <div class="t-stepper">
+          <div class="t-step"><div class="t-dot done"></div><div class="t-label">Accepted</div></div>
+          <div class="t-line done"></div>
+          <div class="t-step"><div class="t-dot active"></div><div class="t-label active">In progress</div></div>
+          <div class="t-line"></div>
+          <div class="t-step"><div class="t-dot"></div><div class="t-label">Done</div></div>
+        </div>
+        <div class="notif-card-tool">
+          <div class="body">Toyota Camry — plate ABC 123</div>
+        </div>
+        <div class="phone-btn-row"><button class="btn-tool btn-tool-primary">Car ready at entrance</button></div>
+      </div>
+    </div>
+    <p class="state-note">Tapping "Car ready at entrance" fires the guest notification and advances this stepper to Done.</p>
+  </section>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kira Concierge — Hi-Fi Mockup: Housekeeping Staff</title>
+<link rel="stylesheet" href="../tokens.css">
+</head>
+<body>
+  <div class="page-header">
+    <h1>Staff App — Housekeeping</h1>
+    <p>Shared desktop/tablet screen for housekeeping staff. Same Kanban pattern as the kitchen display.</p>
+  </div>
+  <nav class="flow-nav">
+    <a href="index.html">All mockups</a>
+    <a href="staff-kitchen.html">Kitchen</a>
+    <a href="staff-housekeeping.html" class="current">Housekeeping</a>
+    <a href="staff-waiter.html">Waiter</a>
+    <a href="staff-concierge-valet.html">Concierge &amp; Valet</a>
+    <a href="staff-front-desk.html">Front Desk</a>
+    <a href="admin-dashboard.html">Admin Dashboard</a>
+  </nav>
+
+  <!-- Screen 1: Queue -->
+  <section class="screen-block">
+    <h2>1. Request queue — Received / In progress / Done</h2>
+    <div class="tool-frame">
+      <div class="tool-main">
+        <div class="tool-topbar"><span>Housekeeping</span><span>Noor A. · 1 new</span></div>
+        <div class="tool-content">
+          <div class="kanban">
+            <div class="kanban-col">
+              <h4>Received <span class="count">(1)</span></h4>
+              <div class="ticket-card urgent">
+                <div class="ticket-top"><span>Room 412 · #HK-203</span><span class="badge badge-warn">2 min</span></div>
+                <div class="ticket-items">2× extra towels</div>
+              </div>
+            </div>
+            <div class="kanban-col">
+              <h4>In progress <span class="count">(1)</span></h4>
+              <div class="ticket-card">
+                <div class="ticket-top"><span>Room 208 · #HK-198</span><span class="badge badge-ok">11 min</span></div>
+                <div class="ticket-items">Clean room</div>
+              </div>
+            </div>
+            <div class="kanban-col">
+              <h4>Done <span class="count">(1)</span></h4>
+              <div class="ticket-card">
+                <div class="ticket-top"><span>Room 115 · #HK-190</span><span class="badge badge-ok">completed</span></div>
+                <div class="ticket-items">Extra pillows</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Same component as the kitchen queue — three columns instead of four, since housekeeping has no delivery handoff step.</p>
+  </section>
+
+  <!-- Screen 2: Ticket detail -->
+  <section class="screen-block">
+    <h2>2. Ticket detail → Mark done</h2>
+    <div class="tool-frame">
+      <div class="tool-main">
+        <div class="tool-topbar"><span>Housekeeping</span><span>Noor A. · 1 new</span></div>
+        <div class="tool-content">
+          <p class="panel-title">Request #HK-203 — Room 412</p>
+          <div class="tool-form-row"><label>Request</label><span>2× extra towels</span></div>
+          <div class="tool-form-row"><label>SLA</label><span class="badge badge-warn">2 min remaining</span></div>
+          <div class="panel-actions">
+            <button class="btn-tool btn-tool-secondary">Back to queue</button>
+            <button class="btn-tool btn-tool-primary">Mark done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Mark done updates the guest's status track to "Done".</p>
+  </section>
+</body>
+</html>

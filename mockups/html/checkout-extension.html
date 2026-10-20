@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kira Concierge — Hi-Fi Mockup: Checkout Extension</title>
+<link rel="stylesheet" href="../tokens.css">
+<style>
+  .subtitle-bar { position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); z-index: 2; }
+</style>
+</head>
+<body>
+  <div class="page-header">
+    <h1>Checkout Extension — Hi-Fi Mockup</h1>
+    <p>Guest tablet, checkout extension flow — needs front-desk approval before resolving; guest sees an explicit waiting state.</p>
+  </div>
+  <nav class="flow-nav">
+    <a href="index.html">All mockups</a>
+    <a href="dining.html">Dining</a>
+    <a href="housekeeping.html">Housekeeping</a>
+    <a href="checkout-extension.html" class="current">Checkout extension</a>
+    <a href="valet.html">Valet</a>
+    <a href="staff-front-desk.html">Staff: Front Desk</a>
+    <a href="admin-dashboard.html">Admin Dashboard</a>
+  </nav>
+
+  <!-- Screen 1: Request -->
+  <section class="screen-block">
+    <h2>1. Request (time compare)</h2>
+    <div class="tablet-frame" style="position:relative;">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">Extend checkout</div>
+      <div class="tablet-body state-speaking">
+        <div class="lantern-wrap small">
+          <svg class="lantern-svg" viewBox="0 0 108 140">
+            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
+            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
+            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
+            <circle cx="54" cy="70" r="20" fill="url(#c1)"/>
+            <defs><radialGradient id="c1"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+          </svg>
+        </div>
+        <div class="subtitle-bar">"Want me to ask the front desk for 5pm?"</div>
+        <div class="guest-card">
+          <div class="g-field-row"><span class="label">Current checkout</span><span class="value">11:00 AM</span></div>
+          <div class="g-field-row"><span class="label">Requested</span><span class="g-select-chip">5:00 PM ▾</span></div>
+        </div>
+        <p class="avatar-sub" style="font-size: var(--fs-small);">May include a late checkout fee</p>
+        <button class="btn btn-brass">Request extension</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screen 2: Pending approval -->
+  <section class="screen-block">
+    <h2>2. Pending approval</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">Extend checkout</div>
+      <div class="tablet-body state-idle">
+        <div class="lantern-wrap small">
+          <svg class="lantern-svg" viewBox="0 0 108 140">
+            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
+            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
+            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
+            <circle cx="54" cy="70" r="20" fill="url(#c2)"/>
+            <defs><radialGradient id="c2"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+          </svg>
+        </div>
+        <p class="avatar-sub">I've sent that to the front desk</p>
+        <div class="g-banner g-banner-pending">
+          Waiting for front desk approval
+          <span class="meta">Requested: checkout at 5:00 PM</span>
+        </div>
+        <button class="btn btn-ghost-dark">Cancel request</button>
+      </div>
+    </div>
+    <p class="state-note">Front desk acts on this from the front-desk staff app. Guest-side state is purely informational, plus cancel.</p>
+  </section>
+
+  <!-- Screen 3a: Outcome approved -->
+  <section class="screen-block">
+    <h2>3a. Outcome — approved + charge confirm</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">Extend checkout</div>
+      <div class="tablet-body state-speaking">
+        <div class="lantern-wrap small">
+          <svg class="lantern-svg" viewBox="0 0 108 140">
+            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
+            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
+            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
+            <circle cx="54" cy="70" r="20" fill="url(#c3)"/>
+            <defs><radialGradient id="c3"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+          </svg>
+        </div>
+        <div class="g-banner g-banner-good">Approved — new checkout: 5:00 PM</div>
+        <div class="guest-card">
+          <div class="g-field-row"><span class="label">Late checkout fee</span><span class="value">AED 90.00</span></div>
+        </div>
+        <div style="display:flex; gap: var(--sp-3);">
+          <button class="btn btn-ghost-dark">Decline</button>
+          <button class="btn btn-brass">Confirm charge</button>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Charge section only shown if a fee applies — a free extension skips straight to a plain acknowledgement, no confirm step.</p>
+  </section>
+
+  <!-- Screen 3b: Outcome denied -->
+  <section class="screen-block">
+    <h2>3b. Outcome — denied (variant)</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">Extend checkout</div>
+      <div class="tablet-body state-speaking">
+        <div class="lantern-wrap small">
+          <svg class="lantern-svg" viewBox="0 0 108 140">
+            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
+            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
+            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
+            <circle cx="54" cy="70" r="20" fill="url(#c4)"/>
+            <defs><radialGradient id="c4"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+          </svg>
+        </div>
+        <div class="g-banner g-banner-warn">Not approved — room is needed for an incoming guest at 1:00 PM</div>
+        <p class="avatar-sub" style="font-size: var(--fs-small);">You can request a later checkout another day, or ask about a day-use room.</p>
+      </div>
+    </div>
+    <p class="state-note">Same layout as approved, banner swapped and reason text shown, no charge section.</p>
+  </section>
+</body>
+</html>
