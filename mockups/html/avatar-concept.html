@@ -18,12 +18,23 @@
   }
   .compare-banner p { margin: 0; font-size: var(--fs-small); color: var(--ink-on-sand); }
   .compare-banner a { color: var(--brass-deep); font-weight: 600; }
+  .hero-portrait-frame {
+    width: 320px; max-width: 100%; margin: 0 auto;
+    border-radius: var(--radius-guest); overflow: hidden;
+    box-shadow: 0 24px 60px -24px rgba(0,0,0,.5);
+    border: 1px solid rgba(217,184,106,.3);
+  }
+  .hero-portrait-frame img { display: block; width: 100%; height: auto; }
+  .hero-wrap { max-width: 1100px; margin: 0 auto var(--sp-6); padding: 0 var(--sp-5); text-align: center; }
+  .hero-caption { margin-top: var(--sp-4); font-size: var(--fs-small); color: var(--muted-on-sand); max-width: 520px; margin-left: auto; margin-right: auto; }
+  .kira-photo-wrap { width: 150px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(217,184,106,.5); box-shadow: 0 0 24px 4px rgba(217,184,106,.25); }
+  .kira-photo-wrap img { display: block; width: 100%; height: auto; }
 </style>
 </head>
 <body>
   <div class="page-header">
     <h1>Avatar direction — human (concept)</h1>
-    <p>Stylized, illustrated human character — confirmed direction, replacing the earlier abstract "Lantern" exploration. This is a code-built concept sketch to test proportions, states, and placement, not final character art — final illustration/rigging is a design task (<code>design/avatar/avatar-brief.md</code> §3–4), built in Live2D by an illustrator.</p>
+    <p>Stylized, illustrated human character — confirmed direction, replacing the earlier abstract "Lantern" exploration. The portrait below is a real AI-generated concept image (first pass) — a genuine step up from the placeholder vector sketch further down this page, which now exists only to show how the 5-state animation hooks work.</p>
   </div>
   <nav class="flow-nav">
     <a href="index.html">All mockups</a>
@@ -34,8 +45,15 @@
     <p>For comparison, the earlier abstract direction ("The Lantern") is still live on <a href="dining.html">the dining mockup</a> — that page hasn't been updated to the new character yet, pending sign-off on this direction.</p>
   </div>
 
+  <div class="hero-wrap">
+    <div class="hero-portrait-frame">
+      <img src="../assets/kira-idle.jpg" alt="Kira concept portrait — AI-generated concept art, first pass">
+    </div>
+    <p class="hero-caption">AI-generated concept art (first pass, idle/neutral expression) — not final, and not yet rigged. The other four expression states (wake, listening, thinking, speaking) still need generating from this same reference so the face stays consistent, then the whole thing needs a real illustrator/Live2D rig for production (<code>design/avatar/avatar-brief.md</code> §3–4).</p>
+  </div>
+
   <section class="screen-block">
-    <h2>Kira — avatar states</h2>
+    <h2>Kira — avatar states (placeholder vector sketch, for animation reference only)</h2>
     <div class="gallery-row">
       <div class="gallery-cell state-idle">
         <div class="kira-avatar-wrap">
@@ -159,23 +177,8 @@
         <div class="nav-group"><span class="nav-icon">🔈 Mute</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
       </div>
       <div class="tablet-body state-idle">
-        <div class="kira-avatar-wrap">
-          <div class="kira-avatar-glow"></div>
-          <svg class="kira-avatar-svg" viewBox="0 0 104 140">
-            <path d="M20,140 L20,119 Q20,109 31,107 L73,107 Q84,109 84,119 L84,140 Z" fill="var(--lagoon-deep)"/>
-            <circle cx="52" cy="118" r="4.5" fill="url(#pin-ctx1)"/>
-            <defs><radialGradient id="pin-ctx1"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a"/><stop offset="100%" stop-color="#b8923f"/></radialGradient></defs>
-            <path d="M43,94 L43,111 Q52,115 61,111 L61,94 Z" fill="#e3c08c"/>
-            <ellipse cx="52" cy="62" rx="29" ry="33" fill="#e3c08c"/>
-            <path d="M22,58 Q18,19 52,17 Q86,19 82,58 Q82,38 52,35 Q22,38 22,58 Z" fill="var(--ink-on-sand)"/>
-            <g class="kira-eyes">
-              <ellipse cx="42" cy="60" rx="4" ry="2.6" fill="var(--lagoon-deep)"/>
-              <ellipse cx="62" cy="60" rx="4" ry="2.6" fill="var(--lagoon-deep)"/>
-            </g>
-            <path d="M37,52 Q42,49 47,51" stroke="var(--ink-on-sand)" stroke-width="2" fill="none" stroke-linecap="round"/>
-            <path d="M57,51 Q62,49 67,52" stroke="var(--ink-on-sand)" stroke-width="2" fill="none" stroke-linecap="round"/>
-            <ellipse class="kira-mouth" cx="52" cy="79" rx="7" ry="2" fill="#a9644f"/>
-          </svg>
+        <div class="kira-photo-wrap">
+          <img src="../assets/kira-idle.jpg" alt="Kira">
         </div>
         <p class="avatar-sub">Good evening — say "Hey Kira," or tap to begin</p>
       </div>
