@@ -232,6 +232,7 @@ h1, h2, h3, p { margin: 0; }
 /* ---------- Staff phone (handheld, still tool-mode: light, dense) ---------- */
 .tool-phone-frame {
   width: 320px; flex-shrink: 0;
+  margin: 0 auto;
   background: var(--paper);
   border: 1px solid rgba(36,31,22,.12);
   border-radius: var(--radius-tool);
