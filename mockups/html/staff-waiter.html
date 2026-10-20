@@ -5,6 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kira Concierge — Hi-Fi Mockup: Waiter Staff</title>
 <link rel="stylesheet" href="../tokens.css">
+<style>
+  /* Page-scoped: handheld "stage" so the phone sits on a surface beside its notes, not adrift in the page. */
+  .phone-stage { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--sp-7); padding: var(--sp-6); background: var(--sand); border: 1px solid rgba(36,31,22,.06); border-radius: var(--radius-tool); }
+  .phone-stage .device-scale, .phone-stage .tool-phone-frame { margin: 0; flex-shrink: 0; }
+  .stage-notes { flex: 1; min-width: 220px; max-width: 460px; }
+  .stage-notes .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--brass-deep); margin-bottom: var(--sp-2); }
+  .stage-notes .lead { font-weight: 600; font-size: var(--fs-body); margin-bottom: var(--sp-3); }
+  .stage-notes .state-note { margin-top: 0; }
+  .stage-notes .state-note + .state-note { margin-top: var(--sp-2); }
+
+  /* Phone proportions + bottom tab bar */
+  .tool-phone-frame { min-height: 540px; display: flex; flex-direction: column; }
+  .tool-phone-content { flex: 1; }
+  .tool-phone-header { display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-body); }
+  .tool-phone-header .sub { font-weight: 400; font-size: 12px; color: var(--muted-on-sand); }
+  .phone-tabbar { display: flex; border-top: 1px solid rgba(36,31,22,.1); background: var(--paper); }
+  .phone-tabbar span { flex: 1; text-align: center; padding: var(--sp-3) 0; font-size: 12px; font-weight: 600; color: var(--muted-on-sand); }
+  .phone-tabbar span.active { color: var(--brass-deep); box-shadow: inset 0 2px 0 var(--brass); }
+
+  /* Cards + touch targets (44px min on handheld) */
+  .notif-card-tool { box-shadow: 0 1px 2px rgba(36,31,22,.05); }
+  .notif-card-tool.ready { border-left: 3px solid var(--brass); }
+  .notif-card-tool.readonly { background: rgba(36,31,22,.025); }
+  .notif-card-tool .meta { display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-2); font-size: 12px; color: var(--muted-on-sand); }
+  .tool-phone-frame .phone-btn-row .btn-tool { flex: 1; min-height: 44px; }
+  .tool-phone-frame .phone-btn-row .btn-tool-secondary { flex: 0 0 auto; padding-left: 20px; padding-right: 20px; }
+  .kv { display: flex; justify-content: space-between; gap: var(--sp-3); padding: 6px 0; font-size: var(--fs-small); border-bottom: 1px solid rgba(36,31,22,.06); }
+  .kv:last-child { border-bottom: none; }
+  .kv .k { color: var(--muted-on-sand); }
+  .kv .v { font-weight: 600; text-align: right; }
+  .phone-spacer { flex: 1; }
+</style>
 </head>
 <body>
   <div class="page-header">
@@ -24,39 +56,70 @@
   <!-- Screen 1: Notifications -->
   <section class="screen-block">
     <h2>1. Ready-for-delivery notifications</h2>
-    <div class="tool-phone-frame">
-      <div class="tool-phone-status"><span>Waiter app</span><span>9:41</span></div>
-      <div class="tool-phone-header">Ready to deliver (1)</div>
-      <div class="tool-phone-content">
-        <div class="notif-card-tool">
-          <div class="top">Room 301 — #4815<span class="time">just now</span></div>
-          <div class="body">1× Burger. Ready for pickup from kitchen.</div>
-          <div class="phone-btn-row"><button class="btn-tool btn-tool-primary">Claim</button></div>
+    <div class="phone-stage">
+      <div class="tool-phone-frame">
+        <div class="tool-phone-status"><span>Waiter app</span><span>9:41</span></div>
+        <div class="tool-phone-header"><span>Ready to deliver (1)</span><span class="sub">In-room dining</span></div>
+        <div class="tool-phone-content">
+          <div class="tabs-row">
+            <span class="tab-chip active">Ready (1)</span>
+            <span class="tab-chip">My deliveries (0)</span>
+          </div>
+          <div class="notif-card-tool ready">
+            <div class="top">Room 301 — #4815<span class="time">just now</span></div>
+            <div class="body">1× Wagyu smash burger</div>
+            <div class="meta">Pickup at kitchen pass · ready 9:41</div>
+            <div class="phone-btn-row"><button class="btn-tool btn-tool-primary">Claim delivery</button></div>
+          </div>
+          <div class="notif-card-tool readonly">
+            <div class="top">Room 604 — #4811<span class="time">3 min ago</span></div>
+            <div class="body">2× Arabic coffee, 1× Dates platter</div>
+            <div class="meta"><span class="badge badge-ok">Claimed</span>Faisal K. · out for delivery</div>
+          </div>
         </div>
-        <div class="notif-card-tool">
-          <div class="top">Room 115 — #4819<span class="time">3 min ago</span></div>
-          <div class="body">1× Soup, 1× Salad. Delivered by Faisal.</div>
-        </div>
+        <div class="phone-tabbar"><span class="active">Deliveries</span><span>Completed today</span></div>
+      </div>
+      <div class="stage-notes">
+        <p class="eyebrow">Triggered by</p>
+        <p class="lead">Kitchen taps Mark ready</p>
+        <p class="state-note">Only unclaimed tickets show an active Claim button; already-claimed ones show who took it, read-only, so two waiters never walk to the pass for the same tray.</p>
+        <p class="state-note">Source: <a href="staff-kitchen.html">Kitchen display, screen 2</a>.</p>
       </div>
     </div>
-    <p class="state-note">Only unclaimed tickets show an active Claim button; already-claimed ones show who took it, read-only.</p>
   </section>
 
   <!-- Screen 2: Claimed -> mark delivered -->
   <section class="screen-block">
     <h2>2. Claimed → Mark delivered</h2>
-    <div class="tool-phone-frame">
-      <div class="tool-phone-status"><span>Waiter app</span><span>9:42</span></div>
-      <div class="tool-phone-header">Order #4815 — Room 301</div>
-      <div class="tool-phone-content">
-        <div class="notif-card-tool">
-          <div class="top">Status: out for delivery</div>
-          <div class="body">1× Burger<br>Claimed by you at 9:41</div>
+    <div class="phone-stage">
+      <div class="tool-phone-frame">
+        <div class="tool-phone-status"><span>Waiter app</span><span>9:42</span></div>
+        <div class="tool-phone-header"><span>Order #4815 — Room 301</span><span class="sub">Floor 3</span></div>
+        <div class="tool-phone-content">
+          <div class="t-stepper">
+            <div class="t-step"><div class="t-dot done"></div><div class="t-label">Ready</div></div>
+            <div class="t-line done"></div>
+            <div class="t-step"><div class="t-dot active"></div><div class="t-label active">Out for delivery</div></div>
+            <div class="t-line"></div>
+            <div class="t-step"><div class="t-dot"></div><div class="t-label">Delivered</div></div>
+          </div>
+          <div class="notif-card-tool">
+            <div class="kv"><span class="k">Items</span><span class="v">1× Wagyu smash burger</span></div>
+            <div class="kv"><span class="k">Claimed</span><span class="v">By you at 9:41</span></div>
+            <div class="kv"><span class="k">Payment</span><span class="v">Charged to room</span></div>
+            <div class="kv"><span class="k">Guest note</span><span class="v">None</span></div>
+          </div>
+          <div class="phone-spacer"></div>
+          <div class="phone-btn-row"><button class="btn-tool btn-tool-secondary">Back</button><button class="btn-tool btn-tool-primary">Mark delivered</button></div>
         </div>
-        <div class="phone-btn-row"><button class="btn-tool btn-tool-primary">Mark delivered</button></div>
+        <div class="phone-tabbar"><span class="active">Deliveries</span><span>Completed today</span></div>
+      </div>
+      <div class="stage-notes">
+        <p class="eyebrow">Updates</p>
+        <p class="lead">Guest status track → Delivered</p>
+        <p class="state-note">Mark delivered closes the ticket and updates the guest's status track to "Delivered" (<a href="dining.html">guest tablet, dining flow</a>). The primary action sits at thumb height, full width.</p>
       </div>
     </div>
-    <p class="state-note">Mark delivered updates the guest's status track to "Delivered".</p>
   </section>
 <script src="../scale.js"></script>
 </body>

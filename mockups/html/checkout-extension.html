@@ -6,7 +6,27 @@
 <title>Kira Concierge — Hi-Fi Mockup: Checkout Extension</title>
 <link rel="stylesheet" href="../tokens.css">
 <style>
-  .subtitle-bar { position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); z-index: 2; }
+  /* Task screens: Kira (Lantern + live subtitle) docked left, the task on the right —
+     uses the 16:10 landscape frame instead of stacking everything in one narrow column. */
+  .tablet-body.split { flex-direction: row; align-items: center; justify-content: center; gap: var(--sp-7); padding: 0 var(--sp-6) var(--sp-5); text-align: left; }
+  .kira-col { width: 196px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: var(--sp-4); text-align: center; }
+  .kira-col .subtitle-bar { max-width: 100%; border-radius: var(--radius-guest-sm); padding: var(--sp-2) var(--sp-4); line-height: 1.45; }
+  .kira-col .avatar-caption { margin-top: calc(-1 * var(--sp-2)); color: var(--brass-soft); }
+  .task-col { flex: 1; max-width: 400px; display: flex; flex-direction: column; gap: var(--sp-3); }
+  .task-col > .guest-card, .task-col > .g-banner, .task-col > .g-stepper, .task-col > .quick-grid { max-width: none; }
+  .task-col > .quick-grid { justify-content: flex-start; }
+  .task-head { display: flex; flex-direction: column; gap: 2px; }
+  .task-eyebrow { font-size: var(--fs-small); color: var(--brass-soft); letter-spacing: .04em; font-weight: 600; }
+  .task-title { font-size: var(--fs-h1); font-weight: 700; line-height: 1.25; }
+  .task-note { font-size: var(--fs-small); color: var(--muted-on-dark); }
+  .guest-card .g-field-row { max-width: none; align-items: center; }
+  .guest-card .g-field-row + .g-field-row { border-top: 1px solid rgba(244,239,227,.08); }
+  .btn-row { display: flex; gap: var(--sp-3); margin-top: var(--sp-1); }
+  .btn-row .btn { flex: 1; padding-left: var(--sp-4); padding-right: var(--sp-4); }
+  .btn[disabled] { opacity: .4; cursor: not-allowed; }
+  .nav-icon svg { width: 13px; height: 13px; vertical-align: -2px; }
+  .time-label { font-size: var(--fs-small); color: var(--muted-on-dark); }
+  .g-banner strong { font-weight: 600; }
 </style>
 </head>
 <body>
@@ -27,31 +47,57 @@
   <!-- Screen 1: Request -->
   <section class="screen-block">
     <h2>1. Request (time compare)</h2>
-    <div class="tablet-frame" style="position:relative;">
+    <div class="tablet-frame">
       <div class="tablet-navbar">
         <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
-        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
       </div>
       <div class="tablet-context">Extend checkout</div>
-      <div class="tablet-body state-speaking">
-        <div class="lantern-wrap small">
-          <svg class="lantern-svg" viewBox="0 0 108 140">
-            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
-            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
-            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
-            <circle cx="54" cy="70" r="20" fill="url(#c1)"/>
-            <defs><radialGradient id="c1"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+      <div class="tablet-body split state-speaking">
+        <div class="kira-col">
+          <div class="lantern-wrap">
+            <div class="lantern-glow"></div>
+            <svg class="lantern-svg" viewBox="0 0 108 140" aria-hidden="true">
+            <defs>
+              <radialGradient id="c1" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#fff3d6"/><stop offset="45%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient>
+              <radialGradient id="c1-glass" cx="50%" cy="52%" r="62%" fx="42%" fy="44%"><stop offset="0%" stop-color="#f3d58f" stop-opacity=".38"/><stop offset="60%" stop-color="#b8923f" stop-opacity=".12"/><stop offset="100%" stop-color="#15201f" stop-opacity=".4"/></radialGradient>
+              <linearGradient id="c1-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8f6b22"/><stop offset="42%" stop-color="#e8cc86"/><stop offset="100%" stop-color="#8f6b22"/></linearGradient>
+            </defs>
+            <path d="M54 0V7" stroke="#b8923f" stroke-width="1.2" opacity=".55"/>
+            <circle cx="54" cy="10.5" r="3.5" fill="none" stroke="#d9b86a" stroke-width="1.5"/>
+            <path d="M39 31Q41 20 54 15Q67 20 69 31Z" fill="url(#c1-metal)" opacity=".9"/>
+            <rect x="31" y="31" width="46" height="5" rx="2" fill="url(#c1-metal)"/>
+            <path d="M34 36H74L88 70L74 104H34L20 70Z" fill="url(#c1-glass)" stroke="#b8923f" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M45 36Q40 70 45 104M63 36Q68 70 63 104" fill="none" stroke="#b8923f" stroke-width="1" opacity=".5"/>
+            <circle cx="54" cy="70" r="21" fill="url(#c1)"/>
+            <path d="M54 57C60 64 61 72 57.5 78C56 80.5 52 80.5 50.5 78C47 72 48 64 54 57Z" fill="#fff3d6" opacity=".88"/>
+            <rect x="31" y="104" width="46" height="5" rx="2" fill="url(#c1-metal)"/>
+            <path d="M40 109H68L62 118H46Z" fill="url(#c1-metal)" opacity=".85"/>
+            <path d="M51 118L54 127L57 118Z" fill="#d9b86a"/>
           </svg>
+          </div>
+          <div class="subtitle-bar">“Shall I ask the front desk for a 5:00 PM checkout?”</div>
         </div>
-        <div class="subtitle-bar">"Want me to ask the front desk for 5pm?"</div>
-        <div class="guest-card">
-          <div class="g-field-row"><span class="label">Current checkout</span><span class="value">11:00 AM</span></div>
-          <div class="g-field-row"><span class="label">Requested</span><span class="g-select-chip">5:00 PM ▾</span></div>
+        <div class="task-col">
+          <p class="task-title">Extend checkout</p>
+          <div class="guest-card">
+            <div class="g-field-row"><span class="label">Current checkout</span><span class="value">11:00 AM</span></div>
+            <div class="g-field-row"><span class="label">Requested</span><span class="g-select-chip">5:00 PM ▾</span></div>
+          </div>
+          <div class="quick-grid">
+            <span class="quick-chip">1:00 PM</span>
+            <span class="quick-chip">3:00 PM</span>
+            <span class="quick-chip selected">5:00 PM</span>
+            <span class="quick-chip">6:00 PM</span>
+          </div>
+          <p class="task-note">A late checkout fee may apply — you'll see it and confirm before anything is charged.</p>
+          <div class="btn-row">
+            <button class="btn btn-brass">Request extension</button>
+          </div>
         </div>
-        <p class="avatar-sub" style="font-size: var(--fs-small);">May include a late checkout fee</p>
-        <button class="btn btn-brass">Request extension</button>
       </div>
     </div>
+    <p class="state-note">Time compare up front: current vs requested, with common times as one-tap chips (the selector chip opens the full list). No fee is shown yet — it depends on the front desk's answer.</p>
   </section>
 
   <!-- Screen 2: Pending approval -->
@@ -60,28 +106,52 @@
     <div class="tablet-frame">
       <div class="tablet-navbar">
         <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
-        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
       </div>
       <div class="tablet-context">Extend checkout</div>
-      <div class="tablet-body state-idle">
-        <div class="lantern-wrap small">
-          <svg class="lantern-svg" viewBox="0 0 108 140">
-            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
-            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
-            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
-            <circle cx="54" cy="70" r="20" fill="url(#c2)"/>
-            <defs><radialGradient id="c2"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+      <div class="tablet-body split state-idle">
+        <div class="kira-col">
+          <div class="lantern-wrap">
+            <div class="lantern-glow"></div>
+            <svg class="lantern-svg" viewBox="0 0 108 140" aria-hidden="true">
+            <defs>
+              <radialGradient id="c2" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#fff3d6"/><stop offset="45%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient>
+              <radialGradient id="c2-glass" cx="50%" cy="52%" r="62%" fx="42%" fy="44%"><stop offset="0%" stop-color="#f3d58f" stop-opacity=".38"/><stop offset="60%" stop-color="#b8923f" stop-opacity=".12"/><stop offset="100%" stop-color="#15201f" stop-opacity=".4"/></radialGradient>
+              <linearGradient id="c2-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8f6b22"/><stop offset="42%" stop-color="#e8cc86"/><stop offset="100%" stop-color="#8f6b22"/></linearGradient>
+            </defs>
+            <path d="M54 0V7" stroke="#b8923f" stroke-width="1.2" opacity=".55"/>
+            <circle cx="54" cy="10.5" r="3.5" fill="none" stroke="#d9b86a" stroke-width="1.5"/>
+            <path d="M39 31Q41 20 54 15Q67 20 69 31Z" fill="url(#c2-metal)" opacity=".9"/>
+            <rect x="31" y="31" width="46" height="5" rx="2" fill="url(#c2-metal)"/>
+            <path d="M34 36H74L88 70L74 104H34L20 70Z" fill="url(#c2-glass)" stroke="#b8923f" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M45 36Q40 70 45 104M63 36Q68 70 63 104" fill="none" stroke="#b8923f" stroke-width="1" opacity=".5"/>
+            <circle cx="54" cy="70" r="21" fill="url(#c2)"/>
+            <path d="M54 57C60 64 61 72 57.5 78C56 80.5 52 80.5 50.5 78C47 72 48 64 54 57Z" fill="#fff3d6" opacity=".88"/>
+            <rect x="31" y="104" width="46" height="5" rx="2" fill="url(#c2-metal)"/>
+            <path d="M40 109H68L62 118H46Z" fill="url(#c2-metal)" opacity=".85"/>
+            <path d="M51 118L54 127L57 118Z" fill="#d9b86a"/>
           </svg>
+          </div>
+          <div class="subtitle-bar">“I've sent that to the front desk.”</div>
         </div>
-        <p class="avatar-sub">I've sent that to the front desk</p>
-        <div class="g-banner g-banner-pending">
-          Waiting for front desk approval
-          <span class="meta">Requested: checkout at 5:00 PM</span>
+        <div class="task-col">
+          <div class="task-head">
+            <span class="task-eyebrow">Request sent</span>
+            <p class="task-title">Waiting for the front desk</p>
+          </div>
+          <div class="g-banner g-banner-pending">
+            Waiting for front desk approval
+            <span class="meta">Requested: checkout at 5:00 PM (currently 11:00 AM)</span>
+          </div>
+          <p class="task-note">You'll be notified here as soon as they reply — feel free to carry on.</p>
+          <div class="btn-row">
+            <button class="btn btn-ghost-dark">Cancel request</button>
+            <button class="btn btn-ghost-dark">Back to home</button>
+          </div>
         </div>
-        <button class="btn btn-ghost-dark">Cancel request</button>
       </div>
     </div>
-    <p class="state-note">Front desk acts on this from the front-desk staff app. Guest-side state is purely informational, plus cancel.</p>
+    <p class="state-note">Front desk acts on this from the front-desk staff app (<a href="staff-front-desk.html">Staff: Front Desk</a>). Guest-side state is purely informational, plus cancel; the Lantern returns to idle so the screen reads as calm waiting, not as an error.</p>
   </section>
 
   <!-- Screen 3a: Outcome approved -->
@@ -90,26 +160,47 @@
     <div class="tablet-frame">
       <div class="tablet-navbar">
         <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
-        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
       </div>
       <div class="tablet-context">Extend checkout</div>
-      <div class="tablet-body state-speaking">
-        <div class="lantern-wrap small">
-          <svg class="lantern-svg" viewBox="0 0 108 140">
-            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
-            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
-            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
-            <circle cx="54" cy="70" r="20" fill="url(#c3)"/>
-            <defs><radialGradient id="c3"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+      <div class="tablet-body split state-speaking">
+        <div class="kira-col">
+          <div class="lantern-wrap">
+            <div class="lantern-glow"></div>
+            <svg class="lantern-svg" viewBox="0 0 108 140" aria-hidden="true">
+            <defs>
+              <radialGradient id="c3" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#fff3d6"/><stop offset="45%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient>
+              <radialGradient id="c3-glass" cx="50%" cy="52%" r="62%" fx="42%" fy="44%"><stop offset="0%" stop-color="#f3d58f" stop-opacity=".38"/><stop offset="60%" stop-color="#b8923f" stop-opacity=".12"/><stop offset="100%" stop-color="#15201f" stop-opacity=".4"/></radialGradient>
+              <linearGradient id="c3-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8f6b22"/><stop offset="42%" stop-color="#e8cc86"/><stop offset="100%" stop-color="#8f6b22"/></linearGradient>
+            </defs>
+            <path d="M54 0V7" stroke="#b8923f" stroke-width="1.2" opacity=".55"/>
+            <circle cx="54" cy="10.5" r="3.5" fill="none" stroke="#d9b86a" stroke-width="1.5"/>
+            <path d="M39 31Q41 20 54 15Q67 20 69 31Z" fill="url(#c3-metal)" opacity=".9"/>
+            <rect x="31" y="31" width="46" height="5" rx="2" fill="url(#c3-metal)"/>
+            <path d="M34 36H74L88 70L74 104H34L20 70Z" fill="url(#c3-glass)" stroke="#b8923f" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M45 36Q40 70 45 104M63 36Q68 70 63 104" fill="none" stroke="#b8923f" stroke-width="1" opacity=".5"/>
+            <circle cx="54" cy="70" r="21" fill="url(#c3)"/>
+            <path d="M54 57C60 64 61 72 57.5 78C56 80.5 52 80.5 50.5 78C47 72 48 64 54 57Z" fill="#fff3d6" opacity=".88"/>
+            <rect x="31" y="104" width="46" height="5" rx="2" fill="url(#c3-metal)"/>
+            <path d="M40 109H68L62 118H46Z" fill="url(#c3-metal)" opacity=".85"/>
+            <path d="M51 118L54 127L57 118Z" fill="#d9b86a"/>
           </svg>
+          </div>
+          <div class="subtitle-bar">“Approved — there's a late checkout fee of AED 90. Shall I confirm?”</div>
         </div>
-        <div class="g-banner g-banner-good">Approved — new checkout: 5:00 PM</div>
-        <div class="guest-card">
-          <div class="g-field-row"><span class="label">Late checkout fee</span><span class="value">AED 90.00</span></div>
-        </div>
-        <div style="display:flex; gap: var(--sp-3);">
-          <button class="btn btn-ghost-dark">Decline</button>
-          <button class="btn btn-brass">Confirm charge</button>
+        <div class="task-col">
+          <div class="g-banner g-banner-good">
+            Approved — new checkout: 5:00 PM
+          </div>
+          <div class="guest-card">
+            <div class="g-field-row"><span class="label">Late checkout fee</span><span class="value">AED 90.00</span></div>
+            <div class="g-field-row"><span class="label">Charged to</span><span class="value">Room 412</span></div>
+          </div>
+          <p class="task-note">Declining keeps your original 11:00 AM checkout.</p>
+          <div class="btn-row">
+            <button class="btn btn-ghost-dark">Decline</button>
+            <button class="btn btn-brass">Confirm charge</button>
+          </div>
         </div>
       </div>
     </div>
@@ -122,24 +213,48 @@
     <div class="tablet-frame">
       <div class="tablet-navbar">
         <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
-        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
       </div>
       <div class="tablet-context">Extend checkout</div>
-      <div class="tablet-body state-speaking">
-        <div class="lantern-wrap small">
-          <svg class="lantern-svg" viewBox="0 0 108 140">
-            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
-            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
-            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
-            <circle cx="54" cy="70" r="20" fill="url(#c4)"/>
-            <defs><radialGradient id="c4"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+      <div class="tablet-body split state-speaking">
+        <div class="kira-col">
+          <div class="lantern-wrap">
+            <div class="lantern-glow"></div>
+            <svg class="lantern-svg" viewBox="0 0 108 140" aria-hidden="true">
+            <defs>
+              <radialGradient id="c4" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#fff3d6"/><stop offset="45%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient>
+              <radialGradient id="c4-glass" cx="50%" cy="52%" r="62%" fx="42%" fy="44%"><stop offset="0%" stop-color="#f3d58f" stop-opacity=".38"/><stop offset="60%" stop-color="#b8923f" stop-opacity=".12"/><stop offset="100%" stop-color="#15201f" stop-opacity=".4"/></radialGradient>
+              <linearGradient id="c4-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8f6b22"/><stop offset="42%" stop-color="#e8cc86"/><stop offset="100%" stop-color="#8f6b22"/></linearGradient>
+            </defs>
+            <path d="M54 0V7" stroke="#b8923f" stroke-width="1.2" opacity=".55"/>
+            <circle cx="54" cy="10.5" r="3.5" fill="none" stroke="#d9b86a" stroke-width="1.5"/>
+            <path d="M39 31Q41 20 54 15Q67 20 69 31Z" fill="url(#c4-metal)" opacity=".9"/>
+            <rect x="31" y="31" width="46" height="5" rx="2" fill="url(#c4-metal)"/>
+            <path d="M34 36H74L88 70L74 104H34L20 70Z" fill="url(#c4-glass)" stroke="#b8923f" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M45 36Q40 70 45 104M63 36Q68 70 63 104" fill="none" stroke="#b8923f" stroke-width="1" opacity=".5"/>
+            <circle cx="54" cy="70" r="21" fill="url(#c4)"/>
+            <path d="M54 57C60 64 61 72 57.5 78C56 80.5 52 80.5 50.5 78C47 72 48 64 54 57Z" fill="#fff3d6" opacity=".88"/>
+            <rect x="31" y="104" width="46" height="5" rx="2" fill="url(#c4-metal)"/>
+            <path d="M40 109H68L62 118H46Z" fill="url(#c4-metal)" opacity=".85"/>
+            <path d="M51 118L54 127L57 118Z" fill="#d9b86a"/>
           </svg>
+          </div>
+          <div class="subtitle-bar">“Sorry, the front desk couldn't approve that one.”</div>
         </div>
-        <div class="g-banner g-banner-warn">Not approved — room is needed for an incoming guest at 1:00 PM</div>
-        <p class="avatar-sub" style="font-size: var(--fs-small);">You can request a later checkout another day, or ask about a day-use room.</p>
+        <div class="task-col">
+          <div class="g-banner g-banner-warn">
+            Not approved
+            <span class="meta">The room is needed for an incoming guest at 1:00 PM. Your checkout stays at 11:00 AM.</span>
+          </div>
+          <p class="task-note">You can request a later checkout on another day, or ask about a day-use room.</p>
+          <div class="btn-row">
+            <button class="btn btn-ghost-dark">Day-use options</button>
+            <button class="btn btn-brass">Done</button>
+          </div>
+        </div>
       </div>
     </div>
-    <p class="state-note">Same layout as approved, banner swapped and reason text shown, no charge section.</p>
+    <p class="state-note">Same layout as approved, banner swapped and reason text shown, no charge section. The guest always has a next step — an alternative or a clean exit — rather than a dead end.</p>
   </section>
 <script src="../scale.js"></script>
 </body>

@@ -6,19 +6,60 @@
 <title>Kira Concierge — Hi-Fi Mockup: Dining</title>
 <link rel="stylesheet" href="../tokens.css">
 <style>
-  .gallery-row { display: flex; gap: var(--sp-6); flex-wrap: wrap; align-items: flex-start; }
-  .gallery-cell { background: var(--dusk-ink); border-radius: var(--radius-guest); padding: var(--sp-5); width: 160px; text-align: center; }
-  .gallery-cell .lantern-wrap { width: 72px; height: 96px; margin: 0 auto var(--sp-3); }
+  .gallery-row { display: flex; gap: var(--sp-5); flex-wrap: wrap; align-items: stretch; }
+  .gallery-cell { background: radial-gradient(ellipse at 50% 30%, var(--dusk-ink-2), var(--dusk-ink) 75%); border-radius: var(--radius-guest); padding: var(--sp-5) var(--sp-4); width: 164px; text-align: center; }
+  .gallery-cell .lantern-wrap { width: 72px; height: 96px; margin: var(--sp-2) auto var(--sp-4); }
   .gallery-cell .lantern-ring { width: 72px; height: 72px; }
   .gallery-cell .avatar-caption { color: var(--ink-on-dark); font-weight: 600; }
   .gallery-cell p { font-size: 12px; color: var(--muted-on-dark); margin-top: var(--sp-1); }
-  .subtitle-bar { position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); z-index: 2; }
+
+  /* Idle / home */
+  .home-greeting { font-size: var(--fs-h1); font-weight: 700; margin-top: var(--sp-2); }
+  .home-chips { margin-top: var(--sp-3); }
+
+  /* Menu browse */
+  .menu-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
+  .menu-toolbar .quick-grid { justify-content: flex-start; max-width: none; width: auto; }
+  .menu-card { padding-top: var(--sp-1); padding-bottom: var(--sp-1); }
+  .menu-item { align-items: center; }
+  .menu-item .allergen { color: #f0d9b5; }
+  .menu-item-end { display: flex; align-items: center; gap: var(--sp-3); }
+  .add-btn { width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--brass); color: var(--brass-soft); font-weight: 700; font-size: 17px; line-height: 1; }
+  .qty-pill { min-width: 30px; height: 30px; padding: 0 var(--sp-2); border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: var(--brass); color: #211704; font-weight: 700; font-size: var(--fs-small); }
+  .cart-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); background: rgba(217,184,106,.1); border: 1px solid rgba(217,184,106,.3); border-radius: var(--radius-guest-sm); padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4); font-size: var(--fs-small); }
+  .cart-bar strong { color: var(--brass-soft); }
+  .cart-bar .btn { padding: 8px 18px; font-size: var(--fs-small); }
+
+  /* Order summary */
+  .sum-row { display: flex; justify-content: space-between; font-size: var(--fs-small); color: var(--muted-on-dark); padding-top: var(--sp-1); }
+  .sum-row:first-of-type { padding-top: var(--sp-3); }
+  .menu-item-note { font-size: var(--fs-small); color: var(--muted-on-dark); }
+
+  /* Task screens: Kira (Lantern + live subtitle) docked left, the task on the right —
+     uses the 16:10 landscape frame instead of stacking everything in one narrow column. */
+  .tablet-body.split { flex-direction: row; align-items: center; justify-content: center; gap: var(--sp-7); padding: 0 var(--sp-6) var(--sp-5); text-align: left; }
+  .kira-col { width: 196px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: var(--sp-4); text-align: center; }
+  .kira-col .subtitle-bar { max-width: 100%; border-radius: var(--radius-guest-sm); padding: var(--sp-2) var(--sp-4); line-height: 1.45; }
+  .kira-col .avatar-caption { margin-top: calc(-1 * var(--sp-2)); color: var(--brass-soft); }
+  .task-col { flex: 1; max-width: 400px; display: flex; flex-direction: column; gap: var(--sp-3); }
+  .task-col > .guest-card, .task-col > .g-banner, .task-col > .g-stepper, .task-col > .quick-grid { max-width: none; }
+  .task-col > .quick-grid { justify-content: flex-start; }
+  .task-head { display: flex; flex-direction: column; gap: 2px; }
+  .task-eyebrow { font-size: var(--fs-small); color: var(--brass-soft); letter-spacing: .04em; font-weight: 600; }
+  .task-title { font-size: var(--fs-h1); font-weight: 700; line-height: 1.25; }
+  .task-note { font-size: var(--fs-small); color: var(--muted-on-dark); }
+  .guest-card .g-field-row { max-width: none; align-items: center; }
+  .guest-card .g-field-row + .g-field-row { border-top: 1px solid rgba(244,239,227,.08); }
+  .btn-row { display: flex; gap: var(--sp-3); margin-top: var(--sp-1); }
+  .btn-row .btn { flex: 1; padding-left: var(--sp-4); padding-right: var(--sp-4); }
+  .btn[disabled] { opacity: .4; cursor: not-allowed; }
+  .nav-icon svg { width: 13px; height: 13px; vertical-align: -2px; }
 </style>
 </head>
 <body>
   <div class="page-header">
     <h1>Dining — Hi-Fi Mockup</h1>
-    <p>Guest tablet, dining flow — the first visual design pass, applying the Kira design system (palette, typography, avatar) to the wireframe layout.</p>
+    <p>Guest tablet, dining flow — the Kira design system (palette, typography, avatar) applied to the wireframe layout, including the loading-failure and send-failure variants.</p>
   </div>
   <nav class="flow-nav">
     <a href="index.html">All mockups</a>
@@ -37,12 +78,23 @@
       <div class="gallery-cell state-idle">
         <div class="lantern-wrap">
           <div class="lantern-glow"></div>
-          <svg class="lantern-svg" viewBox="0 0 108 140">
-            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
-            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
-            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
-            <circle cx="54" cy="70" r="20" fill="url(#g1)"/>
-            <defs><radialGradient id="g1"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+          <svg class="lantern-svg" viewBox="0 0 108 140" aria-hidden="true">
+            <defs>
+              <radialGradient id="g1" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#fff3d6"/><stop offset="45%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient>
+              <radialGradient id="g1-glass" cx="50%" cy="52%" r="62%" fx="42%" fy="44%"><stop offset="0%" stop-color="#f3d58f" stop-opacity=".38"/><stop offset="60%" stop-color="#b8923f" stop-opacity=".12"/><stop offset="100%" stop-color="#15201f" stop-opacity=".4"/></radialGradient>
+              <linearGradient id="g1-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8f6b22"/><stop offset="42%" stop-color="#e8cc86"/><stop offset="100%" stop-color="#8f6b22"/></linearGradient>
+            </defs>
+            <path d="M54 0V7" stroke="#b8923f" stroke-width="1.2" opacity=".55"/>
+            <circle cx="54" cy="10.5" r="3.5" fill="none" stroke="#d9b86a" stroke-width="1.5"/>
+            <path d="M39 31Q41 20 54 15Q67 20 69 31Z" fill="url(#g1-metal)" opacity=".9"/>
+            <rect x="31" y="31" width="46" height="5" rx="2" fill="url(#g1-metal)"/>
+            <path d="M34 36H74L88 70L74 104H34L20 70Z" fill="url(#g1-glass)" stroke="#b8923f" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M45 36Q40 70 45 104M63 36Q68 70 63 104" fill="none" stroke="#b8923f" stroke-width="1" opacity=".5"/>
+            <circle cx="54" cy="70" r="21" fill="url(#g1)"/>
+            <path d="M54 57C60 64 61 72 57.5 78C56 80.5 52 80.5 50.5 78C47 72 48 64 54 57Z" fill="#fff3d6" opacity=".88"/>
+            <rect x="31" y="104" width="46" height="5" rx="2" fill="url(#g1-metal)"/>
+            <path d="M40 109H68L62 118H46Z" fill="url(#g1-metal)" opacity=".85"/>
+            <path d="M51 118L54 127L57 118Z" fill="#d9b86a"/>
           </svg>
         </div>
         <div class="avatar-caption">Idle</div>
@@ -51,12 +103,23 @@
       <div class="gallery-cell state-wake">
         <div class="lantern-wrap">
           <div class="lantern-glow"></div>
-          <svg class="lantern-svg" viewBox="0 0 108 140">
-            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
-            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.16)" stroke="#d9b86a" stroke-width="2"/>
-            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
-            <circle cx="54" cy="70" r="22" fill="url(#g2)"/>
-            <defs><radialGradient id="g2"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#eac97a" stop-opacity=".9"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+          <svg class="lantern-svg" viewBox="0 0 108 140" aria-hidden="true">
+            <defs>
+              <radialGradient id="g2" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#fff3d6"/><stop offset="45%" stop-color="#eac97a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient>
+              <radialGradient id="g2-glass" cx="50%" cy="52%" r="62%" fx="42%" fy="44%"><stop offset="0%" stop-color="#f3d58f" stop-opacity=".55"/><stop offset="60%" stop-color="#b8923f" stop-opacity=".12"/><stop offset="100%" stop-color="#15201f" stop-opacity=".4"/></radialGradient>
+              <linearGradient id="g2-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8f6b22"/><stop offset="42%" stop-color="#e8cc86"/><stop offset="100%" stop-color="#8f6b22"/></linearGradient>
+            </defs>
+            <path d="M54 0V7" stroke="#b8923f" stroke-width="1.2" opacity=".55"/>
+            <circle cx="54" cy="10.5" r="3.5" fill="none" stroke="#d9b86a" stroke-width="1.5"/>
+            <path d="M39 31Q41 20 54 15Q67 20 69 31Z" fill="url(#g2-metal)" opacity=".9"/>
+            <rect x="31" y="31" width="46" height="5" rx="2" fill="url(#g2-metal)"/>
+            <path d="M34 36H74L88 70L74 104H34L20 70Z" fill="url(#g2-glass)" stroke="#d9b86a" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M45 36Q40 70 45 104M63 36Q68 70 63 104" fill="none" stroke="#b8923f" stroke-width="1" opacity=".5"/>
+            <circle cx="54" cy="70" r="24" fill="url(#g2)"/>
+            <path d="M54 57C60 64 61 72 57.5 78C56 80.5 52 80.5 50.5 78C47 72 48 64 54 57Z" fill="#fff3d6" opacity=".96"/>
+            <rect x="31" y="104" width="46" height="5" rx="2" fill="url(#g2-metal)"/>
+            <path d="M40 109H68L62 118H46Z" fill="url(#g2-metal)" opacity=".85"/>
+            <path d="M51 118L54 127L57 118Z" fill="#d9b86a"/>
           </svg>
         </div>
         <div class="avatar-caption">Wake</div>
@@ -65,12 +128,23 @@
       <div class="gallery-cell state-listening">
         <div class="lantern-wrap">
           <div class="lantern-ring"></div>
-          <svg class="lantern-svg" viewBox="0 0 108 140">
-            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
-            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
-            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
-            <circle cx="54" cy="70" r="20" fill="url(#g3)"/>
-            <defs><radialGradient id="g3"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+          <svg class="lantern-svg" viewBox="0 0 108 140" aria-hidden="true">
+            <defs>
+              <radialGradient id="g3" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#fff3d6"/><stop offset="45%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient>
+              <radialGradient id="g3-glass" cx="50%" cy="52%" r="62%" fx="42%" fy="44%"><stop offset="0%" stop-color="#f3d58f" stop-opacity=".38"/><stop offset="60%" stop-color="#b8923f" stop-opacity=".12"/><stop offset="100%" stop-color="#15201f" stop-opacity=".4"/></radialGradient>
+              <linearGradient id="g3-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8f6b22"/><stop offset="42%" stop-color="#e8cc86"/><stop offset="100%" stop-color="#8f6b22"/></linearGradient>
+            </defs>
+            <path d="M54 0V7" stroke="#b8923f" stroke-width="1.2" opacity=".55"/>
+            <circle cx="54" cy="10.5" r="3.5" fill="none" stroke="#d9b86a" stroke-width="1.5"/>
+            <path d="M39 31Q41 20 54 15Q67 20 69 31Z" fill="url(#g3-metal)" opacity=".9"/>
+            <rect x="31" y="31" width="46" height="5" rx="2" fill="url(#g3-metal)"/>
+            <path d="M34 36H74L88 70L74 104H34L20 70Z" fill="url(#g3-glass)" stroke="#b8923f" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M45 36Q40 70 45 104M63 36Q68 70 63 104" fill="none" stroke="#b8923f" stroke-width="1" opacity=".5"/>
+            <circle cx="54" cy="70" r="21" fill="url(#g3)"/>
+            <path d="M54 57C60 64 61 72 57.5 78C56 80.5 52 80.5 50.5 78C47 72 48 64 54 57Z" fill="#fff3d6" opacity=".88"/>
+            <rect x="31" y="104" width="46" height="5" rx="2" fill="url(#g3-metal)"/>
+            <path d="M40 109H68L62 118H46Z" fill="url(#g3-metal)" opacity=".85"/>
+            <path d="M51 118L54 127L57 118Z" fill="#d9b86a"/>
           </svg>
         </div>
         <div class="avatar-caption">Listening</div>
@@ -79,12 +153,23 @@
       <div class="gallery-cell state-thinking">
         <div class="lantern-wrap">
           <div class="lantern-glow"></div>
-          <svg class="lantern-svg" viewBox="0 0 108 140">
-            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
-            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
-            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
-            <circle cx="54" cy="70" r="20" fill="url(#g4)"/>
-            <defs><radialGradient id="g4"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+          <svg class="lantern-svg" viewBox="0 0 108 140" aria-hidden="true">
+            <defs>
+              <radialGradient id="g4" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#fff3d6"/><stop offset="45%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient>
+              <radialGradient id="g4-glass" cx="50%" cy="52%" r="62%" fx="42%" fy="44%"><stop offset="0%" stop-color="#f3d58f" stop-opacity=".30"/><stop offset="60%" stop-color="#b8923f" stop-opacity=".12"/><stop offset="100%" stop-color="#15201f" stop-opacity=".4"/></radialGradient>
+              <linearGradient id="g4-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8f6b22"/><stop offset="42%" stop-color="#e8cc86"/><stop offset="100%" stop-color="#8f6b22"/></linearGradient>
+            </defs>
+            <path d="M54 0V7" stroke="#b8923f" stroke-width="1.2" opacity=".55"/>
+            <circle cx="54" cy="10.5" r="3.5" fill="none" stroke="#d9b86a" stroke-width="1.5"/>
+            <path d="M39 31Q41 20 54 15Q67 20 69 31Z" fill="url(#g4-metal)" opacity=".9"/>
+            <rect x="31" y="31" width="46" height="5" rx="2" fill="url(#g4-metal)"/>
+            <path d="M34 36H74L88 70L74 104H34L20 70Z" fill="url(#g4-glass)" stroke="#b8923f" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M45 36Q40 70 45 104M63 36Q68 70 63 104" fill="none" stroke="#b8923f" stroke-width="1" opacity=".5"/>
+            <circle cx="54" cy="70" r="19" fill="url(#g4)"/>
+            <path d="M54 57C60 64 61 72 57.5 78C56 80.5 52 80.5 50.5 78C47 72 48 64 54 57Z" fill="#fff3d6" opacity=".78"/>
+            <rect x="31" y="104" width="46" height="5" rx="2" fill="url(#g4-metal)"/>
+            <path d="M40 109H68L62 118H46Z" fill="url(#g4-metal)" opacity=".85"/>
+            <path d="M51 118L54 127L57 118Z" fill="#d9b86a"/>
           </svg>
         </div>
         <div class="avatar-caption">Thinking</div>
@@ -93,19 +178,30 @@
       <div class="gallery-cell state-speaking">
         <div class="lantern-wrap">
           <div class="lantern-glow"></div>
-          <svg class="lantern-svg" viewBox="0 0 108 140">
-            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
-            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
-            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
-            <circle cx="54" cy="70" r="20" fill="url(#g5)"/>
-            <defs><radialGradient id="g5"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+          <svg class="lantern-svg" viewBox="0 0 108 140" aria-hidden="true">
+            <defs>
+              <radialGradient id="g5" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#fff3d6"/><stop offset="45%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient>
+              <radialGradient id="g5-glass" cx="50%" cy="52%" r="62%" fx="42%" fy="44%"><stop offset="0%" stop-color="#f3d58f" stop-opacity=".38"/><stop offset="60%" stop-color="#b8923f" stop-opacity=".12"/><stop offset="100%" stop-color="#15201f" stop-opacity=".4"/></radialGradient>
+              <linearGradient id="g5-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8f6b22"/><stop offset="42%" stop-color="#e8cc86"/><stop offset="100%" stop-color="#8f6b22"/></linearGradient>
+            </defs>
+            <path d="M54 0V7" stroke="#b8923f" stroke-width="1.2" opacity=".55"/>
+            <circle cx="54" cy="10.5" r="3.5" fill="none" stroke="#d9b86a" stroke-width="1.5"/>
+            <path d="M39 31Q41 20 54 15Q67 20 69 31Z" fill="url(#g5-metal)" opacity=".9"/>
+            <rect x="31" y="31" width="46" height="5" rx="2" fill="url(#g5-metal)"/>
+            <path d="M34 36H74L88 70L74 104H34L20 70Z" fill="url(#g5-glass)" stroke="#b8923f" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M45 36Q40 70 45 104M63 36Q68 70 63 104" fill="none" stroke="#b8923f" stroke-width="1" opacity=".5"/>
+            <circle cx="54" cy="70" r="21" fill="url(#g5)"/>
+            <path d="M54 57C60 64 61 72 57.5 78C56 80.5 52 80.5 50.5 78C47 72 48 64 54 57Z" fill="#fff3d6" opacity=".88"/>
+            <rect x="31" y="104" width="46" height="5" rx="2" fill="url(#g5-metal)"/>
+            <path d="M40 109H68L62 118H46Z" fill="url(#g5-metal)" opacity=".85"/>
+            <path d="M51 118L54 127L57 118Z" fill="#d9b86a"/>
           </svg>
         </div>
         <div class="avatar-caption">Speaking</div>
         <p>Rhythmic pulse, no lip-sync needed</p>
       </div>
     </div>
-    <p class="state-note">Form: an abstracted hanging lantern, not a face or a generic glowing orb — ties the one AI-native element in the room to the hospitality material language around it. Final art commissioned per the avatar design brief (<code>design/avatar/avatar-brief.md</code>); this is motion/placement proof, not final linework.</p>
+    <p class="state-note">Form: an abstracted hanging lantern — hanger ring, brass cap and collars, a faceted glass body with two ribs, and a single flame-shaped light — not a face or a generic glowing orb. It ties the one AI-native element in the room to the hospitality material language around it. These are the static hero frames per state; the rigged Rive/Lottie animation is built from the same linework per the avatar design brief (<code>design/avatar/avatar-brief.md</code>).</p>
   </section>
 
   <!-- Screen 1: Idle -->
@@ -114,131 +210,337 @@
     <div class="tablet-frame">
       <div class="tablet-navbar">
         <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
-        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
       </div>
       <div class="tablet-context">9:41 PM · 24°C, clear</div>
       <div class="tablet-body state-idle">
         <div class="lantern-wrap">
           <div class="lantern-glow"></div>
-          <svg class="lantern-svg" viewBox="0 0 108 140">
-            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
-            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
-            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
-            <circle cx="54" cy="70" r="20" fill="url(#gi)"/>
-            <defs><radialGradient id="gi"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+          <svg class="lantern-svg" viewBox="0 0 108 140" aria-hidden="true">
+            <defs>
+              <radialGradient id="gi" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#fff3d6"/><stop offset="45%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient>
+              <radialGradient id="gi-glass" cx="50%" cy="52%" r="62%" fx="42%" fy="44%"><stop offset="0%" stop-color="#f3d58f" stop-opacity=".38"/><stop offset="60%" stop-color="#b8923f" stop-opacity=".12"/><stop offset="100%" stop-color="#15201f" stop-opacity=".4"/></radialGradient>
+              <linearGradient id="gi-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8f6b22"/><stop offset="42%" stop-color="#e8cc86"/><stop offset="100%" stop-color="#8f6b22"/></linearGradient>
+            </defs>
+            <path d="M54 0V7" stroke="#b8923f" stroke-width="1.2" opacity=".55"/>
+            <circle cx="54" cy="10.5" r="3.5" fill="none" stroke="#d9b86a" stroke-width="1.5"/>
+            <path d="M39 31Q41 20 54 15Q67 20 69 31Z" fill="url(#gi-metal)" opacity=".9"/>
+            <rect x="31" y="31" width="46" height="5" rx="2" fill="url(#gi-metal)"/>
+            <path d="M34 36H74L88 70L74 104H34L20 70Z" fill="url(#gi-glass)" stroke="#b8923f" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M45 36Q40 70 45 104M63 36Q68 70 63 104" fill="none" stroke="#b8923f" stroke-width="1" opacity=".5"/>
+            <circle cx="54" cy="70" r="21" fill="url(#gi)"/>
+            <path d="M54 57C60 64 61 72 57.5 78C56 80.5 52 80.5 50.5 78C47 72 48 64 54 57Z" fill="#fff3d6" opacity=".88"/>
+            <rect x="31" y="104" width="46" height="5" rx="2" fill="url(#gi-metal)"/>
+            <path d="M40 109H68L62 118H46Z" fill="url(#gi-metal)" opacity=".85"/>
+            <path d="M51 118L54 127L57 118Z" fill="#d9b86a"/>
           </svg>
         </div>
-        <p class="avatar-sub">Hey Kira, or tap to begin</p>
+        <p class="home-greeting">Good evening</p>
+        <p class="avatar-sub">Say “Hey Kira”, or tap to begin</p>
+        <div class="quick-grid home-chips">
+          <span class="quick-chip">In-room dining</span>
+          <span class="quick-chip">Housekeeping</span>
+          <span class="quick-chip">Late checkout</span>
+          <span class="quick-chip">Valet</span>
+        </div>
       </div>
     </div>
-    <p class="state-note">Centre-aligned, dark, mostly empty — this is a bedside object at night, not a dashboard. The lattice texture behind the lantern is a 4% line pattern, visible only on close inspection.</p>
+    <p class="state-note">Centre-aligned, dark, mostly empty — this is a bedside object at night, not a dashboard. Four quiet shortcuts give touch-first guests a way in without speaking. The lattice texture behind the lantern is a faint 5% line pattern, visible only on close inspection.</p>
   </section>
 
   <!-- Screen 2: Menu browse -->
   <section class="screen-block">
     <h2>2. Menu browse</h2>
-    <div class="tablet-frame" style="position:relative;">
+    <div class="tablet-frame">
       <div class="tablet-navbar">
         <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
-        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
       </div>
       <div class="tablet-context">In-room dining</div>
-      <div class="tablet-body state-listening">
-        <div class="lantern-wrap small">
-          <svg class="lantern-svg" viewBox="0 0 108 140">
-            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
-            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
-            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
-            <circle cx="54" cy="70" r="20" fill="url(#g2b)"/>
-            <defs><radialGradient id="g2b"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+      <div class="tablet-body split state-listening">
+        <div class="kira-col">
+          <div class="lantern-wrap">
+            <div class="lantern-glow"></div>
+            <div class="lantern-ring"></div>
+            <svg class="lantern-svg" viewBox="0 0 108 140" aria-hidden="true">
+            <defs>
+              <radialGradient id="g2b" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#fff3d6"/><stop offset="45%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient>
+              <radialGradient id="g2b-glass" cx="50%" cy="52%" r="62%" fx="42%" fy="44%"><stop offset="0%" stop-color="#f3d58f" stop-opacity=".38"/><stop offset="60%" stop-color="#b8923f" stop-opacity=".12"/><stop offset="100%" stop-color="#15201f" stop-opacity=".4"/></radialGradient>
+              <linearGradient id="g2b-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8f6b22"/><stop offset="42%" stop-color="#e8cc86"/><stop offset="100%" stop-color="#8f6b22"/></linearGradient>
+            </defs>
+            <path d="M54 0V7" stroke="#b8923f" stroke-width="1.2" opacity=".55"/>
+            <circle cx="54" cy="10.5" r="3.5" fill="none" stroke="#d9b86a" stroke-width="1.5"/>
+            <path d="M39 31Q41 20 54 15Q67 20 69 31Z" fill="url(#g2b-metal)" opacity=".9"/>
+            <rect x="31" y="31" width="46" height="5" rx="2" fill="url(#g2b-metal)"/>
+            <path d="M34 36H74L88 70L74 104H34L20 70Z" fill="url(#g2b-glass)" stroke="#b8923f" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M45 36Q40 70 45 104M63 36Q68 70 63 104" fill="none" stroke="#b8923f" stroke-width="1" opacity=".5"/>
+            <circle cx="54" cy="70" r="21" fill="url(#g2b)"/>
+            <path d="M54 57C60 64 61 72 57.5 78C56 80.5 52 80.5 50.5 78C47 72 48 64 54 57Z" fill="#fff3d6" opacity=".88"/>
+            <rect x="31" y="104" width="46" height="5" rx="2" fill="url(#g2b-metal)"/>
+            <path d="M40 109H68L62 118H46Z" fill="url(#g2b-metal)" opacity=".85"/>
+            <path d="M51 118L54 127L57 118Z" fill="#d9b86a"/>
           </svg>
+          </div>
+          <div class="avatar-caption">Listening…</div>
+          <div class="subtitle-bar">“Two burgers and a Coke, please”</div>
         </div>
-        <div class="subtitle-bar">"two burgers and a coke please"</div>
-        <div class="guest-card">
-          <div class="menu-item">
-            <div><div class="menu-item-name">Wagyu smash burger</div><div class="menu-item-tag">contains gluten, dairy</div></div>
-            <div class="menu-item-price">AED 68</div>
+        <div class="task-col">
+          <div class="menu-toolbar">
+            <div class="quick-grid">
+              <span class="quick-chip">Starters</span>
+              <span class="quick-chip selected">Mains</span>
+              <span class="quick-chip">Drinks</span>
+              <span class="quick-chip">Desserts</span>
+            </div>
           </div>
-          <div class="menu-item">
-            <div><div class="menu-item-name">Chicken shawarma plate</div><div class="menu-item-tag">contains gluten</div></div>
-            <div class="menu-item-price">AED 54</div>
+          <div class="guest-card menu-card">
+            <div class="menu-item">
+              <div><div class="menu-item-name">Wagyu smash burger</div><div class="menu-item-tag allergen">Contains gluten, dairy</div></div>
+              <div class="menu-item-end"><span class="menu-item-price">AED 68</span><span class="qty-pill">2</span></div>
+            </div>
+            <div class="menu-item">
+              <div><div class="menu-item-name">Chicken shawarma plate</div><div class="menu-item-tag allergen">Contains gluten</div></div>
+              <div class="menu-item-end"><span class="menu-item-price">AED 54</span><span class="add-btn">+</span></div>
+            </div>
+            <div class="menu-item">
+              <div><div class="menu-item-name">Grilled hammour, saffron rice</div><div class="menu-item-tag allergen">Contains nuts, fish</div></div>
+              <div class="menu-item-end"><span class="menu-item-price">AED 92</span><span class="add-btn">+</span></div>
+            </div>
           </div>
-          <div class="menu-item">
-            <div><div class="menu-item-name">Soft drink</div><div class="menu-item-tag">Coke, Sprite, Fanta</div></div>
-            <div class="menu-item-price">AED 18</div>
+          <div class="cart-bar">
+            <span>Your order · <strong>3 items · AED 154</strong></span>
+            <button class="btn btn-brass">Review order</button>
           </div>
         </div>
       </div>
     </div>
-    <p class="state-note">Listening state shown with the ripple cue — guest is mid-sentence. Cart build is voice or tap; both update the same card live (touch parity).</p>
+    <p class="state-note">Listening state shown with the ripple cue — the guest is mid-sentence and the live transcript sits under the Lantern, never over the menu. Saying “add a burger” has the same effect as tapping [+]; both update the same order bar live (touch parity). Allergen tags are always visible on the item, not hidden behind a tap.</p>
+  </section>
+
+  <!-- Screen 2b: Menu unavailable -->
+  <section class="screen-block">
+    <h2>2b. Menu browse — menu unavailable (variant)</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">In-room dining</div>
+      <div class="tablet-body split state-thinking">
+        <div class="kira-col">
+          <div class="lantern-wrap">
+            <div class="lantern-glow"></div>
+            <svg class="lantern-svg" viewBox="0 0 108 140" aria-hidden="true">
+            <defs>
+              <radialGradient id="g2c" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#fff3d6"/><stop offset="45%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient>
+              <radialGradient id="g2c-glass" cx="50%" cy="52%" r="62%" fx="42%" fy="44%"><stop offset="0%" stop-color="#f3d58f" stop-opacity=".30"/><stop offset="60%" stop-color="#b8923f" stop-opacity=".12"/><stop offset="100%" stop-color="#15201f" stop-opacity=".4"/></radialGradient>
+              <linearGradient id="g2c-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8f6b22"/><stop offset="42%" stop-color="#e8cc86"/><stop offset="100%" stop-color="#8f6b22"/></linearGradient>
+            </defs>
+            <path d="M54 0V7" stroke="#b8923f" stroke-width="1.2" opacity=".55"/>
+            <circle cx="54" cy="10.5" r="3.5" fill="none" stroke="#d9b86a" stroke-width="1.5"/>
+            <path d="M39 31Q41 20 54 15Q67 20 69 31Z" fill="url(#g2c-metal)" opacity=".9"/>
+            <rect x="31" y="31" width="46" height="5" rx="2" fill="url(#g2c-metal)"/>
+            <path d="M34 36H74L88 70L74 104H34L20 70Z" fill="url(#g2c-glass)" stroke="#b8923f" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M45 36Q40 70 45 104M63 36Q68 70 63 104" fill="none" stroke="#b8923f" stroke-width="1" opacity=".5"/>
+            <circle cx="54" cy="70" r="19" fill="url(#g2c)"/>
+            <path d="M54 57C60 64 61 72 57.5 78C56 80.5 52 80.5 50.5 78C47 72 48 64 54 57Z" fill="#fff3d6" opacity=".78"/>
+            <rect x="31" y="104" width="46" height="5" rx="2" fill="url(#g2c-metal)"/>
+            <path d="M40 109H68L62 118H46Z" fill="url(#g2c-metal)" opacity=".85"/>
+            <path d="M51 118L54 127L57 118Z" fill="#d9b86a"/>
+          </svg>
+          </div>
+          <div class="subtitle-bar">“I couldn't load the menu just now — let me try again.”</div>
+        </div>
+        <div class="task-col">
+          <div class="task-head">
+            <p class="task-title">Menu unavailable</p>
+          </div>
+          <div class="g-banner g-banner-warn">
+            The menu couldn't be loaded.
+            <span class="meta">This is usually brief. You can also order from the room phone.</span>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-ghost-dark">Back to home</button>
+            <button class="btn btn-brass">Try again</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Same frame as menu browse, content replaced. While loading, the Lantern stays in its thinking state in place of a spinner; if the load fails, this panel offers a retry and a phone fallback.</p>
   </section>
 
   <!-- Screen 3: Order summary / confirm -->
   <section class="screen-block">
-    <h2>3. Order summary — confirm</h2>
+    <h2>3. Order summary — confirm (chargeable)</h2>
     <div class="tablet-frame">
       <div class="tablet-navbar">
         <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
-        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
       </div>
-      <div class="tablet-context">Review your order</div>
-      <div class="tablet-body state-speaking">
-        <div class="lantern-wrap">
-          <div class="lantern-glow"></div>
-          <svg class="lantern-svg" viewBox="0 0 108 140">
-            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
-            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
-            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
-            <circle cx="54" cy="70" r="20" fill="url(#gs)"/>
-            <defs><radialGradient id="gs"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+      <div class="tablet-context">In-room dining · Review your order</div>
+      <div class="tablet-body split state-speaking">
+        <div class="kira-col">
+          <div class="lantern-wrap">
+            <div class="lantern-glow"></div>
+            <svg class="lantern-svg" viewBox="0 0 108 140" aria-hidden="true">
+            <defs>
+              <radialGradient id="gs" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#fff3d6"/><stop offset="45%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient>
+              <radialGradient id="gs-glass" cx="50%" cy="52%" r="62%" fx="42%" fy="44%"><stop offset="0%" stop-color="#f3d58f" stop-opacity=".38"/><stop offset="60%" stop-color="#b8923f" stop-opacity=".12"/><stop offset="100%" stop-color="#15201f" stop-opacity=".4"/></radialGradient>
+              <linearGradient id="gs-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8f6b22"/><stop offset="42%" stop-color="#e8cc86"/><stop offset="100%" stop-color="#8f6b22"/></linearGradient>
+            </defs>
+            <path d="M54 0V7" stroke="#b8923f" stroke-width="1.2" opacity=".55"/>
+            <circle cx="54" cy="10.5" r="3.5" fill="none" stroke="#d9b86a" stroke-width="1.5"/>
+            <path d="M39 31Q41 20 54 15Q67 20 69 31Z" fill="url(#gs-metal)" opacity=".9"/>
+            <rect x="31" y="31" width="46" height="5" rx="2" fill="url(#gs-metal)"/>
+            <path d="M34 36H74L88 70L74 104H34L20 70Z" fill="url(#gs-glass)" stroke="#b8923f" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M45 36Q40 70 45 104M63 36Q68 70 63 104" fill="none" stroke="#b8923f" stroke-width="1" opacity=".5"/>
+            <circle cx="54" cy="70" r="21" fill="url(#gs)"/>
+            <path d="M54 57C60 64 61 72 57.5 78C56 80.5 52 80.5 50.5 78C47 72 48 64 54 57Z" fill="#fff3d6" opacity=".88"/>
+            <rect x="31" y="104" width="46" height="5" rx="2" fill="url(#gs-metal)"/>
+            <path d="M40 109H68L62 118H46Z" fill="url(#gs-metal)" opacity=".85"/>
+            <path d="M51 118L54 127L57 118Z" fill="#d9b86a"/>
           </svg>
+          </div>
+          <div class="subtitle-bar">“That's AED 177.10 in total — shall I send it to the kitchen?”</div>
         </div>
-        <div class="guest-card">
-          <div class="menu-item"><div class="menu-item-name">2× Wagyu smash burger</div><div class="menu-item-price">AED 136</div></div>
-          <div class="menu-item"><div class="menu-item-name">1× Soft drink</div><div class="menu-item-price">AED 18</div></div>
-          <div class="order-total-row"><span>Total</span><span>AED 154.00</span></div>
-        </div>
-        <div style="display:flex; gap: var(--sp-3);">
-          <button class="btn btn-ghost-dark">Change order</button>
-          <button class="btn btn-brass">Confirm &amp; send to kitchen</button>
+        <div class="task-col">
+          <p class="task-title">Your order</p>
+          <div class="guest-card">
+            <div class="menu-item">
+              <div><div class="menu-item-name">2× Wagyu smash burger</div><div class="menu-item-note">No onion</div></div>
+              <div class="menu-item-price">AED 136.00</div>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-name">1× Coke</div>
+              <div class="menu-item-price">AED 18.00</div>
+            </div>
+            <div class="sum-row"><span>Subtotal</span><span>AED 154.00</span></div>
+            <div class="sum-row"><span>Service charge &amp; VAT</span><span>AED 23.10</span></div>
+            <div class="order-total-row"><span>Total · charged to Room 412</span><span>AED 177.10</span></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-ghost-dark">Edit order</button>
+            <button class="btn btn-brass">Confirm &amp; send</button>
+          </div>
         </div>
       </div>
     </div>
-    <p class="state-note">Confirm is the chargeable step — explicit tap or voice "yes" required either way, backed by a server-issued <code>confirmation_token</code> so a touch guest and a voice guest hit the exact same contract (<code>dev-plan/api-contracts.md</code> §3).</p>
+    <p class="state-note">Confirm is the chargeable step — explicit tap or voice “yes” required either way, backed by a server-issued <code>confirmation_token</code> generated on entry to this screen, so a touch guest and a voice guest hit the exact same contract (<code>dev-plan/api-contracts.md</code> §3).</p>
+  </section>
+
+  <!-- Screen 3b: Submit error -->
+  <section class="screen-block">
+    <h2>3b. Order summary — couldn't send (variant)</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">In-room dining · Review your order</div>
+      <div class="tablet-body split state-speaking">
+        <div class="kira-col">
+          <div class="lantern-wrap">
+            <div class="lantern-glow"></div>
+            <svg class="lantern-svg" viewBox="0 0 108 140" aria-hidden="true">
+            <defs>
+              <radialGradient id="gse" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#fff3d6"/><stop offset="45%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient>
+              <radialGradient id="gse-glass" cx="50%" cy="52%" r="62%" fx="42%" fy="44%"><stop offset="0%" stop-color="#f3d58f" stop-opacity=".38"/><stop offset="60%" stop-color="#b8923f" stop-opacity=".12"/><stop offset="100%" stop-color="#15201f" stop-opacity=".4"/></radialGradient>
+              <linearGradient id="gse-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8f6b22"/><stop offset="42%" stop-color="#e8cc86"/><stop offset="100%" stop-color="#8f6b22"/></linearGradient>
+            </defs>
+            <path d="M54 0V7" stroke="#b8923f" stroke-width="1.2" opacity=".55"/>
+            <circle cx="54" cy="10.5" r="3.5" fill="none" stroke="#d9b86a" stroke-width="1.5"/>
+            <path d="M39 31Q41 20 54 15Q67 20 69 31Z" fill="url(#gse-metal)" opacity=".9"/>
+            <rect x="31" y="31" width="46" height="5" rx="2" fill="url(#gse-metal)"/>
+            <path d="M34 36H74L88 70L74 104H34L20 70Z" fill="url(#gse-glass)" stroke="#b8923f" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M45 36Q40 70 45 104M63 36Q68 70 63 104" fill="none" stroke="#b8923f" stroke-width="1" opacity=".5"/>
+            <circle cx="54" cy="70" r="21" fill="url(#gse)"/>
+            <path d="M54 57C60 64 61 72 57.5 78C56 80.5 52 80.5 50.5 78C47 72 48 64 54 57Z" fill="#fff3d6" opacity=".88"/>
+            <rect x="31" y="104" width="46" height="5" rx="2" fill="url(#gse-metal)"/>
+            <path d="M40 109H68L62 118H46Z" fill="url(#gse-metal)" opacity=".85"/>
+            <path d="M51 118L54 127L57 118Z" fill="#d9b86a"/>
+          </svg>
+          </div>
+          <div class="subtitle-bar">“Sorry, that didn't go through. Shall I try again?”</div>
+        </div>
+        <div class="task-col">
+          <p class="task-title">Your order</p>
+          <div class="g-banner g-banner-warn">
+            Couldn't send your order
+            <span class="meta">Nothing has been charged. Retrying sends it once — never twice.</span>
+          </div>
+          <div class="guest-card">
+            <div class="menu-item"><div class="menu-item-name">2× Wagyu smash burger, 1× Coke</div></div>
+            <div class="order-total-row"><span>Total</span><span>AED 177.10</span></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-brass">Try again</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Same layout as the confirm screen, with a banner above the total and a single retry button — the same <code>confirmation_token</code> is reused, so a second tap can never create a duplicate order (idempotency).</p>
   </section>
 
   <!-- Screen 4: Status track -->
   <section class="screen-block">
-    <h2>4. Status track</h2>
+    <h2>4. Status track (Accepted → Preparing → Ready → Delivered)</h2>
     <div class="tablet-frame">
       <div class="tablet-navbar">
         <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
-        <div class="nav-group"><span class="nav-icon">🔈</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
       </div>
-      <div class="tablet-context">Order #4821</div>
-      <div class="tablet-body state-idle">
-        <div class="lantern-wrap small">
-          <svg class="lantern-svg" viewBox="0 0 108 140">
-            <circle cx="54" cy="10" r="4" fill="#d9b86a"/>
-            <polygon points="24,34 84,34 94,70 84,106 24,106 14,70" fill="rgba(217,184,106,.12)" stroke="#b8923f" stroke-width="2"/>
-            <polygon points="40,106 68,106 64,120 44,120" fill="rgba(217,184,106,.2)" stroke="#b8923f" stroke-width="1.5"/>
-            <circle cx="54" cy="70" r="20" fill="url(#g4b)"/>
-            <defs><radialGradient id="g4b"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient></defs>
+      <div class="tablet-context">In-room dining · Order #4821</div>
+      <div class="tablet-body split state-speaking">
+        <div class="kira-col">
+          <div class="lantern-wrap">
+            <div class="lantern-glow"></div>
+            <svg class="lantern-svg" viewBox="0 0 108 140" aria-hidden="true">
+            <defs>
+              <radialGradient id="g4b" cx="50%" cy="55%" r="50%"><stop offset="0%" stop-color="#fff3d6"/><stop offset="45%" stop-color="#d9b86a" stop-opacity=".8"/><stop offset="100%" stop-color="#b8923f" stop-opacity="0"/></radialGradient>
+              <radialGradient id="g4b-glass" cx="50%" cy="52%" r="62%" fx="42%" fy="44%"><stop offset="0%" stop-color="#f3d58f" stop-opacity=".38"/><stop offset="60%" stop-color="#b8923f" stop-opacity=".12"/><stop offset="100%" stop-color="#15201f" stop-opacity=".4"/></radialGradient>
+              <linearGradient id="g4b-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8f6b22"/><stop offset="42%" stop-color="#e8cc86"/><stop offset="100%" stop-color="#8f6b22"/></linearGradient>
+            </defs>
+            <path d="M54 0V7" stroke="#b8923f" stroke-width="1.2" opacity=".55"/>
+            <circle cx="54" cy="10.5" r="3.5" fill="none" stroke="#d9b86a" stroke-width="1.5"/>
+            <path d="M39 31Q41 20 54 15Q67 20 69 31Z" fill="url(#g4b-metal)" opacity=".9"/>
+            <rect x="31" y="31" width="46" height="5" rx="2" fill="url(#g4b-metal)"/>
+            <path d="M34 36H74L88 70L74 104H34L20 70Z" fill="url(#g4b-glass)" stroke="#b8923f" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M45 36Q40 70 45 104M63 36Q68 70 63 104" fill="none" stroke="#b8923f" stroke-width="1" opacity=".5"/>
+            <circle cx="54" cy="70" r="21" fill="url(#g4b)"/>
+            <path d="M54 57C60 64 61 72 57.5 78C56 80.5 52 80.5 50.5 78C47 72 48 64 54 57Z" fill="#fff3d6" opacity=".88"/>
+            <rect x="31" y="104" width="46" height="5" rx="2" fill="url(#g4b-metal)"/>
+            <path d="M40 109H68L62 118H46Z" fill="url(#g4b-metal)" opacity=".85"/>
+            <path d="M51 118L54 127L57 118Z" fill="#d9b86a"/>
           </svg>
+          </div>
+          <div class="subtitle-bar">“Your order is being prepared now.”</div>
         </div>
-        <p class="avatar-sub" style="margin-bottom: var(--sp-2);">Your order is being prepared</p>
-        <div class="g-stepper">
-          <div class="g-step"><div class="g-dot done"></div><div class="g-label">Accepted</div></div>
-          <div class="g-line done"></div>
-          <div class="g-step"><div class="g-dot active"></div><div class="g-label active">Preparing</div></div>
-          <div class="g-line"></div>
-          <div class="g-step"><div class="g-dot"></div><div class="g-label">Ready</div></div>
-          <div class="g-line"></div>
-          <div class="g-step"><div class="g-dot"></div><div class="g-label">Delivered</div></div>
+        <div class="task-col">
+          <div class="task-head">
+            <span class="task-eyebrow">Order #4821</span>
+            <p class="task-title">Being prepared</p>
+          </div>
+          <p class="task-note">2× Wagyu smash burger, 1× Coke · AED 177.10</p>
+          <div class="guest-card">
+            <div class="g-stepper">
+              <div class="g-step"><div class="g-dot done"></div><div class="g-label">Accepted</div></div>
+              <div class="g-line done"></div>
+              <div class="g-step"><div class="g-dot active"></div><div class="g-label active">Preparing</div></div>
+              <div class="g-line"></div>
+              <div class="g-step"><div class="g-dot"></div><div class="g-label">Ready</div></div>
+              <div class="g-line"></div>
+              <div class="g-step"><div class="g-dot"></div><div class="g-label">Delivered</div></div>
+            </div>
+          </div>
+          <p class="avatar-sub">Ready in about 15 minutes</p>
+          <div class="btn-row">
+            <button class="btn btn-ghost-dark" disabled>Cancel order</button>
+            <button class="btn btn-ghost-dark">Back to home</button>
+          </div>
         </div>
       </div>
     </div>
-    <p class="state-note">Brass fill = done, brass ring = active, hollow = pending. Same stepper component reused for housekeeping, valet, and checkout-extension status tracks.</p>
+    <p class="state-note">One screen; the stepper updates in place for all four states. Brass fill = done, brass ring = active, hollow = pending. Cancel is only enabled before “Preparing” (shown disabled here). Each step change is announced by Kira, not just shown silently. Same stepper component is reused for housekeeping, valet, and checkout-extension.</p>
   </section>
 <script src="../scale.js"></script>
 </body>

@@ -6,16 +6,237 @@
 <title>Kira Concierge — Hi-Fi Mockup: Admin Dashboard</title>
 <link rel="stylesheet" href="../tokens.css">
 <style>
-  .kb-layout { display: flex; gap: var(--sp-5); }
-  .kb-list { width: 200px; flex-shrink: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
-  .kb-list .dept-chip { text-align: left; cursor: default; }
-  .kb-detail { flex: 1; border-left: 1px dashed rgba(36,31,22,.15); padding-left: var(--sp-5); }
+  /* Page-local extensions for the admin shell. Built only from tokens.css variables;
+     shared classes are extended here, never redefined in tokens.css. */
+
+  /* ---- Sidebar: grouped nav, hover/focus, live count, hotel identity footer ---- */
+  .tool-sidebar { display: flex; flex-direction: column; }
+  .tool-sidebar nav { display: flex; flex-direction: column; }
+  .adm-nav-label {
+    font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted-on-dark); padding: 0 var(--sp-3); margin: var(--sp-4) 0 var(--sp-2);
+  }
+  .adm-nav-label:first-child { margin-top: 0; }
+  .tool-sidebar .tool-link {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2);
+    text-decoration: none; cursor: pointer; transition: background-color .15s, color .15s;
+  }
+  .tool-sidebar .tool-link:hover { background: rgba(244,239,227,.06); color: var(--ink-on-dark); }
+  .tool-sidebar .tool-link.active { box-shadow: inset 2px 0 0 var(--brass-soft); }
+  .tool-sidebar .tool-link.active:hover { background: rgba(184,146,63,.24); color: var(--brass-soft); }
+  .tool-sidebar .tool-link:focus-visible { outline: 2px solid var(--brass-soft); outline-offset: 1px; }
+  .adm-nav-count {
+    min-width: 20px; padding: 0 6px; border-radius: 999px; text-align: center;
+    background: var(--brass); color: #211704; font-size: 11px; font-weight: 700; line-height: 18px;
+  }
+  .adm-sidebar-foot {
+    margin-top: auto; padding-top: var(--sp-4); border-top: 1px solid rgba(244,239,227,.1);
+    display: flex; align-items: center; gap: var(--sp-2); font-size: 12px; line-height: 1.3;
+  }
+  .adm-sidebar-foot strong { display: block; color: var(--ink-on-dark); font-weight: 600; }
+  .adm-sidebar-foot small { color: var(--muted-on-dark); font-size: 11px; }
+
+  .adm-avatar {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    display: inline-grid; place-items: center; font-size: 11px; font-weight: 700; letter-spacing: .02em;
+    background: var(--sand-2); color: var(--lagoon-deep); border: 1px solid rgba(36,31,22,.08);
+  }
+  .adm-avatar-dark { background: rgba(184,146,63,.2); color: var(--brass-soft); border-color: rgba(217,184,106,.35); }
+
+  /* ---- Topbar breadcrumb + live indicator ---- */
+  .tool-topbar { align-items: center; }
+  .adm-crumb strong { color: var(--ink-on-sand); font-weight: 600; }
+  .adm-crumb .sep { margin: 0 var(--sp-2); color: rgba(36,31,22,.3); }
+  .adm-live { display: inline-flex; align-items: center; gap: 6px; color: var(--ok); font-weight: 600; }
+  .adm-live::before {
+    content: ""; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--ok); box-shadow: 0 0 0 3px rgba(91,122,99,.18);
+  }
+
+  /* ---- Panel head: real page title + actions (replaces ad hoc inline margins) ---- */
+  .adm-head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--sp-4); margin-bottom: var(--sp-5); }
+  .adm-title { font-size: var(--fs-h1); font-weight: 700; letter-spacing: -.01em; line-height: 1.2; }
+  .adm-sub { font-size: var(--fs-small); color: var(--muted-on-sand); margin-top: var(--sp-1); }
+  .adm-actions { display: flex; align-items: center; gap: var(--sp-2); flex-shrink: 0; }
+
+  .adm-toolbar { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+  .adm-search {
+    flex: 0 0 220px; padding-left: 32px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b6354' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: 10px center;
+  }
+  .tool-input:focus-visible { outline: 2px solid var(--brass); outline-offset: 0; border-color: var(--brass); }
+  .tab-chip { cursor: pointer; }
+
+  /* ---- Key-figure strip (wizard summary, rooms rollout, request counts) ---- */
+  .adm-summary {
+    display: grid; grid-template-columns: repeat(3, 1fr); margin-bottom: var(--sp-5);
+    border: 1px solid rgba(36,31,22,.1); border-radius: var(--radius-tool); background: rgba(237,230,216,.45);
+  }
+  .adm-summary.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .adm-summary > div { padding: var(--sp-3) var(--sp-4); }
+  .adm-summary > div + div { border-left: 1px solid rgba(36,31,22,.08); }
+  .adm-k { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-on-sand); }
+  .adm-v { font-weight: 600; font-size: var(--fs-small); margin-top: 2px; }
+  .adm-v.big { font-size: var(--fs-h2); font-weight: 700; color: var(--lagoon-deep); font-variant-numeric: tabular-nums; }
+  .adm-progress { height: 6px; border-radius: 999px; background: rgba(36,31,22,.08); margin-top: var(--sp-2); overflow: hidden; }
+  .adm-progress > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--brass), var(--brass-soft)); }
+  .adm-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+  .adm-dot.ok { background: var(--ok); } .adm-dot.warn { background: var(--warn); } .adm-dot.err { background: var(--err); }
+
+  /* ---- Tables: framed card, aligned cells, compact row actions ---- */
+  .adm-table-wrap { border: 1px solid rgba(36,31,22,.1); border-radius: var(--radius-tool); overflow: hidden; background: var(--paper); box-shadow: 0 1px 2px rgba(36,31,22,.04); }
+  .adm-table-wrap .data-table th { font-size: 12px; letter-spacing: .02em; white-space: nowrap; }
+  .adm-table-wrap .data-table td { vertical-align: middle; }
+  .adm-table-wrap .data-table tbody tr:last-child td { border-bottom: none; }
+  .adm-table-wrap .badge { white-space: nowrap; }
+  .adm-table-wrap .badge::before {
+    content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; margin-right: 6px; vertical-align: 1px;
+  }
+  .adm-table-foot {
+    display: flex; justify-content: space-between; padding: var(--sp-2) var(--sp-3);
+    font-size: 12px; color: var(--muted-on-sand); background: rgba(36,31,22,.02); border-top: 1px solid rgba(36,31,22,.06);
+  }
+  .adm-cell { display: flex; align-items: center; gap: var(--sp-3); }
+  .adm-cell-title { font-weight: 600; }
+  .adm-cell-meta { font-size: 12px; color: var(--muted-on-sand); }
+  .adm-num, .data-table .adm-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .adm-id { font-variant-numeric: tabular-nums; letter-spacing: .02em; font-size: 12px; color: var(--lagoon); font-weight: 600; }
+  .adm-nowrap { white-space: nowrap; }
+  .adm-cell-actions { text-align: right; white-space: nowrap; }
+  .adm-row-action { padding: 4px 12px; font-size: 12px; }
+  .adm-row-alert td { background: rgba(139,74,61,.04); }
+  .adm-row-alert td:first-child { box-shadow: inset 3px 0 0 var(--err); }
+  .adm-escalated { color: var(--err); font-weight: 600; white-space: nowrap; }
+  .adm-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+  /* Menu photo placeholder: mashrabiya texture echoes the guest tablet frame */
+  .adm-thumb {
+    width: 40px; height: 40px; border-radius: var(--radius-tool-sm); flex-shrink: 0; position: relative; overflow: hidden;
+    background: linear-gradient(135deg, var(--brass-soft), var(--brass)); border: 1px solid rgba(36,31,22,.08);
+  }
+  .adm-thumb.cool { background: linear-gradient(135deg, var(--lagoon), var(--lagoon-deep)); }
+  .adm-thumb.sand { background: linear-gradient(135deg, var(--sand), var(--sand-2)); }
+  .adm-thumb::after {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      repeating-linear-gradient(60deg, rgba(250,248,243,.22) 0 1px, transparent 1px 8px),
+      repeating-linear-gradient(-60deg, rgba(250,248,243,.22) 0 1px, transparent 1px 8px);
+  }
+  .adm-switch { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: 12px; color: var(--muted-on-sand); white-space: nowrap; }
+  .adm-toggle { width: 30px; height: 18px; border-radius: 999px; background: rgba(36,31,22,.2); position: relative; flex-shrink: 0; }
+  .adm-toggle::after {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--paper); box-shadow: 0 1px 2px rgba(0,0,0,.2);
+  }
+  .adm-toggle.on { background: var(--brass); }
+  .adm-toggle.on::after { left: 14px; }
+
+  .adm-channel {
+    display: inline-block; font-size: 12px; padding: 2px 8px; white-space: nowrap;
+    border-radius: var(--radius-tool-sm); background: rgba(47,72,88,.08); color: var(--lagoon);
+  }
+
+  /* ---- Setup wizard ---- */
+  .wizard-step.done::before { content: "\2713\00a0"; font-weight: 700; }
+  .adm-wizard-meta { font-size: var(--fs-small); color: var(--muted-on-sand); margin: calc(var(--sp-3) * -1) 0 var(--sp-4); }
+  .dept-grid .dept-chip { cursor: pointer; }
+  .dept-grid .dept-chip:not(.off):not(.add)::before { content: "\2713"; margin-right: 6px; font-weight: 700; }
+  /* "off" is a toggle state, not a disabled control: keep it legible (~5.5:1) instead of 40% opacity */
+  .dept-grid .dept-chip.off { opacity: 1; color: var(--muted-on-sand); background: transparent; border-color: rgba(36,31,22,.18); }
+  .adm-footer-actions {
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid rgba(36,31,22,.08); padding-top: var(--sp-4); margin-top: var(--sp-5);
+  }
+  .adm-footer-actions .panel-actions { margin-top: 0; }
+  .adm-hint { font-size: 12px; color: var(--muted-on-sand); }
+
+  /* ---- Staff & departments: department summary cards ---- */
+  .adm-dept-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--sp-3); margin-bottom: var(--sp-5); }
+  .adm-card {
+    background: var(--paper); border: 1px solid rgba(36,31,22,.1); border-radius: var(--radius-tool);
+    padding: var(--sp-3) var(--sp-4); box-shadow: 0 1px 2px rgba(36,31,22,.04);
+  }
+  .adm-dept-cards .adm-card { border-top: 2px solid var(--lagoon); }
+  .adm-dept-cards .adm-card.more { border-top-color: rgba(36,31,22,.15); background: transparent; box-shadow: none; }
+  .adm-dept-name { font-weight: 700; font-size: var(--fs-small); }
+  .adm-more-list { margin-top: var(--sp-1); }
+  .adm-dept-count { font-size: var(--fs-h2); font-weight: 800; color: var(--lagoon-deep); line-height: 1.3; margin-top: var(--sp-1); }
+  .adm-dept-count small { font-size: 12px; font-weight: 500; color: var(--muted-on-sand); }
+
+  /* ---- Knowledge base: list + detail, tool-mode radius, brass active state ---- */
+  .kb-layout { display: grid; grid-template-columns: 220px 1fr; gap: var(--sp-5); align-items: start; }
+  .kb-list {
+    display: flex; flex-direction: column; gap: 2px; padding: var(--sp-2);
+    background: var(--paper); border: 1px solid rgba(36,31,22,.1); border-radius: var(--radius-tool);
+  }
+  .kb-list .tool-input { flex: none; max-width: none; margin-bottom: var(--sp-2); }
+  .kb-list .adm-k { padding: var(--sp-2) var(--sp-3) var(--sp-1); }
+  .kb-item {
+    display: block; padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-tool-sm);
+    border-left: 2px solid transparent; font-size: var(--fs-small); color: var(--ink-on-sand); cursor: pointer;
+  }
+  .kb-item:hover { background: rgba(184,146,63,.06); }
+  .kb-item.active { background: rgba(184,146,63,.12); border-left-color: var(--brass); font-weight: 600; }
+  .kb-item small { display: block; font-size: 11px; font-weight: 400; color: var(--muted-on-sand); }
+  .kb-add {
+    margin-top: var(--sp-2); padding: var(--sp-2); text-align: center; font-size: var(--fs-small); font-weight: 600;
+    color: var(--brass-deep); border: 1px dashed var(--brass); border-radius: var(--radius-tool-sm); cursor: pointer;
+  }
+  .kb-detail {
+    background: var(--paper); border: 1px solid rgba(36,31,22,.1); border-radius: var(--radius-tool);
+    padding: var(--sp-5); box-shadow: 0 1px 2px rgba(36,31,22,.04);
+  }
+  .kb-detail .adm-head { margin-bottom: var(--sp-4); align-items: flex-start; }
+  .kb-detail .adm-title { font-size: var(--fs-h2); }
+  .kb-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0 var(--sp-4); }
+  .kb-detail .tool-form-row { flex-direction: column; align-items: stretch; gap: var(--sp-1); }
+  .kb-detail .tool-form-row label { width: auto; }
+  .kb-detail .tool-input { max-width: none; }
+  .kb-detail textarea.tool-input { resize: vertical; min-height: 64px; line-height: var(--lh-body); }
+  .kb-preview {
+    margin-top: var(--sp-2); padding: var(--sp-3) var(--sp-4); font-size: var(--fs-small);
+    background: var(--dusk-ink); color: var(--ink-on-dark);
+    border: 1px solid rgba(217,184,106,.25); border-radius: var(--radius-tool);
+  }
+  .kb-preview .q { color: var(--muted-on-dark); }
+  .kb-preview .a { display: flex; align-items: baseline; gap: var(--sp-2); margin-top: var(--sp-1); }
+  .kb-preview .a::before {
+    content: ""; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; transform: translateY(-1px);
+    background: radial-gradient(circle at 35% 30%, #fff3d6, var(--brass-soft) 55%, var(--brass) 100%);
+    box-shadow: 0 0 7px 1px rgba(217,184,106,.55);
+  }
+  .kb-detail .adm-footer-actions { margin-top: var(--sp-4); }
+
+  /* ---- Analytics ---- */
+  .adm-delta { font-size: 12px; font-weight: 600; color: var(--ok); margin-top: var(--sp-2); }
+  .adm-delta.neutral { color: var(--muted-on-sand); font-weight: 500; }
+  .adm-chart-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: var(--sp-4); }
+  .adm-chart-grid .adm-card { padding: var(--sp-4); }
+  .adm-card-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--sp-2); }
+  .adm-card-title { font-weight: 700; font-size: var(--fs-small); }
+  .adm-card .bar-chart {
+    height: 150px; padding: var(--sp-5) 0 0; background: transparent; border: none; border-radius: 0;
+    border-bottom: 1px solid rgba(36,31,22,.15);
+  }
+  .bar-chart .bar { position: relative; }
+  .bar-chart .bar::after {
+    content: attr(data-value); position: absolute; left: 0; right: 0; top: -18px;
+    text-align: center; font-size: 12px; font-weight: 700; color: var(--ink-on-sand); font-variant-numeric: tabular-nums;
+  }
+  .adm-axis { display: flex; gap: var(--sp-3); margin-top: var(--sp-2); }
+  .adm-axis span { flex: 1; text-align: center; font-size: 11px; color: var(--muted-on-sand); }
+  .adm-hbar { display: grid; grid-template-columns: 104px 1fr 32px; align-items: center; gap: var(--sp-2); font-size: 12px; margin-top: var(--sp-3); }
+  .adm-hbar-track { height: 8px; border-radius: 999px; background: rgba(36,31,22,.06); overflow: hidden; }
+  .adm-hbar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--brass), var(--brass-soft)); }
+  .adm-hbar .adm-num { font-weight: 600; }
 </style>
 </head>
 <body>
   <div class="page-header">
     <h1>Admin Dashboard</h1>
-    <p>Desktop web app. Hotel admin self-service management, plus our team's initial setup. Sidebar stays fixed; only the content panel changes per section.</p>
+    <p>Desktop web app. Hotel admin self-service management, plus our team's initial setup. Sidebar stays fixed; only the content panel changes per section. Sidebar links on this page jump between the seven screens.</p>
   </div>
   <nav class="flow-nav">
     <a href="index.html">All mockups</a>
@@ -28,29 +249,40 @@
   </nav>
 
   <!-- Screen 1: Setup wizard -->
-  <section class="screen-block">
+  <section class="screen-block" id="setup">
     <h2>1. Setup wizard — department template by star rating</h2>
     <div class="tool-frame">
-      <div class="tool-sidebar">
+      <aside class="tool-sidebar">
         <div class="brand">Kira Admin</div>
-        <a class="tool-link active">Setup</a>
-        <a class="tool-link">Menu</a>
-        <a class="tool-link">Knowledge base</a>
-        <a class="tool-link">Staff &amp; departments</a>
-        <a class="tool-link">Rooms</a>
-        <a class="tool-link">Request board</a>
-        <a class="tool-link">Analytics</a>
-      </div>
+        <nav aria-label="Admin sections">
+          <p class="adm-nav-label">Configure</p>
+          <a class="tool-link active" aria-current="page" href="#setup">Setup</a>
+          <a class="tool-link" href="#menu">Menu</a>
+          <a class="tool-link" href="#knowledge-base">Knowledge base</a>
+          <a class="tool-link" href="#staff">Staff &amp; departments</a>
+          <a class="tool-link" href="#rooms">Rooms</a>
+          <p class="adm-nav-label">Operate</p>
+          <a class="tool-link" href="#requests">Request board <span class="adm-nav-count">3</span></a>
+          <a class="tool-link" href="#analytics">Analytics</a>
+        </nav>
+        <div class="adm-sidebar-foot"><span class="adm-avatar adm-avatar-dark">GM</span><span><strong>Grand Marina Hotel</strong><small>Hotel admin</small></span></div>
+      </aside>
       <div class="tool-main">
-        <div class="tool-topbar"><span>Setup wizard</span><span>Grand Marina Hotel</span></div>
+        <div class="tool-topbar"><span class="adm-crumb">Grand Marina Hotel<span class="sep">/</span><strong>Setup</strong></span><span>Draft saved automatically</span></div>
         <div class="tool-content">
           <div class="wizard-steps">
             <span class="wizard-step done">1. Hotel info</span>
             <span class="wizard-step done">2. Star rating</span>
             <span class="wizard-step done">3. Languages</span>
-            <span class="wizard-step active">4. Departments</span>
+            <span class="wizard-step active" aria-current="step">4. Departments</span>
+          </div>
+          <div class="adm-summary">
+            <div><div class="adm-k">Hotel</div><div class="adm-v">Grand Marina Hotel, Dubai Marina</div></div>
+            <div><div class="adm-k">Star rating</div><div class="adm-v">5★ Luxury</div></div>
+            <div><div class="adm-k">Languages</div><div class="adm-v">English · <bdi lang="ar">العربية</bdi> · +4 more</div></div>
           </div>
           <p class="panel-title">5★ template loaded — 13 departments. Disable or add as needed.</p>
+          <p class="adm-wizard-meta">11 enabled · 2 disabled. Select a department to toggle it.</p>
           <div class="dept-grid">
             <span class="dept-chip">Dining</span>
             <span class="dept-chip">Housekeeping</span>
@@ -61,11 +293,18 @@
             <span class="dept-chip off">Butler service</span>
             <span class="dept-chip">Maintenance</span>
             <span class="dept-chip off">Kids club</span>
+            <span class="dept-chip">Laundry</span>
+            <span class="dept-chip">Bell desk</span>
+            <span class="dept-chip">Pool &amp; beach</span>
+            <span class="dept-chip">Security</span>
             <span class="dept-chip add">+ Add department</span>
           </div>
-          <div class="panel-actions">
-            <button class="btn-tool btn-tool-secondary">Back</button>
-            <button class="btn-tool btn-tool-primary">Continue</button>
+          <div class="adm-footer-actions">
+            <span class="adm-hint">Routing for each department is set under Staff &amp; departments.</span>
+            <div class="panel-actions">
+              <button type="button" class="btn-tool btn-tool-secondary">Back</button>
+              <button type="button" class="btn-tool btn-tool-primary">Continue</button>
+            </div>
           </div>
         </div>
       </div>
@@ -74,129 +313,320 @@
   </section>
 
   <!-- Screen 2: Menu editor -->
-  <section class="screen-block">
+  <section class="screen-block" id="menu">
     <h2>2. Menu editor</h2>
     <div class="tool-frame">
-      <div class="tool-sidebar">
+      <aside class="tool-sidebar">
         <div class="brand">Kira Admin</div>
-        <a class="tool-link">Setup</a>
-        <a class="tool-link active">Menu</a>
-        <a class="tool-link">Knowledge base</a>
-        <a class="tool-link">Staff &amp; departments</a>
-        <a class="tool-link">Rooms</a>
-        <a class="tool-link">Request board</a>
-        <a class="tool-link">Analytics</a>
-      </div>
+        <nav aria-label="Admin sections">
+          <p class="adm-nav-label">Configure</p>
+          <a class="tool-link" href="#setup">Setup</a>
+          <a class="tool-link active" aria-current="page" href="#menu">Menu</a>
+          <a class="tool-link" href="#knowledge-base">Knowledge base</a>
+          <a class="tool-link" href="#staff">Staff &amp; departments</a>
+          <a class="tool-link" href="#rooms">Rooms</a>
+          <p class="adm-nav-label">Operate</p>
+          <a class="tool-link" href="#requests">Request board <span class="adm-nav-count">3</span></a>
+          <a class="tool-link" href="#analytics">Analytics</a>
+        </nav>
+        <div class="adm-sidebar-foot"><span class="adm-avatar adm-avatar-dark">GM</span><span><strong>Grand Marina Hotel</strong><small>Hotel admin</small></span></div>
+      </aside>
       <div class="tool-main">
-        <div class="tool-topbar"><span>Menu editor</span><span>Grand Marina Hotel</span></div>
+        <div class="tool-topbar"><span class="adm-crumb">Grand Marina Hotel<span class="sep">/</span><strong>Menu</strong></span><span>Changes sync to guest tablets instantly</span></div>
         <div class="tool-content">
-          <div class="panel-actions" style="justify-content:flex-start; margin: 0 0 14px;">
-            <button class="btn-tool btn-tool-primary">+ Add item</button>
+          <div class="adm-head">
+            <div>
+              <h3 class="adm-title">In-room dining menu</h3>
+              <p class="adm-sub">24 items across 4 categories · names shown to guests in English and Arabic</p>
+            </div>
+            <div class="adm-actions">
+              <button type="button" class="btn-tool btn-tool-secondary">Preview on tablet</button>
+              <button type="button" class="btn-tool btn-tool-primary">+ Add item</button>
+            </div>
           </div>
-          <table class="data-table">
-            <tr><th>Photo</th><th>Name</th><th>Category</th><th>Price</th><th>Allergens</th><th></th></tr>
-            <tr><td>—</td><td>Wagyu smash burger</td><td>Mains</td><td>AED 68.00</td><td>Gluten, dairy</td><td><button class="btn-tool btn-tool-secondary">Edit</button></td></tr>
-            <tr><td>—</td><td>Chicken shawarma plate</td><td>Mains</td><td>AED 54.00</td><td>Gluten</td><td><button class="btn-tool btn-tool-secondary">Edit</button></td></tr>
-          </table>
+          <div class="adm-toolbar">
+            <div class="tabs-row">
+              <span class="tab-chip active">All</span>
+              <span class="tab-chip">Starters</span>
+              <span class="tab-chip">Mains</span>
+              <span class="tab-chip">Desserts</span>
+              <span class="tab-chip">Beverages</span>
+            </div>
+            <input class="tool-input adm-search" type="search" placeholder="Search items" aria-label="Search menu items">
+          </div>
+          <div class="adm-table-wrap">
+            <table class="data-table">
+              <caption class="adm-sr">Menu items</caption>
+              <thead>
+                <tr><th scope="col">Item</th><th scope="col">Category</th><th scope="col">Allergens</th><th scope="col" class="adm-num">Price</th><th scope="col">Availability</th><th scope="col"><span class="adm-sr">Actions</span></th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><div class="adm-cell"><span class="adm-thumb" aria-hidden="true"></span><div><div class="adm-cell-title">Wagyu smash burger</div><div class="adm-cell-meta"><bdi lang="ar">برغر واغيو سماش</bdi></div></div></div></td>
+                  <td>Mains</td><td class="adm-cell-meta">Gluten, dairy</td><td class="adm-num">AED 68.00</td>
+                  <td><span class="adm-switch"><span class="adm-toggle on" aria-hidden="true"></span>Available</span></td>
+                  <td class="adm-cell-actions"><button type="button" class="btn-tool btn-tool-secondary adm-row-action">Edit</button></td>
+                </tr>
+                <tr>
+                  <td><div class="adm-cell"><span class="adm-thumb sand" aria-hidden="true"></span><div><div class="adm-cell-title">Chicken shawarma plate</div><div class="adm-cell-meta"><bdi lang="ar">طبق شاورما دجاج</bdi></div></div></div></td>
+                  <td>Mains</td><td class="adm-cell-meta">Gluten</td><td class="adm-num">AED 54.00</td>
+                  <td><span class="adm-switch"><span class="adm-toggle on" aria-hidden="true"></span>Available</span></td>
+                  <td class="adm-cell-actions"><button type="button" class="btn-tool btn-tool-secondary adm-row-action">Edit</button></td>
+                </tr>
+                <tr>
+                  <td><div class="adm-cell"><span class="adm-thumb cool" aria-hidden="true"></span><div><div class="adm-cell-title">Fattoush salad</div><div class="adm-cell-meta"><bdi lang="ar">سلطة فتوش</bdi></div></div></div></td>
+                  <td>Starters</td><td class="adm-cell-meta">Gluten</td><td class="adm-num">AED 38.00</td>
+                  <td><span class="adm-switch"><span class="adm-toggle on" aria-hidden="true"></span>Available</span></td>
+                  <td class="adm-cell-actions"><button type="button" class="btn-tool btn-tool-secondary adm-row-action">Edit</button></td>
+                </tr>
+                <tr>
+                  <td><div class="adm-cell"><span class="adm-thumb" aria-hidden="true"></span><div><div class="adm-cell-title">Umm Ali</div><div class="adm-cell-meta"><bdi lang="ar">أم علي</bdi></div></div></div></td>
+                  <td>Desserts</td><td class="adm-cell-meta">Dairy, nuts, gluten</td><td class="adm-num">AED 42.00</td>
+                  <td><span class="adm-switch"><span class="adm-toggle" aria-hidden="true"></span>Paused</span></td>
+                  <td class="adm-cell-actions"><button type="button" class="btn-tool btn-tool-secondary adm-row-action">Edit</button></td>
+                </tr>
+                <tr>
+                  <td><div class="adm-cell"><span class="adm-thumb sand" aria-hidden="true"></span><div><div class="adm-cell-title">Lemon mint</div><div class="adm-cell-meta"><bdi lang="ar">ليمون بالنعناع</bdi></div></div></div></td>
+                  <td>Beverages</td><td class="adm-cell-meta">—</td><td class="adm-num">AED 28.00</td>
+                  <td><span class="adm-switch"><span class="adm-toggle on" aria-hidden="true"></span>Available</span></td>
+                  <td class="adm-cell-actions"><button type="button" class="btn-tool btn-tool-secondary adm-row-action">Edit</button></td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="adm-table-foot"><span>Showing 5 of 24 items</span><span>Paused items are hidden from guests</span></div>
+          </div>
         </div>
       </div>
     </div>
-    <p class="state-note">Edit opens a form panel (photo upload, modifiers, allergen tags) — same shape as the Add item flow.</p>
+    <p class="state-note">Edit opens a form panel (photo upload, modifiers, allergen tags) — same shape as the Add item flow. The availability switch pauses an item without deleting it.</p>
   </section>
 
   <!-- Screen 3: Knowledge base editor -->
-  <section class="screen-block">
+  <section class="screen-block" id="knowledge-base">
     <h2>3. Knowledge-base editor</h2>
     <div class="tool-frame">
-      <div class="tool-sidebar">
+      <aside class="tool-sidebar">
         <div class="brand">Kira Admin</div>
-        <a class="tool-link">Setup</a>
-        <a class="tool-link">Menu</a>
-        <a class="tool-link active">Knowledge base</a>
-        <a class="tool-link">Staff &amp; departments</a>
-        <a class="tool-link">Rooms</a>
-        <a class="tool-link">Request board</a>
-        <a class="tool-link">Analytics</a>
-      </div>
+        <nav aria-label="Admin sections">
+          <p class="adm-nav-label">Configure</p>
+          <a class="tool-link" href="#setup">Setup</a>
+          <a class="tool-link" href="#menu">Menu</a>
+          <a class="tool-link active" aria-current="page" href="#knowledge-base">Knowledge base</a>
+          <a class="tool-link" href="#staff">Staff &amp; departments</a>
+          <a class="tool-link" href="#rooms">Rooms</a>
+          <p class="adm-nav-label">Operate</p>
+          <a class="tool-link" href="#requests">Request board <span class="adm-nav-count">3</span></a>
+          <a class="tool-link" href="#analytics">Analytics</a>
+        </nav>
+        <div class="adm-sidebar-foot"><span class="adm-avatar adm-avatar-dark">GM</span><span><strong>Grand Marina Hotel</strong><small>Hotel admin</small></span></div>
+      </aside>
       <div class="tool-main">
-        <div class="tool-topbar"><span>Knowledge base</span><span>Grand Marina Hotel</span></div>
+        <div class="tool-topbar"><span class="adm-crumb">Grand Marina Hotel<span class="sep">/</span><strong>Knowledge base</strong></span><span>Feeds Kira's answers to guests</span></div>
         <div class="tool-content">
           <div class="kb-layout">
             <div class="kb-list">
-              <span class="dept-chip">Pool hours</span>
-              <span class="dept-chip">Spa policies</span>
-              <span class="dept-chip">Wifi info</span>
-              <span class="dept-chip add">+ Add article</span>
+              <input class="tool-input adm-search" type="search" placeholder="Search articles" aria-label="Search articles">
+              <div class="adm-k">Facilities</div>
+              <a class="kb-item active" aria-current="true">Pool hours<small>Updated 12 Oct</small></a>
+              <a class="kb-item">Spa policies<small>Updated 3 Oct</small></a>
+              <a class="kb-item">Gym &amp; fitness<small>Updated 28 Sep</small></a>
+              <div class="adm-k">Guest services</div>
+              <a class="kb-item">Wifi info<small>Updated 15 Oct</small></a>
+              <a class="kb-item">Late checkout<small>Updated 9 Oct</small></a>
+              <a class="kb-item">Airport transfers<small>Updated 1 Oct</small></a>
+              <span class="kb-add">+ Add article</span>
             </div>
             <div class="kb-detail">
-              <p class="panel-title">Pool hours</p>
-              <div class="tool-form-row"><label>Content</label><input class="tool-input" value="Open 6am–10pm daily. Rooftop pool, level 8."></div>
-              <div class="panel-actions"><button class="btn-tool btn-tool-primary">Save</button></div>
+              <div class="adm-head">
+                <div>
+                  <h3 class="adm-title">Pool hours</h3>
+                  <p class="adm-sub">Facilities · live for guests</p>
+                </div>
+                <span class="badge badge-ok">Published</span>
+              </div>
+              <div class="kb-fields">
+                <div class="tool-form-row"><label for="kb-title">Title</label><input id="kb-title" class="tool-input" value="Pool hours"></div>
+                <div class="tool-form-row"><label for="kb-cat">Category</label><input id="kb-cat" class="tool-input" value="Facilities"></div>
+              </div>
+              <div class="tool-form-row"><label for="kb-en">Content (English)</label><textarea id="kb-en" class="tool-input" rows="2">Open 6am–10pm daily. Rooftop pool, level 8. Towels are provided poolside.</textarea></div>
+              <div class="tool-form-row"><label for="kb-ar">Content (Arabic)</label><textarea id="kb-ar" class="tool-input" rows="2" lang="ar" dir="rtl">المسبح مفتوح يومياً من 6 صباحاً حتى 10 مساءً، على السطح في الطابق الثامن. تتوفر المناشف بجانب المسبح.</textarea></div>
+              <div class="adm-k">How Kira will answer</div>
+              <div class="kb-preview">
+                <div class="q">Guest: “What time does the pool close?”</div>
+                <div class="a">The rooftop pool on level 8 is open until 10pm tonight. Towels are waiting poolside.</div>
+              </div>
+              <div class="adm-footer-actions">
+                <span class="adm-hint">Last updated 12 Oct by Hotel admin</span>
+                <div class="panel-actions">
+                  <button type="button" class="btn-tool btn-tool-secondary">Discard</button>
+                  <button type="button" class="btn-tool btn-tool-primary">Save</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <p class="state-note">Edits here feed the AI's answers directly — list + detail editor pattern, same as the menu editor's row + edit panel.</p>
+    <p class="state-note">Edits here feed the AI's answers directly — list + detail editor pattern, same as the menu editor's row + edit panel. The preview shows a sample guest question answered from the saved content.</p>
   </section>
 
   <!-- Screen 4: Staff & department management -->
-  <section class="screen-block">
+  <section class="screen-block" id="staff">
     <h2>4. Staff &amp; department management</h2>
     <div class="tool-frame">
-      <div class="tool-sidebar">
+      <aside class="tool-sidebar">
         <div class="brand">Kira Admin</div>
-        <a class="tool-link">Setup</a>
-        <a class="tool-link">Menu</a>
-        <a class="tool-link">Knowledge base</a>
-        <a class="tool-link active">Staff &amp; departments</a>
-        <a class="tool-link">Rooms</a>
-        <a class="tool-link">Request board</a>
-        <a class="tool-link">Analytics</a>
-      </div>
+        <nav aria-label="Admin sections">
+          <p class="adm-nav-label">Configure</p>
+          <a class="tool-link" href="#setup">Setup</a>
+          <a class="tool-link" href="#menu">Menu</a>
+          <a class="tool-link" href="#knowledge-base">Knowledge base</a>
+          <a class="tool-link active" aria-current="page" href="#staff">Staff &amp; departments</a>
+          <a class="tool-link" href="#rooms">Rooms</a>
+          <p class="adm-nav-label">Operate</p>
+          <a class="tool-link" href="#requests">Request board <span class="adm-nav-count">3</span></a>
+          <a class="tool-link" href="#analytics">Analytics</a>
+        </nav>
+        <div class="adm-sidebar-foot"><span class="adm-avatar adm-avatar-dark">GM</span><span><strong>Grand Marina Hotel</strong><small>Hotel admin</small></span></div>
+      </aside>
       <div class="tool-main">
-        <div class="tool-topbar"><span>Staff &amp; departments</span><span>Grand Marina Hotel</span></div>
+        <div class="tool-topbar"><span class="adm-crumb">Grand Marina Hotel<span class="sep">/</span><strong>Staff &amp; departments</strong></span><span>64 staff · 11 departments</span></div>
         <div class="tool-content">
-          <div class="panel-actions" style="justify-content:flex-start; margin: 0 0 14px;">
-            <button class="btn-tool btn-tool-primary">+ Add staff</button>
+          <div class="adm-head">
+            <div>
+              <h3 class="adm-title">Staff &amp; departments</h3>
+              <p class="adm-sub">Who receives each request, and on which device</p>
+            </div>
+            <div class="adm-actions">
+              <button type="button" class="btn-tool btn-tool-secondary">Manage departments</button>
+              <button type="button" class="btn-tool btn-tool-primary">+ Add staff</button>
+            </div>
           </div>
-          <table class="data-table">
-            <tr><th>Name</th><th>Department</th><th>Routing</th><th>Status</th><th></th></tr>
-            <tr><td>Ahmed R.</td><td>Kitchen</td><td>KDS screen + printer</td><td><span class="badge badge-ok">Active</span></td><td><button class="btn-tool btn-tool-secondary">Edit</button></td></tr>
-            <tr><td>Faisal K.</td><td>Waiter</td><td>Mobile app</td><td><span class="badge badge-ok">Active</span></td><td><button class="btn-tool btn-tool-secondary">Edit</button></td></tr>
-            <tr><td>Fatima S.</td><td>Front desk</td><td>Desktop</td><td><span class="badge badge-ok">Active</span></td><td><button class="btn-tool btn-tool-secondary">Edit</button></td></tr>
-          </table>
+          <div class="adm-dept-cards">
+            <div class="adm-card"><div class="adm-dept-name">Dining</div><div class="adm-dept-count">14 <small>staff</small></div><span class="adm-channel">KDS + mobile</span></div>
+            <div class="adm-card"><div class="adm-dept-name">Housekeeping</div><div class="adm-dept-count">22 <small>staff</small></div><span class="adm-channel">Mobile app</span></div>
+            <div class="adm-card"><div class="adm-dept-name">Front desk</div><div class="adm-dept-count">6 <small>staff</small></div><span class="adm-channel">Desktop</span></div>
+            <div class="adm-card"><div class="adm-dept-name">Valet</div><div class="adm-dept-count">5 <small>staff</small></div><span class="adm-channel">Mobile app</span></div>
+            <div class="adm-card more"><div class="adm-dept-name">+7 more</div><div class="adm-cell-meta adm-more-list">Concierge, Spa, Maintenance, Laundry…</div></div>
+          </div>
+          <div class="adm-toolbar">
+            <div class="tabs-row">
+              <span class="tab-chip active">All staff</span>
+              <span class="tab-chip">On shift</span>
+              <span class="tab-chip">Invited</span>
+            </div>
+            <input class="tool-input adm-search" type="search" placeholder="Search staff" aria-label="Search staff">
+          </div>
+          <div class="adm-table-wrap">
+            <table class="data-table">
+              <caption class="adm-sr">Staff members</caption>
+              <thead>
+                <tr><th scope="col">Staff member</th><th scope="col">Department</th><th scope="col">Routing</th><th scope="col">Last active</th><th scope="col">Status</th><th scope="col"><span class="adm-sr">Actions</span></th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><div class="adm-cell"><span class="adm-avatar">AR</span><div class="adm-cell-title">Ahmed R.</div></div></td>
+                  <td>Dining<div class="adm-cell-meta">Kitchen</div></td><td><span class="adm-channel">KDS screen + printer</span></td><td class="adm-cell-meta">On shift</td>
+                  <td><span class="badge badge-ok">Active</span></td>
+                  <td class="adm-cell-actions"><button type="button" class="btn-tool btn-tool-secondary adm-row-action">Edit</button></td>
+                </tr>
+                <tr>
+                  <td><div class="adm-cell"><span class="adm-avatar">FK</span><div class="adm-cell-title">Faisal K.</div></div></td>
+                  <td>Dining<div class="adm-cell-meta">Waiter</div></td><td><span class="adm-channel">Mobile app</span></td><td class="adm-cell-meta">12 min ago</td>
+                  <td><span class="badge badge-ok">Active</span></td>
+                  <td class="adm-cell-actions"><button type="button" class="btn-tool btn-tool-secondary adm-row-action">Edit</button></td>
+                </tr>
+                <tr>
+                  <td><div class="adm-cell"><span class="adm-avatar">FS</span><div class="adm-cell-title">Fatima S.</div></div></td>
+                  <td>Front desk<div class="adm-cell-meta">Duty manager</div></td><td><span class="adm-channel">Desktop</span></td><td class="adm-cell-meta">On shift</td>
+                  <td><span class="badge badge-ok">Active</span></td>
+                  <td class="adm-cell-actions"><button type="button" class="btn-tool btn-tool-secondary adm-row-action">Edit</button></td>
+                </tr>
+                <tr>
+                  <td><div class="adm-cell"><span class="adm-avatar">OH</span><div class="adm-cell-title">Omar H.</div></div></td>
+                  <td>Valet<div class="adm-cell-meta">Attendant</div></td><td><span class="adm-channel">Mobile app</span></td><td class="adm-cell-meta">2 h ago</td>
+                  <td><span class="badge badge-ok">Active</span></td>
+                  <td class="adm-cell-actions"><button type="button" class="btn-tool btn-tool-secondary adm-row-action">Edit</button></td>
+                </tr>
+                <tr>
+                  <td><div class="adm-cell"><span class="adm-avatar">LM</span><div class="adm-cell-title">Layla M.</div></div></td>
+                  <td>Concierge<div class="adm-cell-meta">Concierge</div></td><td><span class="adm-channel">Desktop</span></td><td class="adm-cell-meta">—</td>
+                  <td><span class="badge badge-warn">Invite sent</span></td>
+                  <td class="adm-cell-actions"><button type="button" class="btn-tool btn-tool-secondary adm-row-action">Resend</button></td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="adm-table-foot"><span>Showing 5 of 64 staff</span><span>Routing is set per department, overridable per person</span></div>
+          </div>
         </div>
       </div>
     </div>
-    <p class="state-note">The Routing column is where each department's delivery channel (printer, tablet, mobile, screen) is configured, part of the onboarding flow.</p>
+    <p class="state-note">The Routing column is where each department's delivery channel (printer, tablet, mobile, screen) is configured, part of the onboarding flow. Department cards summarise headcount and the default channel.</p>
   </section>
 
   <!-- Screen 5: Room registration -->
-  <section class="screen-block">
+  <section class="screen-block" id="rooms">
     <h2>5. Room registration</h2>
     <div class="tool-frame">
-      <div class="tool-sidebar">
+      <aside class="tool-sidebar">
         <div class="brand">Kira Admin</div>
-        <a class="tool-link">Setup</a>
-        <a class="tool-link">Menu</a>
-        <a class="tool-link">Knowledge base</a>
-        <a class="tool-link">Staff &amp; departments</a>
-        <a class="tool-link active">Rooms</a>
-        <a class="tool-link">Request board</a>
-        <a class="tool-link">Analytics</a>
-      </div>
+        <nav aria-label="Admin sections">
+          <p class="adm-nav-label">Configure</p>
+          <a class="tool-link" href="#setup">Setup</a>
+          <a class="tool-link" href="#menu">Menu</a>
+          <a class="tool-link" href="#knowledge-base">Knowledge base</a>
+          <a class="tool-link" href="#staff">Staff &amp; departments</a>
+          <a class="tool-link active" aria-current="page" href="#rooms">Rooms</a>
+          <p class="adm-nav-label">Operate</p>
+          <a class="tool-link" href="#requests">Request board <span class="adm-nav-count">3</span></a>
+          <a class="tool-link" href="#analytics">Analytics</a>
+        </nav>
+        <div class="adm-sidebar-foot"><span class="adm-avatar adm-avatar-dark">GM</span><span><strong>Grand Marina Hotel</strong><small>Hotel admin</small></span></div>
+      </aside>
       <div class="tool-main">
-        <div class="tool-topbar"><span>Rooms</span><span>Grand Marina Hotel · 120 rooms</span></div>
+        <div class="tool-topbar"><span class="adm-crumb">Grand Marina Hotel<span class="sep">/</span><strong>Rooms</strong></span><span>120 rooms · 8 floors</span></div>
         <div class="tool-content">
-          <div class="panel-actions" style="justify-content:flex-start; margin: 0 0 14px;">
-            <button class="btn-tool btn-tool-primary">+ Register tablet</button>
+          <div class="adm-head">
+            <div>
+              <h3 class="adm-title">Rooms &amp; tablets</h3>
+              <p class="adm-sub">Bind each in-room tablet to its room. Rollout runs floor by floor.</p>
+            </div>
+            <div class="adm-actions">
+              <button type="button" class="btn-tool btn-tool-secondary">Import room list</button>
+              <button type="button" class="btn-tool btn-tool-primary">+ Register tablet</button>
+            </div>
           </div>
-          <table class="data-table">
-            <tr><th>Room</th><th>Tablet ID</th><th>Status</th><th></th></tr>
-            <tr><td>412</td><td>KIRA-TB-0412</td><td><span class="badge badge-ok">Bound, online</span></td><td><button class="btn-tool btn-tool-secondary">Unbind</button></td></tr>
-            <tr><td>413</td><td>—</td><td><span class="badge badge-warn">Not registered</span></td><td><button class="btn-tool btn-tool-primary">Bind tablet</button></td></tr>
-          </table>
+          <div class="adm-summary cols-4">
+            <div><div class="adm-k">Rollout</div><div class="adm-v big">82%</div><div class="adm-progress" role="img" aria-label="98 of 120 rooms bound"><span style="width: 82%;"></span></div></div>
+            <div><div class="adm-k"><span class="adm-dot ok"></span>Online</div><div class="adm-v big">96</div></div>
+            <div><div class="adm-k"><span class="adm-dot err"></span>Offline</div><div class="adm-v big">2</div></div>
+            <div><div class="adm-k"><span class="adm-dot warn"></span>Not registered</div><div class="adm-v big">22</div></div>
+          </div>
+          <div class="adm-toolbar">
+            <div class="tabs-row">
+              <span class="tab-chip">All floors</span>
+              <span class="tab-chip">Floor 2</span>
+              <span class="tab-chip">Floor 3</span>
+              <span class="tab-chip active">Floor 4</span>
+            </div>
+            <input class="tool-input adm-search" type="search" placeholder="Room or tablet ID" aria-label="Search rooms or tablet IDs">
+          </div>
+          <div class="adm-table-wrap">
+            <table class="data-table">
+              <caption class="adm-sr">Rooms on floor 4</caption>
+              <thead>
+                <tr><th scope="col">Room</th><th scope="col">Type</th><th scope="col">Tablet ID</th><th scope="col">Status</th><th scope="col">Last seen</th><th scope="col"><span class="adm-sr">Actions</span></th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="adm-cell-title">410</td><td>Deluxe King</td><td class="adm-id">KIRA-TB-0410</td><td><span class="badge badge-ok">Bound, online</span></td><td class="adm-cell-meta">Just now</td><td class="adm-cell-actions"><button type="button" class="btn-tool btn-tool-secondary adm-row-action">Unbind</button></td></tr>
+                <tr><td class="adm-cell-title">411</td><td>Deluxe Twin</td><td class="adm-id">KIRA-TB-0411</td><td><span class="badge badge-ok">Bound, online</span></td><td class="adm-cell-meta">1 min ago</td><td class="adm-cell-actions"><button type="button" class="btn-tool btn-tool-secondary adm-row-action">Unbind</button></td></tr>
+                <tr><td class="adm-cell-title">412</td><td>Marina Suite</td><td class="adm-id">KIRA-TB-0412</td><td><span class="badge badge-ok">Bound, online</span></td><td class="adm-cell-meta">Just now</td><td class="adm-cell-actions"><button type="button" class="btn-tool btn-tool-secondary adm-row-action">Unbind</button></td></tr>
+                <tr><td class="adm-cell-title">413</td><td>Deluxe King</td><td class="adm-cell-meta">—</td><td><span class="badge badge-warn">Not registered</span></td><td class="adm-cell-meta">—</td><td class="adm-cell-actions"><button type="button" class="btn-tool btn-tool-primary adm-row-action">Bind tablet</button></td></tr>
+                <tr><td class="adm-cell-title">414</td><td>Deluxe Twin</td><td class="adm-id">KIRA-TB-0414</td><td><span class="badge badge-err">Offline</span></td><td class="adm-cell-meta">3 h ago</td><td class="adm-cell-actions"><button type="button" class="btn-tool btn-tool-secondary adm-row-action">Troubleshoot</button></td></tr>
+              </tbody>
+            </table>
+            <div class="adm-table-foot"><span>Floor 4 · 5 of 15 rooms shown</span><span>Offline tablets alert the front desk after 15 min</span></div>
+          </div>
         </div>
       </div>
     </div>
@@ -204,69 +634,150 @@
   </section>
 
   <!-- Screen 6: Live request board -->
-  <section class="screen-block">
+  <section class="screen-block" id="requests">
     <h2>6. Live request board</h2>
     <div class="tool-frame">
-      <div class="tool-sidebar">
+      <aside class="tool-sidebar">
         <div class="brand">Kira Admin</div>
-        <a class="tool-link">Setup</a>
-        <a class="tool-link">Menu</a>
-        <a class="tool-link">Knowledge base</a>
-        <a class="tool-link">Staff &amp; departments</a>
-        <a class="tool-link">Rooms</a>
-        <a class="tool-link active">Request board</a>
-        <a class="tool-link">Analytics</a>
-      </div>
+        <nav aria-label="Admin sections">
+          <p class="adm-nav-label">Configure</p>
+          <a class="tool-link" href="#setup">Setup</a>
+          <a class="tool-link" href="#menu">Menu</a>
+          <a class="tool-link" href="#knowledge-base">Knowledge base</a>
+          <a class="tool-link" href="#staff">Staff &amp; departments</a>
+          <a class="tool-link" href="#rooms">Rooms</a>
+          <p class="adm-nav-label">Operate</p>
+          <a class="tool-link active" aria-current="page" href="#requests">Request board <span class="adm-nav-count">3</span></a>
+          <a class="tool-link" href="#analytics">Analytics</a>
+        </nav>
+        <div class="adm-sidebar-foot"><span class="adm-avatar adm-avatar-dark">GM</span><span><strong>Grand Marina Hotel</strong><small>Hotel admin</small></span></div>
+      </aside>
       <div class="tool-main">
-        <div class="tool-topbar"><span>Request board</span><span>All departments · 3 open</span></div>
+        <div class="tool-topbar"><span class="adm-crumb">Grand Marina Hotel<span class="sep">/</span><strong>Request board</strong></span><span class="adm-live">Live</span></div>
         <div class="tool-content">
-          <table class="data-table">
-            <tr><th>Room</th><th>Department</th><th>Request</th><th>SLA</th><th>Status</th><th>Escalation</th></tr>
-            <tr><td>412</td><td>Dining</td><td>#4821</td><td><span class="badge badge-warn">4 min</span></td><td>Preparing</td><td>—</td></tr>
-            <tr><td>208</td><td>Housekeeping</td><td>#HK-203</td><td><span class="badge badge-ok">18 min</span></td><td>In progress</td><td>—</td></tr>
-            <tr><td>301</td><td>Valet</td><td>#V-57</td><td><span class="badge badge-warn">overdue 2 min</span></td><td>Bringing car</td><td>Manager notified</td></tr>
-          </table>
+          <div class="adm-head">
+            <div>
+              <h3 class="adm-title">Live request board</h3>
+              <p class="adm-sub">All departments, hotel-wide · 3 open</p>
+            </div>
+            <div class="adm-actions">
+              <button type="button" class="btn-tool btn-tool-secondary">SLA settings</button>
+            </div>
+          </div>
+          <div class="adm-summary cols-4">
+            <div><div class="adm-k">Open</div><div class="adm-v big">3</div></div>
+            <div><div class="adm-k"><span class="adm-dot ok"></span>On track</div><div class="adm-v big">1</div></div>
+            <div><div class="adm-k"><span class="adm-dot warn"></span>At risk</div><div class="adm-v big">1</div></div>
+            <div><div class="adm-k"><span class="adm-dot err"></span>Overdue</div><div class="adm-v big">1</div></div>
+          </div>
+          <div class="adm-toolbar">
+            <div class="tabs-row">
+              <span class="tab-chip active">All departments</span>
+              <span class="tab-chip">Dining</span>
+              <span class="tab-chip">Housekeeping</span>
+              <span class="tab-chip">Valet</span>
+            </div>
+          </div>
+          <div class="adm-table-wrap">
+            <table class="data-table">
+              <caption class="adm-sr">Open guest requests</caption>
+              <thead>
+                <tr><th scope="col">Room</th><th scope="col">Department</th><th scope="col">Request</th><th scope="col">Assigned</th><th scope="col">SLA</th><th scope="col">Status</th><th scope="col">Escalation</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="adm-cell-title">412</td><td>Dining</td>
+                  <td><span class="adm-id">#4821</span><div class="adm-cell-meta">Wagyu burger ×1</div></td>
+                  <td class="adm-nowrap">Ahmed R.</td><td><span class="badge badge-warn">4 min left</span></td><td class="adm-nowrap">Preparing</td><td class="adm-cell-meta">—</td>
+                </tr>
+                <tr>
+                  <td class="adm-cell-title">208</td><td>Housekeeping</td>
+                  <td><span class="adm-id">#HK-198</span><div class="adm-cell-meta">Clean room</div></td>
+                  <td class="adm-nowrap">Noor A.</td><td><span class="badge badge-ok">11 min left</span></td><td class="adm-nowrap">In progress</td><td class="adm-cell-meta">—</td>
+                </tr>
+                <tr class="adm-row-alert">
+                  <td class="adm-cell-title">301</td><td>Valet</td>
+                  <td><span class="adm-id">#V-56</span><div class="adm-cell-meta">Car to entrance</div></td>
+                  <td class="adm-nowrap">Omar H.</td><td><span class="badge badge-err">Overdue 2 min</span></td><td class="adm-nowrap">Bringing car</td><td class="adm-escalated">Manager notified</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="adm-table-foot"><span>SLA targets: Dining 25 min · Housekeeping 30 min · Valet 10 min</span><span>Updated just now</span></div>
+          </div>
         </div>
       </div>
     </div>
-    <p class="state-note">Same table shape as front desk's oversight view, but hotel-wide and with escalation status visible — this is where SLA thresholds get configured (a settings sub-panel, not shown here).</p>
+    <p class="state-note">Same table shape as front desk's oversight view, but hotel-wide and with escalation status visible — this is where SLA thresholds get configured (the "SLA settings" sub-panel, not shown here).</p>
   </section>
 
   <!-- Screen 7: Analytics -->
-  <section class="screen-block">
+  <section class="screen-block" id="analytics">
     <h2>7. Analytics</h2>
     <div class="tool-frame">
-      <div class="tool-sidebar">
+      <aside class="tool-sidebar">
         <div class="brand">Kira Admin</div>
-        <a class="tool-link">Setup</a>
-        <a class="tool-link">Menu</a>
-        <a class="tool-link">Knowledge base</a>
-        <a class="tool-link">Staff &amp; departments</a>
-        <a class="tool-link">Rooms</a>
-        <a class="tool-link">Request board</a>
-        <a class="tool-link active">Analytics</a>
-      </div>
+        <nav aria-label="Admin sections">
+          <p class="adm-nav-label">Configure</p>
+          <a class="tool-link" href="#setup">Setup</a>
+          <a class="tool-link" href="#menu">Menu</a>
+          <a class="tool-link" href="#knowledge-base">Knowledge base</a>
+          <a class="tool-link" href="#staff">Staff &amp; departments</a>
+          <a class="tool-link" href="#rooms">Rooms</a>
+          <p class="adm-nav-label">Operate</p>
+          <a class="tool-link" href="#requests">Request board <span class="adm-nav-count">3</span></a>
+          <a class="tool-link active" aria-current="page" href="#analytics">Analytics</a>
+        </nav>
+        <div class="adm-sidebar-foot"><span class="adm-avatar adm-avatar-dark">GM</span><span><strong>Grand Marina Hotel</strong><small>Hotel admin</small></span></div>
+      </aside>
       <div class="tool-main">
-        <div class="tool-topbar"><span>Analytics</span><span>Last 7 days</span></div>
+        <div class="tool-topbar"><span class="adm-crumb">Grand Marina Hotel<span class="sep">/</span><strong>Analytics</strong></span><span>13–19 Oct 2026</span></div>
         <div class="tool-content">
-          <div class="stat-grid">
-            <div class="stat-tile"><div class="value">342</div><div class="label">Total requests</div></div>
-            <div class="stat-tile"><div class="value">94%</div><div class="label">SLA compliance</div></div>
-            <div class="stat-tile"><div class="value">6</div><div class="label">Languages used</div></div>
-            <div class="stat-tile"><div class="value">2.1s</div><div class="label">Avg. response time</div></div>
+          <div class="adm-head">
+            <div>
+              <h3 class="adm-title">Analytics</h3>
+              <p class="adm-sub">Requests and Kira performance vs. the previous 7 days</p>
+            </div>
+            <div class="adm-actions">
+              <div class="tabs-row">
+                <span class="tab-chip active">7 days</span>
+                <span class="tab-chip">30 days</span>
+                <span class="tab-chip">90 days</span>
+              </div>
+              <button type="button" class="btn-tool btn-tool-secondary">Export CSV</button>
+            </div>
           </div>
-          <p class="panel-title" style="font-size: var(--fs-small); color: var(--muted-on-sand);">Requests by department</p>
-          <div class="bar-chart">
-            <div class="bar" style="height:80%;"></div>
-            <div class="bar" style="height:55%;"></div>
-            <div class="bar" style="height:40%;"></div>
-            <div class="bar" style="height:25%;"></div>
-            <div class="bar" style="height:15%;"></div>
+          <div class="stat-grid">
+            <div class="stat-tile"><div class="value">342</div><div class="label">Total requests</div><div class="adm-delta">▲ 12% vs last week</div></div>
+            <div class="stat-tile"><div class="value">94%</div><div class="label">SLA compliance</div><div class="adm-delta">▲ 2 pts vs last week</div></div>
+            <div class="stat-tile"><div class="value">6</div><div class="label">Languages used</div><div class="adm-delta neutral">Arabic: 31% of requests</div></div>
+            <div class="stat-tile"><div class="value">2.1s</div><div class="label">Avg. response time</div><div class="adm-delta">▼ 0.3s faster</div></div>
+          </div>
+          <div class="adm-chart-grid">
+            <div class="adm-card">
+              <div class="adm-card-head"><span class="adm-card-title">Requests by department</span><span class="adm-cell-meta">342 total</span></div>
+              <div class="bar-chart" role="img" aria-label="Requests by department: Dining 128, Housekeeping 88, Concierge 64, Valet 40, Front desk 22">
+                <div class="bar" data-value="128" title="Dining: 128 requests" style="height: 88%;"></div>
+                <div class="bar" data-value="88" title="Housekeeping: 88 requests" style="height: 60%;"></div>
+                <div class="bar" data-value="64" title="Concierge: 64 requests" style="height: 44%;"></div>
+                <div class="bar" data-value="40" title="Valet: 40 requests" style="height: 27%;"></div>
+                <div class="bar" data-value="22" title="Front desk: 22 requests" style="height: 15%;"></div>
+              </div>
+              <div class="adm-axis" aria-hidden="true"><span>Dining</span><span>Housekeeping</span><span>Concierge</span><span>Valet</span><span>Front desk</span></div>
+            </div>
+            <div class="adm-card">
+              <div class="adm-card-head"><span class="adm-card-title">Requests by language</span><span class="adm-cell-meta">Share of total</span></div>
+              <div class="adm-hbar"><span>English</span><div class="adm-hbar-track"><div class="adm-hbar-fill" style="width: 41%;"></div></div><span class="adm-num">41%</span></div>
+              <div class="adm-hbar"><span>Arabic · <bdi lang="ar">العربية</bdi></span><div class="adm-hbar-track"><div class="adm-hbar-fill" style="width: 31%;"></div></div><span class="adm-num">31%</span></div>
+              <div class="adm-hbar"><span>Russian</span><div class="adm-hbar-track"><div class="adm-hbar-fill" style="width: 11%;"></div></div><span class="adm-num">11%</span></div>
+              <div class="adm-hbar"><span>Chinese</span><div class="adm-hbar-track"><div class="adm-hbar-fill" style="width: 8%;"></div></div><span class="adm-num">8%</span></div>
+              <div class="adm-hbar"><span>French</span><div class="adm-hbar-track"><div class="adm-hbar-fill" style="width: 5%;"></div></div><span class="adm-num">5%</span></div>
+              <div class="adm-hbar"><span>German</span><div class="adm-hbar-track"><div class="adm-hbar-fill" style="width: 4%;"></div></div><span class="adm-num">4%</span></div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <p class="state-note">Placeholder bars only — the real chart and exact metric set (by department/language) are finalized separately.</p>
+    <p class="state-note">Illustrative figures — the real chart and exact metric set (by department/language) are finalized separately.</p>
   </section>
 <script src="../scale.js"></script>
 </body>

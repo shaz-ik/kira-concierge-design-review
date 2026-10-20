@@ -5,6 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kira Concierge — Hi-Fi Mockup: Front Desk Staff</title>
 <link rel="stylesheet" href="../tokens.css">
+<style>
+  /* Page-scoped refinements layered on tokens.css (tool mode). */
+  .tool-topbar .who { display: flex; align-items: center; gap: var(--sp-2); }
+  .tool-topbar .title { font-weight: 600; color: var(--ink-on-sand); }
+  .tool-sidebar .shift { margin-top: var(--sp-6); padding-top: var(--sp-4); border-top: 1px solid rgba(244,239,227,.12); font-size: 12px; color: var(--muted-on-dark); line-height: 1.5; }
+  .tool-sidebar .shift strong { display: block; color: var(--ink-on-dark); font-weight: 600; }
+  .tool-link .n { float: right; font-weight: 600; color: var(--brass-soft); }
+
+  .table-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--sp-3); }
+  .table-head .panel-title { margin-bottom: 0; }
+  .table-head .hint { font-size: 12px; color: var(--muted-on-sand); }
+  .data-table td { vertical-align: middle; }
+  .data-table .room { font-weight: 700; }
+  .data-table .badge, .data-table .nw { white-space: nowrap; }
+  .data-table .sub { display: block; font-size: 12px; color: var(--muted-on-sand); }
+  .data-table .actions { text-align: right; white-space: nowrap; }
+  .data-table .actions .btn-tool + .btn-tool { margin-left: var(--sp-2); }
+  .data-table tr.flagged td { background: rgba(139,74,61,.04); }
+  .data-table tr.flagged td:first-child { box-shadow: inset 3px 0 0 var(--err); }
+  .table-gap { height: var(--sp-6); }
+
+  .deny-grid { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: var(--sp-5); align-items: start; }
+  .kv { display: flex; justify-content: space-between; gap: var(--sp-3); padding: 6px 0; font-size: var(--fs-small); border-bottom: 1px solid rgba(36,31,22,.06); }
+  .kv:last-child { border-bottom: none; }
+  .kv .k { color: var(--muted-on-sand); }
+  .kv .v { font-weight: 600; text-align: right; }
+  .summary-title { font-size: var(--fs-small); font-weight: 700; color: var(--muted-on-sand); margin-bottom: var(--sp-2); }
+  .tool-form-row.top { align-items: flex-start; }
+  textarea.tool-input { max-width: none; min-height: 84px; resize: vertical; line-height: 1.5; }
+  .field-help { font-size: 12px; color: var(--muted-on-sand); margin: calc(-1 * var(--sp-1)) 0 0 152px; }
+  .stat-tile .value.err { color: var(--err); }
+  .stat-tile .value.warn { color: var(--warn); }
+</style>
 </head>
 <body>
   <div class="page-header">
@@ -27,23 +60,43 @@
     <div class="tool-frame">
       <div class="tool-sidebar">
         <div class="brand">Front Desk</div>
-        <a class="tool-link active">Approvals</a>
+        <a class="tool-link active">Approvals <span class="n">2</span></a>
         <a class="tool-link">All departments</a>
+        <div class="shift"><strong>Fatima S.</strong>Front office<br>Shift until 3:00 PM</div>
       </div>
       <div class="tool-main">
-        <div class="tool-topbar"><span>Approvals</span><span>Fatima S. · 1 new</span></div>
+        <div class="tool-topbar"><span class="title">Approvals</span><span class="who">9:41 AM · <span class="badge badge-warn">1 new</span></span></div>
         <div class="tool-content">
+          <div class="table-head"><p class="panel-title">Pending (2)</p><span class="hint">Standard checkout 11:00 AM · fee applies after 2:00 PM</span></div>
           <table class="data-table">
-            <tr><th>Room</th><th>Request</th><th>Requested</th><th>Fee</th><th></th></tr>
-            <tr><td>412</td><td>Checkout extension → 5:00 PM</td><td>2 min ago</td><td>AED 90.00</td>
-              <td><button class="btn-tool btn-tool-secondary">Deny</button> <button class="btn-tool btn-tool-primary">Approve</button></td></tr>
-            <tr><td>208</td><td>Checkout extension → 2:00 PM</td><td>14 min ago</td><td>No fee (within policy)</td>
-              <td><button class="btn-tool btn-tool-secondary">Deny</button> <button class="btn-tool btn-tool-primary">Approve</button></td></tr>
+            <thead>
+              <tr><th>Room</th><th>Request</th><th>Requested</th><th>Fee</th><th>Next arrival</th><th></th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="room">412</td><td class="nw">Late checkout → 5:00 PM<span class="sub">From 11:00 AM</span></td><td class="nw">2 min ago</td><td>AED 90.00</td>
+                <td><span class="badge badge-warn">1:00 PM · conflict</span></td>
+                <td class="actions"><button class="btn-tool btn-tool-secondary">Deny</button><button class="btn-tool btn-tool-primary">Approve</button></td></tr>
+              <tr><td class="room">208</td><td class="nw">Late checkout → 2:00 PM<span class="sub">From 11:00 AM</span></td><td class="nw">14 min ago</td><td>No fee<span class="sub">Within policy</span></td>
+                <td><span class="badge badge-ok">None today</span></td>
+                <td class="actions"><button class="btn-tool btn-tool-secondary">Deny</button><button class="btn-tool btn-tool-primary">Approve</button></td></tr>
+            </tbody>
+          </table>
+          <div class="table-gap"></div>
+          <div class="table-head"><p class="panel-title">Decided today</p><span class="hint">Last 3</span></div>
+          <table class="data-table">
+            <thead>
+              <tr><th>Room</th><th>Request</th><th>Decision</th><th>By</th><th>Time</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="room">517</td><td>Late checkout → 1:00 PM</td><td><span class="badge badge-ok">Approved</span></td><td>Fatima S.</td><td>9:12 AM</td></tr>
+              <tr><td class="room">320</td><td>Late checkout → 6:00 PM</td><td><span class="badge badge-err">Denied</span></td><td>Fatima S.</td><td>8:47 AM</td></tr>
+              <tr><td class="room">604</td><td>Late checkout → 3:00 PM</td><td><span class="badge badge-ok">Approved · AED 90.00</span></td><td>Fatima S.</td><td>8:20 AM</td></tr>
+            </tbody>
           </table>
         </div>
       </div>
     </div>
-    <p class="state-note">Approve/Deny are inline row actions here rather than a separate detail screen — front desk handles these at volume.</p>
+    <p class="state-note">Approve/Deny are inline row actions here rather than a separate detail screen — front desk handles these at volume. The Next arrival column surfaces the room conflict so the decision doesn't need a PMS lookup.</p>
   </section>
 
   <!-- Screen 2: Deny reason -->
@@ -52,22 +105,36 @@
     <div class="tool-frame">
       <div class="tool-sidebar">
         <div class="brand">Front Desk</div>
-        <a class="tool-link active">Approvals</a>
+        <a class="tool-link active">Approvals <span class="n">2</span></a>
         <a class="tool-link">All departments</a>
+        <div class="shift"><strong>Fatima S.</strong>Front office<br>Shift until 3:00 PM</div>
       </div>
       <div class="tool-main">
-        <div class="tool-topbar"><span>Approvals</span><span>Fatima S. · 1 new</span></div>
+        <div class="tool-topbar"><span class="title">Approvals</span><span class="who">9:42 AM · <span class="badge badge-warn">1 new</span></span></div>
         <div class="tool-content">
           <p class="panel-title">Deny — Room 412, checkout extension</p>
-          <div class="tool-form-row"><label>Reason</label><input class="tool-input" value="Room needed for incoming guest at 1:00 PM"></div>
-          <div class="panel-actions">
-            <button class="btn-tool btn-tool-secondary">Cancel</button>
-            <button class="btn-tool btn-tool-primary">Confirm deny</button>
+          <div class="deny-grid">
+            <div>
+              <div class="tool-form-row top"><label for="deny-reason">Reason for guest</label><textarea id="deny-reason" class="tool-input">Room needed for incoming guest at 1:00 PM</textarea></div>
+              <p class="field-help">Required. Shown to the guest exactly as written, in their language.</p>
+              <div class="panel-actions">
+                <button class="btn-tool btn-tool-secondary">Cancel</button>
+                <button class="btn-tool btn-tool-primary">Confirm deny</button>
+              </div>
+            </div>
+            <div class="ticket-card">
+              <p class="summary-title">Request</p>
+              <div class="kv"><span class="k">Room</span><span class="v">412</span></div>
+              <div class="kv"><span class="k">Current checkout</span><span class="v">11:00 AM</span></div>
+              <div class="kv"><span class="k">Requested</span><span class="v">5:00 PM</span></div>
+              <div class="kv"><span class="k">Fee</span><span class="v">AED 90.00</span></div>
+              <div class="kv"><span class="k">Next arrival</span><span class="v"><span class="badge badge-warn">1:00 PM</span></span></div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <p class="state-note">Reason text is required and shown to the guest verbatim.</p>
+    <p class="state-note">Reason text is required and shown to the guest verbatim (<a href="checkout-extension.html">guest tablet, checkout-extension flow, screen 3b</a>).</p>
   </section>
 
   <!-- Screen 3: Oversight -->
@@ -76,22 +143,38 @@
     <div class="tool-frame">
       <div class="tool-sidebar">
         <div class="brand">Front Desk</div>
-        <a class="tool-link">Approvals</a>
+        <a class="tool-link">Approvals <span class="n">2</span></a>
         <a class="tool-link active">All departments</a>
+        <div class="shift"><strong>Fatima S.</strong>Front office<br>Shift until 3:00 PM</div>
       </div>
       <div class="tool-main">
-        <div class="tool-topbar"><span>All departments</span><span>Fatima S. · 1 new</span></div>
+        <div class="tool-topbar"><span class="title">All departments</span><span class="who">9:44 AM · read-only</span></div>
         <div class="tool-content">
+          <div class="stat-grid">
+            <div class="stat-tile"><div class="value">12</div><div class="label">Open requests</div></div>
+            <div class="stat-tile"><div class="value warn">2</div><div class="label">At risk (under 5 min)</div></div>
+            <div class="stat-tile"><div class="value err">1</div><div class="label">Overdue</div></div>
+            <div class="stat-tile"><div class="value">2.6 min</div><div class="label">Avg. time to accept</div></div>
+          </div>
+          <div class="table-head"><p class="panel-title">Most urgent first</p><span class="hint">Showing 7 of 12 open</span></div>
           <table class="data-table">
-            <tr><th>Room</th><th>Department</th><th>Request</th><th>SLA</th><th>Status</th></tr>
-            <tr><td>412</td><td>Dining</td><td>#4821</td><td><span class="badge badge-warn">4 min</span></td><td>Preparing</td></tr>
-            <tr><td>208</td><td>Housekeeping</td><td>#HK-203</td><td><span class="badge badge-ok">18 min</span></td><td>In progress</td></tr>
-            <tr><td>301</td><td>Valet</td><td>#V-57</td><td><span class="badge badge-warn">overdue 2 min</span></td><td>Bringing car</td></tr>
+            <thead>
+              <tr><th>Room</th><th>Department</th><th>Request</th><th>SLA</th><th>Status</th><th>Assigned</th></tr>
+            </thead>
+            <tbody>
+              <tr class="flagged"><td class="room">301</td><td>Valet</td><td>#V-56</td><td><span class="badge badge-err">Overdue 2 min</span></td><td>Bringing car</td><td>Valet team</td></tr>
+              <tr><td class="room">412</td><td>Dining</td><td>#4821</td><td><span class="badge badge-warn">1 min left</span></td><td>Preparing</td><td>Ahmed R.</td></tr>
+              <tr><td class="room">115</td><td>Dining</td><td>#4819</td><td><span class="badge badge-warn">3 min left</span></td><td>Preparing</td><td>Ahmed R.</td></tr>
+              <tr><td class="room">412</td><td>Valet</td><td>#V-57</td><td><span class="badge badge-ok">6 min left</span></td><td>In progress</td><td>Valet team</td></tr>
+              <tr><td class="room">208</td><td>Housekeeping</td><td>#HK-198</td><td><span class="badge badge-ok">8 min left</span></td><td>In progress</td><td>Noor A.</td></tr>
+              <tr><td class="room">208</td><td>Concierge</td><td>#C-32</td><td><span class="badge badge-ok">8 min left</span></td><td>Received</td><td>—</td></tr>
+              <tr><td class="room">208</td><td>Dining</td><td>#4822</td><td><span class="badge badge-ok">9 min left</span></td><td>Incoming</td><td>—</td></tr>
+            </tbody>
           </table>
         </div>
       </div>
     </div>
-    <p class="state-note">Read-only for front desk — escalation routing/thresholds are configured in the admin dashboard, not here.</p>
+    <p class="state-note">Read-only for front desk — escalation routing and thresholds are configured in the <a href="admin-dashboard.html">admin dashboard</a>, not here. Overdue rows are flagged red and pinned to the top.</p>
   </section>
 <script src="../scale.js"></script>
 </body>

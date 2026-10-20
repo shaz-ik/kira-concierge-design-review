@@ -5,6 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kira Concierge — Hi-Fi Mockup: Kitchen Staff</title>
 <link rel="stylesheet" href="../tokens.css">
+<style>
+  /* Page-scoped refinements layered on tokens.css (tool mode). */
+  .tool-topbar .who { display: flex; align-items: center; gap: var(--sp-2); }
+  .tool-topbar .title { font-weight: 600; color: var(--ink-on-sand); }
+  .tool-sidebar .shift { margin-top: var(--sp-6); padding-top: var(--sp-4); border-top: 1px solid rgba(244,239,227,.12); font-size: 12px; color: var(--muted-on-dark); line-height: 1.5; }
+  .tool-sidebar .shift strong { display: block; color: var(--ink-on-dark); font-weight: 600; }
+  .ticket-top > span:first-child { display: flex; flex-direction: column; line-height: 1.3; min-width: 0; }
+  .ticket-top .badge { white-space: nowrap; flex-shrink: 0; }
+  .ticket-top .room { font-weight: 700; }
+  .ticket-top .rid { font-weight: 500; font-size: 12px; color: var(--muted-on-sand); }
+  .ticket-tags { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-top: var(--sp-2); }
+  .ticket-card.muted { opacity: .8; }
+  .detail-head { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-5); }
+  .detail-head .panel-title { margin-bottom: 0; font-size: var(--fs-h2); }
+  .detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: var(--sp-5); align-items: start; }
+  .detail-stepper { margin-bottom: var(--sp-5); max-width: 520px; }
+  .detail-rows .tool-form-row { align-items: flex-start; padding-bottom: var(--sp-3); border-bottom: 1px solid rgba(36,31,22,.06); }
+  .detail-rows .tool-form-row:last-child { border-bottom: none; }
+  .detail-rows .tool-form-row label { width: 120px; }
+  .history-title { font-size: var(--fs-small); font-weight: 700; color: var(--muted-on-sand); margin-bottom: var(--sp-3); }
+  .history { list-style: none; margin: 0; padding: 0; font-size: 12px; }
+  .history li { display: flex; gap: var(--sp-3); padding: 6px 0; border-bottom: 1px solid rgba(36,31,22,.06); }
+  .history li:last-child { border-bottom: none; }
+  .history time { color: var(--muted-on-sand); width: 34px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+</style>
 </head>
 <body>
   <div class="page-header">
@@ -25,55 +50,102 @@
   <section class="screen-block">
     <h2>1. Order queue — Incoming / Preparing / Ready</h2>
     <div class="tool-frame">
+      <div class="tool-sidebar">
+        <div class="brand">Kitchen</div>
+        <a class="tool-link active">Order queue</a>
+        <a class="tool-link">Completed today</a>
+        <div class="shift"><strong>Ahmed R.</strong>In-room dining<br>Shift until 3:00 PM</div>
+      </div>
       <div class="tool-main">
-        <div class="tool-topbar"><span>Kitchen — Dining</span><span>Ahmed R. · 2 new</span></div>
+        <div class="tool-topbar"><span class="title">Order queue — In-room dining</span><span class="who">9:41 AM · <span class="badge badge-warn">2 new</span></span></div>
         <div class="tool-content">
           <div class="kanban">
             <div class="kanban-col">
               <h4>Incoming <span class="count">(2)</span></h4>
               <div class="ticket-card urgent">
-                <div class="ticket-top"><span>Room 412 · #4821</span><span class="badge badge-warn">4 min</span></div>
-                <div class="ticket-items">1× Burger (no onion), 1× Coke</div>
-                <div class="ticket-note">Guest wrote in Urdu — translated above</div>
+                <div class="ticket-top"><span><span class="room">Room 412</span> <span class="rid">#4821</span></span><span class="badge badge-warn">4 min left</span></div>
+                <div class="ticket-items">2× Wagyu smash burger (no onion), 1× Soft drink — Coke</div>
+                <div class="ticket-meta">Ordered via voice · delivery note attached</div>
+                <div class="ticket-note">Guest ordered in Urdu — translated automatically</div>
               </div>
               <div class="ticket-card">
-                <div class="ticket-top"><span>Room 208 · #4822</span><span class="badge badge-ok">12 min</span></div>
-                <div class="ticket-items">2× Pasta</div>
+                <div class="ticket-top"><span><span class="room">Room 208</span> <span class="rid">#4822</span></span><span class="badge badge-ok">12 min left</span></div>
+                <div class="ticket-items">2× Chicken shawarma plate</div>
+                <div class="ticket-meta">Ordered via in-room tablet</div>
+                <div class="ticket-tags"><span class="badge badge-warn">Gluten</span></div>
               </div>
             </div>
             <div class="kanban-col">
-              <h4>Preparing <span class="count">(1)</span></h4>
+              <h4>Preparing <span class="count">(2)</span></h4>
               <div class="ticket-card">
-                <div class="ticket-top"><span>Room 115 · #4819</span><span class="badge badge-ok">6 min</span></div>
-                <div class="ticket-items">1× Soup, 1× Salad — contains nuts</div>
+                <div class="ticket-top"><span><span class="room">Room 115</span> <span class="rid">#4819</span></span><span class="badge badge-ok">6 min left</span></div>
+                <div class="ticket-items">1× Lentil soup, 1× Garden salad</div>
+                <div class="ticket-meta">Started 9:33 · Ahmed R.</div>
+                <div class="ticket-tags"><span class="badge badge-err">Allergy: nuts</span></div>
+              </div>
+              <div class="ticket-card">
+                <div class="ticket-top"><span><span class="room">Room 517</span> <span class="rid">#4820</span></span><span class="badge badge-ok">9 min left</span></div>
+                <div class="ticket-items">1× Arabic breakfast platter, 1× Fresh orange juice</div>
+                <div class="ticket-meta">Started 9:36 · Ahmed R.</div>
               </div>
             </div>
             <div class="kanban-col">
               <h4>Ready <span class="count">(1)</span></h4>
               <div class="ticket-card">
-                <div class="ticket-top"><span>Room 301 · #4815</span><span class="badge badge-ok">waiting for pickup</span></div>
-                <div class="ticket-items">1× Burger</div>
+                <div class="ticket-top"><span><span class="room">Room 301</span> <span class="rid">#4815</span></span><span class="badge badge-ok">Awaiting pickup</span></div>
+                <div class="ticket-items">1× Wagyu smash burger</div>
+                <div class="ticket-meta">Ready 9:41 · waiter notified</div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <p class="state-note">Tapping a ticket opens the detail panel (screen 2). The SLA badge turns from ok to warn as the time budget runs down — colour only, no alarming animation.</p>
+    <p class="state-note">Tapping a ticket opens the detail panel (screen 2). The SLA badge turns from ok to warn as the time budget runs down — colour only, no alarming animation. Guest-declared allergies always show as a red tag on the card, not only in the detail view.</p>
   </section>
 
   <!-- Screen 2: Ticket detail -->
   <section class="screen-block">
     <h2>2. Ticket detail → Mark ready</h2>
     <div class="tool-frame">
+      <div class="tool-sidebar">
+        <div class="brand">Kitchen</div>
+        <a class="tool-link active">Order queue</a>
+        <a class="tool-link">Completed today</a>
+        <div class="shift"><strong>Ahmed R.</strong>In-room dining<br>Shift until 3:00 PM</div>
+      </div>
       <div class="tool-main">
-        <div class="tool-topbar"><span>Kitchen — Dining</span><span>Ahmed R. · 2 new</span></div>
+        <div class="tool-topbar"><span class="title">Order queue — In-room dining</span><span class="who">9:44 AM · <span class="badge badge-warn">1 new</span></span></div>
         <div class="tool-content">
-          <p class="panel-title">Order #4821 — Room 412</p>
-          <div class="tool-form-row"><label>Items</label><span>1× Burger (no onion), 1× Coke</span></div>
-          <div class="tool-form-row"><label>Allergens</label><span>None flagged</span></div>
-          <div class="tool-form-row"><label>Delivery note</label><span>"Please knock softly, baby sleeping" (translated from Urdu)</span></div>
-          <div class="tool-form-row"><label>SLA</label><span class="badge badge-warn">4 min remaining</span></div>
+          <div class="detail-head">
+            <p class="panel-title">Order #4821 — Room 412</p>
+            <span class="badge badge-warn">1 min remaining</span>
+          </div>
+          <div class="t-stepper detail-stepper">
+            <div class="t-step"><div class="t-dot done"></div><div class="t-label">Accepted</div></div>
+            <div class="t-line done"></div>
+            <div class="t-step"><div class="t-dot active"></div><div class="t-label active">Preparing</div></div>
+            <div class="t-line"></div>
+            <div class="t-step"><div class="t-dot"></div><div class="t-label">Ready</div></div>
+            <div class="t-line"></div>
+            <div class="t-step"><div class="t-dot"></div><div class="t-label">Delivered</div></div>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-rows">
+              <div class="tool-form-row"><label>Items</label><span>2× Wagyu smash burger (no onion)<br>1× Soft drink — Coke</span></div>
+              <div class="tool-form-row"><label>Allergens</label><span><span class="badge badge-ok">No guest allergies declared</span><br><span class="ticket-meta">Dish contains gluten, dairy (menu standard)</span></span></div>
+              <div class="tool-form-row"><label>Delivery note</label><span>"Please knock softly, baby sleeping"<br><span class="ticket-meta">Translated from Urdu</span></span></div>
+              <div class="tool-form-row"><label>Order total</label><span>AED 154.00 · charged to room</span></div>
+            </div>
+            <div class="ticket-card">
+              <p class="history-title">Ticket history</p>
+              <ul class="history">
+                <li><time>9:15</time><span>Placed by guest via voice (Urdu)</span></li>
+                <li><time>9:15</time><span>Printed at kitchen pass</span></li>
+                <li><time>9:42</time><span>Started by Ahmed R.</span></li>
+              </ul>
+            </div>
+          </div>
           <div class="panel-actions">
             <button class="btn-tool btn-tool-secondary">Back to queue</button>
             <button class="btn-tool btn-tool-primary">Mark ready</button>
@@ -81,7 +153,7 @@
         </div>
       </div>
     </div>
-    <p class="state-note">Mark ready moves the ticket to the Ready column and fires the waiter notification.</p>
+    <p class="state-note">Mark ready moves the ticket to the Ready column and fires the waiter notification (<a href="staff-waiter.html">Waiter app, screen 1</a>). The guest's status track advances to Ready at the same moment.</p>
   </section>
 <script src="../scale.js"></script>
 </body>
