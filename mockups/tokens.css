@@ -202,6 +202,19 @@ h1, h2, h3, p { margin: 0; }
 .state-thinking .kira-mouth { animation: kira-think 2.4s ease-in-out infinite; }
 .state-thinking .kira-eyes { animation: kira-look 2.4s ease-in-out infinite; }
 .state-speaking .kira-mouth { animation: kira-talk .55s ease-in-out infinite; }
+
+/* Kira — real avatar photo (AI-generated concept art), replaces the kira-avatar-svg/lantern placeholders */
+.kira-photo-wrap {
+  width: 150px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  border: 2px solid rgba(217,184,106,.5);
+  box-shadow: 0 0 24px 4px rgba(217,184,106,.25);
+}
+.kira-photo-wrap img { display: block; width: 100%; height: auto; }
+.kira-photo-wrap.small { width: 64px; box-shadow: 0 0 14px 2px rgba(217,184,106,.25); }
+.state-idle .kira-photo-wrap { animation: breathe 4.5s ease-in-out infinite; }
+.state-wake .kira-photo-wrap { animation: pop .5s ease-out; }
+.state-listening .kira-photo-wrap { animation: listen-pulse 1.3s ease-in-out infinite; }
+.state-thinking .kira-photo-wrap { animation: think-drift 2.4s ease-in-out infinite; }
 @keyframes kira-think { 0%,100% { transform: scaleX(1) translateY(0); } 50% { transform: scaleX(.85) translateY(1px); } }
 @keyframes kira-look { 0%,100% { transform: translate(0,0); } 50% { transform: translate(2px,-1px); } }
 @keyframes kira-talk { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.8); } }
