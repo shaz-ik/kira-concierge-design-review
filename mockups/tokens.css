@@ -175,6 +175,37 @@ h1, h2, h3, p { margin: 0; }
 .lantern-wrap.small { width: 56px; height: 72px; }
 .lantern-wrap.small .lantern-ring { width: 56px; height: 56px; }
 
+/* ---------- Kira — stylized human avatar (concept, supersedes The Lantern direction) ---------- */
+.kira-avatar-wrap { width: 130px; height: 160px; position: relative; }
+.kira-avatar-wrap.small { width: 64px; height: 78px; }
+.kira-avatar-wrap.small .kira-avatar-ring { width: 64px; height: 64px; }
+.kira-avatar-glow {
+  position: absolute; inset: -36px; top: -50px;
+  background: radial-gradient(circle, rgba(217,184,106,.3), transparent 65%);
+  border-radius: 50%;
+  filter: blur(2px);
+}
+.kira-avatar-svg { position: relative; width: 100%; height: 100%; }
+.kira-avatar-ring {
+  position: absolute; left: 50%; top: 38%;
+  width: 118px; height: 118px;
+  border: 1px solid rgba(217,184,106,.5);
+  border-radius: 50%;
+  transform: translate(-50%,-50%) scale(1);
+  opacity: 0;
+}
+.state-idle .kira-avatar-svg { animation: breathe 4.5s ease-in-out infinite; }
+.state-wake .kira-avatar-svg { animation: pop .5s ease-out; }
+.state-listening .kira-avatar-svg { animation: listen-pulse 1.3s ease-in-out infinite; }
+.state-listening .kira-avatar-ring { animation: ripple 1.6s ease-out infinite; }
+.kira-mouth, .kira-eyes { transform-box: fill-box; transform-origin: center; }
+.state-thinking .kira-mouth { animation: kira-think 2.4s ease-in-out infinite; }
+.state-thinking .kira-eyes { animation: kira-look 2.4s ease-in-out infinite; }
+.state-speaking .kira-mouth { animation: kira-talk .55s ease-in-out infinite; }
+@keyframes kira-think { 0%,100% { transform: scaleX(1) translateY(0); } 50% { transform: scaleX(.85) translateY(1px); } }
+@keyframes kira-look { 0%,100% { transform: translate(0,0); } 50% { transform: translate(2px,-1px); } }
+@keyframes kira-talk { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.8); } }
+
 .subtitle-bar {
   background: rgba(0,0,0,.3);
   border: 1px solid rgba(217,184,106,.22);

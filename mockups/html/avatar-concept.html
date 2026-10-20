@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kira Concierge — Avatar Direction: Human (Concept)</title>
+<link rel="stylesheet" href="../tokens.css">
+<style>
+  .gallery-row { display: flex; gap: var(--sp-6); flex-wrap: wrap; align-items: flex-start; }
+  .gallery-cell { background: var(--dusk-ink); border-radius: var(--radius-guest); padding: var(--sp-5); width: 160px; text-align: center; }
+  .gallery-cell .kira-avatar-wrap { width: 86px; height: 106px; margin: 0 auto var(--sp-3); }
+  .gallery-cell .kira-avatar-ring { width: 86px; height: 86px; }
+  .gallery-cell .avatar-caption { color: var(--ink-on-dark); font-weight: 600; }
+  .gallery-cell p { font-size: 12px; color: var(--muted-on-dark); margin-top: var(--sp-1); }
+  .compare-banner {
+    max-width: 1100px; margin: 0 auto var(--sp-6); padding: var(--sp-4) var(--sp-5);
+    background: rgba(184,146,63,.08); border: 1px solid rgba(184,146,63,.3); border-radius: var(--radius-tool);
+  }
+  .compare-banner p { margin: 0; font-size: var(--fs-small); color: var(--ink-on-sand); }
+  .compare-banner a { color: var(--brass-deep); font-weight: 600; }
+</style>
+</head>
+<body>
+  <div class="page-header">
+    <h1>Avatar direction — human (concept)</h1>
+    <p>Stylized, illustrated human character — confirmed direction, replacing the earlier abstract "Lantern" exploration. This is a code-built concept sketch to test proportions, states, and placement, not final character art — final illustration/rigging is a design task (<code>design/avatar/avatar-brief.md</code> §3–4), built in Live2D by an illustrator.</p>
+  </div>
+  <nav class="flow-nav">
+    <a href="index.html">All mockups</a>
+    <a href="avatar-concept.html" class="current">Avatar: human concept</a>
+  </nav>
+
+  <div class="compare-banner">
+    <p>For comparison, the earlier abstract direction ("The Lantern") is still live on <a href="dining.html">the dining mockup</a> — that page hasn't been updated to the new character yet, pending sign-off on this direction.</p>
+  </div>
+
+  <section class="screen-block">
+    <h2>Kira — avatar states</h2>
+    <div class="gallery-row">
+      <div class="gallery-cell state-idle">
+        <div class="kira-avatar-wrap">
+          <div class="kira-avatar-glow"></div>
+          <svg class="kira-avatar-svg" viewBox="0 0 104 140">
+            <path d="M20,140 L20,119 Q20,109 31,107 L73,107 Q84,109 84,119 L84,140 Z" fill="var(--lagoon-deep)"/>
+            <circle cx="52" cy="118" r="4.5" fill="url(#pin-i)"/>
+            <defs><radialGradient id="pin-i"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a"/><stop offset="100%" stop-color="#b8923f"/></radialGradient></defs>
+            <path d="M43,94 L43,111 Q52,115 61,111 L61,94 Z" fill="#e3c08c"/>
+            <ellipse cx="52" cy="62" rx="29" ry="33" fill="#e3c08c"/>
+            <path d="M22,58 Q18,19 52,17 Q86,19 82,58 Q82,38 52,35 Q22,38 22,58 Z" fill="var(--ink-on-sand)"/>
+            <g class="kira-eyes">
+              <ellipse cx="42" cy="60" rx="4" ry="2.6" fill="var(--lagoon-deep)"/>
+              <ellipse cx="62" cy="60" rx="4" ry="2.6" fill="var(--lagoon-deep)"/>
+            </g>
+            <path d="M37,52 Q42,49 47,51" stroke="var(--ink-on-sand)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M57,51 Q62,49 67,52" stroke="var(--ink-on-sand)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <ellipse class="kira-mouth" cx="52" cy="79" rx="7" ry="2" fill="#a9644f"/>
+          </svg>
+        </div>
+        <div class="avatar-caption">Idle</div>
+        <p>Slow breathing pulse</p>
+      </div>
+      <div class="gallery-cell state-wake">
+        <div class="kira-avatar-wrap">
+          <div class="kira-avatar-glow"></div>
+          <svg class="kira-avatar-svg" viewBox="0 0 104 140">
+            <path d="M20,140 L20,119 Q20,109 31,107 L73,107 Q84,109 84,119 L84,140 Z" fill="var(--lagoon-deep)"/>
+            <circle cx="52" cy="118" r="4.5" fill="url(#pin-w)"/>
+            <defs><radialGradient id="pin-w"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#eac97a"/><stop offset="100%" stop-color="#b8923f"/></radialGradient></defs>
+            <path d="M43,94 L43,111 Q52,115 61,111 L61,94 Z" fill="#e3c08c"/>
+            <ellipse cx="52" cy="62" rx="29" ry="33" fill="#e3c08c"/>
+            <path d="M22,58 Q18,19 52,17 Q86,19 82,58 Q82,38 52,35 Q22,38 22,58 Z" fill="var(--ink-on-sand)"/>
+            <g class="kira-eyes">
+              <ellipse cx="42" cy="59" rx="4.3" ry="3.2" fill="var(--lagoon-deep)"/>
+              <ellipse cx="62" cy="59" rx="4.3" ry="3.2" fill="var(--lagoon-deep)"/>
+            </g>
+            <path d="M37,50 Q42,46 47,49" stroke="var(--ink-on-sand)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M57,49 Q62,46 67,50" stroke="var(--ink-on-sand)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path class="kira-mouth" d="M45,78 Q52,84 59,78" stroke="#a9644f" stroke-width="3" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="avatar-caption">Wake</div>
+        <p>Brightens, quick perk-up</p>
+      </div>
+      <div class="gallery-cell state-listening">
+        <div class="kira-avatar-wrap">
+          <div class="kira-avatar-ring"></div>
+          <svg class="kira-avatar-svg" viewBox="0 0 104 140">
+            <path d="M20,140 L20,119 Q20,109 31,107 L73,107 Q84,109 84,119 L84,140 Z" fill="var(--lagoon-deep)"/>
+            <circle cx="52" cy="118" r="4.5" fill="url(#pin-l)"/>
+            <defs><radialGradient id="pin-l"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a"/><stop offset="100%" stop-color="#b8923f"/></radialGradient></defs>
+            <path d="M43,94 L43,111 Q52,115 61,111 L61,94 Z" fill="#e3c08c"/>
+            <ellipse cx="52" cy="62" rx="29" ry="33" fill="#e3c08c"/>
+            <path d="M22,58 Q18,19 52,17 Q86,19 82,58 Q82,38 52,35 Q22,38 22,58 Z" fill="var(--ink-on-sand)"/>
+            <g class="kira-eyes">
+              <ellipse cx="42" cy="59" rx="4.3" ry="3" fill="var(--lagoon-deep)"/>
+              <ellipse cx="62" cy="59" rx="4.3" ry="3" fill="var(--lagoon-deep)"/>
+            </g>
+            <path d="M37,51 Q42,48 47,50" stroke="var(--ink-on-sand)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M57,50 Q62,48 67,51" stroke="var(--ink-on-sand)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <ellipse class="kira-mouth" cx="52" cy="79" rx="6" ry="1.8" fill="#a9644f"/>
+          </svg>
+        </div>
+        <div class="avatar-caption">Listening</div>
+        <p>Attentive, sound-ripple cue</p>
+      </div>
+      <div class="gallery-cell state-thinking">
+        <div class="kira-avatar-wrap">
+          <div class="kira-avatar-glow"></div>
+          <svg class="kira-avatar-svg" viewBox="0 0 104 140">
+            <path d="M20,140 L20,119 Q20,109 31,107 L73,107 Q84,109 84,119 L84,140 Z" fill="var(--lagoon-deep)"/>
+            <circle cx="52" cy="118" r="4.5" fill="url(#pin-t)"/>
+            <defs><radialGradient id="pin-t"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a"/><stop offset="100%" stop-color="#b8923f"/></radialGradient></defs>
+            <path d="M43,94 L43,111 Q52,115 61,111 L61,94 Z" fill="#e3c08c"/>
+            <ellipse cx="52" cy="62" rx="29" ry="33" fill="#e3c08c"/>
+            <path d="M22,58 Q18,19 52,17 Q86,19 82,58 Q82,38 52,35 Q22,38 22,58 Z" fill="var(--ink-on-sand)"/>
+            <g class="kira-eyes">
+              <ellipse cx="42" cy="61" rx="4" ry="1.8" fill="var(--lagoon-deep)"/>
+              <ellipse cx="62" cy="61" rx="4" ry="1.8" fill="var(--lagoon-deep)"/>
+            </g>
+            <path d="M37,52 Q42,50 47,51" stroke="var(--ink-on-sand)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M57,51 Q62,50 67,52" stroke="var(--ink-on-sand)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <ellipse class="kira-mouth" cx="52" cy="80" rx="5.5" ry="1.6" fill="#a9644f"/>
+          </svg>
+        </div>
+        <div class="avatar-caption">Thinking</div>
+        <p>Gaze drifts, never frozen</p>
+      </div>
+      <div class="gallery-cell state-speaking">
+        <div class="kira-avatar-wrap">
+          <div class="kira-avatar-glow"></div>
+          <svg class="kira-avatar-svg" viewBox="0 0 104 140">
+            <path d="M20,140 L20,119 Q20,109 31,107 L73,107 Q84,109 84,119 L84,140 Z" fill="var(--lagoon-deep)"/>
+            <circle cx="52" cy="118" r="4.5" fill="url(#pin-s)"/>
+            <defs><radialGradient id="pin-s"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a"/><stop offset="100%" stop-color="#b8923f"/></radialGradient></defs>
+            <path d="M43,94 L43,111 Q52,115 61,111 L61,94 Z" fill="#e3c08c"/>
+            <ellipse cx="52" cy="62" rx="29" ry="33" fill="#e3c08c"/>
+            <path d="M22,58 Q18,19 52,17 Q86,19 82,58 Q82,38 52,35 Q22,38 22,58 Z" fill="var(--ink-on-sand)"/>
+            <g class="kira-eyes">
+              <ellipse cx="42" cy="60" rx="4" ry="2.6" fill="var(--lagoon-deep)"/>
+              <ellipse cx="62" cy="60" rx="4" ry="2.6" fill="var(--lagoon-deep)"/>
+            </g>
+            <path d="M37,52 Q42,49 47,51" stroke="var(--ink-on-sand)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M57,51 Q62,49 67,52" stroke="var(--ink-on-sand)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <ellipse class="kira-mouth" cx="52" cy="79" rx="6.5" ry="3" fill="#a9644f"/>
+          </svg>
+        </div>
+        <div class="avatar-caption">Speaking</div>
+        <p>Mouth-shape swap, no AI video needed</p>
+      </div>
+    </div>
+    <p class="state-note">Flat, illustrated, universal features (not tied to one ethnicity) — final linework/rigging is a design task, see <code>design/avatar/avatar-brief.md</code>. The brass collar pin is the one accent tying the character to the hotel's material palette; a hotel-specific uniform color could replace the lagoon collar per property.</p>
+  </section>
+
+  <section class="screen-block">
+    <h2>In context — idle</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon">🔈 Mute</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-body state-idle">
+        <div class="kira-avatar-wrap">
+          <div class="kira-avatar-glow"></div>
+          <svg class="kira-avatar-svg" viewBox="0 0 104 140">
+            <path d="M20,140 L20,119 Q20,109 31,107 L73,107 Q84,109 84,119 L84,140 Z" fill="var(--lagoon-deep)"/>
+            <circle cx="52" cy="118" r="4.5" fill="url(#pin-ctx1)"/>
+            <defs><radialGradient id="pin-ctx1"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a"/><stop offset="100%" stop-color="#b8923f"/></radialGradient></defs>
+            <path d="M43,94 L43,111 Q52,115 61,111 L61,94 Z" fill="#e3c08c"/>
+            <ellipse cx="52" cy="62" rx="29" ry="33" fill="#e3c08c"/>
+            <path d="M22,58 Q18,19 52,17 Q86,19 82,58 Q82,38 52,35 Q22,38 22,58 Z" fill="var(--ink-on-sand)"/>
+            <g class="kira-eyes">
+              <ellipse cx="42" cy="60" rx="4" ry="2.6" fill="var(--lagoon-deep)"/>
+              <ellipse cx="62" cy="60" rx="4" ry="2.6" fill="var(--lagoon-deep)"/>
+            </g>
+            <path d="M37,52 Q42,49 47,51" stroke="var(--ink-on-sand)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M57,51 Q62,49 67,52" stroke="var(--ink-on-sand)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <ellipse class="kira-mouth" cx="52" cy="79" rx="7" ry="2" fill="#a9644f"/>
+          </svg>
+        </div>
+        <p class="avatar-sub">Good evening — say "Hey Kira," or tap to begin</p>
+      </div>
+    </div>
+    <p class="state-note">Same scale/placement as the previous Lantern idle screen — swap in once the direction is confirmed.</p>
+  </section>
+
+  <section class="screen-block">
+    <h2>In context — speaking</h2>
+    <div class="tablet-frame" style="position:relative;">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon">🔈 Mute</span><span class="nav-icon">Aa+ Aa−</span><span class="nav-emergency">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-body state-speaking">
+        <div class="kira-avatar-wrap">
+          <div class="kira-avatar-glow"></div>
+          <svg class="kira-avatar-svg" viewBox="0 0 104 140">
+            <path d="M20,140 L20,119 Q20,109 31,107 L73,107 Q84,109 84,119 L84,140 Z" fill="var(--lagoon-deep)"/>
+            <circle cx="52" cy="118" r="4.5" fill="url(#pin-ctx2)"/>
+            <defs><radialGradient id="pin-ctx2"><stop offset="0%" stop-color="#fff3d6"/><stop offset="60%" stop-color="#d9b86a"/><stop offset="100%" stop-color="#b8923f"/></radialGradient></defs>
+            <path d="M43,94 L43,111 Q52,115 61,111 L61,94 Z" fill="#e3c08c"/>
+            <ellipse cx="52" cy="62" rx="29" ry="33" fill="#e3c08c"/>
+            <path d="M22,58 Q18,19 52,17 Q86,19 82,58 Q82,38 52,35 Q22,38 22,58 Z" fill="var(--ink-on-sand)"/>
+            <g class="kira-eyes">
+              <ellipse cx="42" cy="60" rx="4" ry="2.6" fill="var(--lagoon-deep)"/>
+              <ellipse cx="62" cy="60" rx="4" ry="2.6" fill="var(--lagoon-deep)"/>
+            </g>
+            <path d="M37,52 Q42,49 47,51" stroke="var(--ink-on-sand)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M57,51 Q62,49 67,52" stroke="var(--ink-on-sand)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <ellipse class="kira-mouth" cx="52" cy="79" rx="6.5" ry="3" fill="#a9644f"/>
+          </svg>
+        </div>
+        <div class="subtitle-bar">"The spa opens at 7 AM, right by the gym."</div>
+      </div>
+    </div>
+    <p class="state-note">Mouth stretches open/closed on a loop while speaking — the real build swaps between a handful of viseme shapes driven by the TTS audio, matched roughly to syllable timing.</p>
+  </section>
+<script src="../scale.js"></script>
+</body>
+</html>

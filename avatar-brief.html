@@ -24,7 +24,7 @@
   <div class="brief">
     <p class="back"><a href="index.html">&larr; Back to overview</a></p>
     <h1>Kira Avatar — Design Brief</h1>
-    <p class="intro">Defines what the avatar needs to express and why, ahead of final art/animation production. See the Lantern concept in motion on the dining mockup.</p>
+    <p class="intro">Defines what the avatar needs to express and why, ahead of final art/animation production. <strong>Direction confirmed: human-like, stylized rather than photoreal</strong> — see the concept sketch on <a href="mockups/html/avatar-concept.html">the avatar concept page</a>. This supersedes the earlier abstract "Lantern" exploration (still visible on the dining mockup for reference).</p>
 
     <h2>1. What the avatar needs to express</h2>
     <p>Five states, design and animate as one continuous character, not five disconnected poses:</p>
@@ -34,31 +34,31 @@
       <tr><td><strong>Wake</strong></td><td>"I'm listening to you now"</td><td>Clear, fast perk-up — the moment a guest decides the tablet heard them</td></tr>
       <tr><td><strong>Listening</strong></td><td>Actively hearing speech</td><td>Must read clearly even with a live subtitle overlapping it</td></tr>
       <tr><td><strong>Thinking</strong></td><td>Processing (covers the response-latency window)</td><td>Must not look frozen — the state most likely to get a second tap from an impatient guest</td></tr>
-      <tr><td><strong>Speaking</strong></td><td>Delivering a response</td><td>Lip-sync not required for pilot — a simpler talk-cycle is fine as long as it's visibly distinct from idle</td></tr>
+      <tr><td><strong>Speaking</strong></td><td>Delivering a response</td><td>Needs visible mouth movement (viseme/lip-sync) — a believable talk-cycle, not just an open/closed toggle</td></tr>
     </table>
     <p>Every state must also hold up with reduced text size on, and with a subtitle bar present — design with the subtitle area reserved, not added after.</p>
 
-    <h2>2. Visual direction — open, not yet decided</h2>
-    <p>No house style exists yet. Two directions to choose between:</p>
+    <h2>2. Visual direction — human, stylized rather than photoreal</h2>
+    <p><strong>Confirmed: human-like, not abstract.</strong> Specifically a stylized/illustrated human character (flat-vector app-mascot register, not a photograph), weighed against two heavier alternatives:</p>
     <ul>
-      <li><strong>Abstract/orb-like</strong> (glowing shape, light, particles) — hides the lack of a "face," ages well, easiest to animate smoothly, lowest risk of looking uncanny in any state.</li>
-      <li><strong>Character-like</strong> (stylized face or creature, non-photoreal) — more memorable/brandable, but much higher design and animation cost to get all five states + transitions reading well.</li>
+      <li><strong>Photoreal animated portrait</strong> (a real/AI-generated photo, lip-synced via a model like MuseTalk) — looks the most like an actual person, but requires sourcing a specific face (licensing/likeness implications) and more GPU headroom.</li>
+      <li><strong>Full photoreal 3D</strong> (e.g. NVIDIA ACE/Audio2Face driving an Unreal Engine MetaHuman) — the most realistic option, but needs a dedicated rendering GPU separate from the one running the LLM, plus a full 3D content pipeline. Most reference builds in this category are designed cloud-first, which cuts against "no guest data leaves the property."</li>
     </ul>
-    <p>The dining mockup explores an abstract direction — <strong>"the Lantern"</strong> — drawing on the hanging-lantern motif found in Gulf hospitality interiors rather than generic sci-fi-assistant iconography. Recommend presenting both directions as quick concepts before committing; this is a branding decision as much as a UI one.</p>
+    <p>A stylized illustrated character sidesteps both: it's a 2D rigged character, animates cheaply, never competes for GPU with the LLM/STT/TTS stack, and avoids the steepest uncanny-valley risk. Persona direction (open for the first concept pass): warm, professional, approachable — reads as "hotel concierge." Keep facial features simple/universal rather than tied to one specific ethnicity or real person, since guests across many nationalities will be looking at the same face.</p>
 
-    <h2>3. Technical constraint the design must respect</h2>
-    <p>The on-prem box's GPU is already running the AI model and speech processing. A heavy real-time 3D render competes for that same hardware and adds latency on top of an already-tight response-time budget.</p>
-    <p><strong>Recommendation: design as a 2D rigged/vector character (Rive or Lottie export), not a 3D model.</strong></p>
+    <h2>3. Technical direction: Live2D-style rigged 2D character</h2>
+    <p><strong>Recommendation: build as a Live2D-style rigged character</strong> — the standard tool for a flat illustrated character with layered parts that deform and animate in real time, including lip-sync via mouth-shape swapping driven by audio.</p>
     <ul>
-      <li>Build it as layered vector art with a skeletal rig, not a pre-rendered video loop — so state transitions can blend smoothly rather than hard-cutting.</li>
-      <li>Lip-sync to TTS is out of scope for pilot — design a generic "talking" motion rather than phoneme-accurate viseme animation.</li>
-      <li>Deliver source files (Rive <code>.riv</code> or AE/Lottie <code>.json</code>) sized for a tablet-resolution canvas, not print/marketing resolution.</li>
+      <li>Build as layered 2D artwork (separate layers per deformable part: eyes, mouth, eyebrows) rigged with a mesh/bone system, not a flat static image or a pre-rendered video loop.</li>
+      <li>Lip-sync is now in scope — as viseme-driven mouth-shape swapping (a handful of discrete mouth shapes mapped to phoneme groups), not phoneme-perfect motion capture.</li>
+      <li>Runs on CPU/light GPU — no AI video-generation model needed at runtime.</li>
+      <li>Deliver source files (Live2D rig or equivalent) sized for a tablet-resolution canvas, not print/marketing resolution.</li>
     </ul>
 
     <h2>4. Deliverables expected from this brief</h2>
     <ul>
-      <li>Two quick concept directions (abstract vs. character) — low-fidelity, for a go/no-go decision.</li>
-      <li>Once direction is picked: the five states above as a rigged animation, exported Rive/Lottie.</li>
+      <li>Two or three quick concept directions for the character itself (styling, gender presentation, exact look) — low-fidelity, for a go/no-go decision before investing in a full rig.</li>
+      <li>Once direction is picked: the five states above as a rigged, lip-synced Live2D character.</li>
       <li>A static "hero frame" per state, for dropping into the hi-fi mockups.</li>
     </ul>
 
