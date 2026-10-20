@@ -15,8 +15,10 @@
   .phone-tabbar span { flex: 1; text-align: center; padding: var(--sp-3) 0; font-size: 12px; font-weight: 600; color: var(--muted-on-sand); }
   .phone-tabbar span.active { color: var(--brass-deep); box-shadow: inset 0 2px 0 var(--brass); }
 
-  .notif-card-tool { box-shadow: 0 1px 2px rgba(36,31,22,.05); }
+  .notif-card-tool { box-shadow: 0 1px 2px rgba(36,31,22,.05); transition: box-shadow .15s, border-color .15s; }
   .notif-card-tool.ready { border-left: 3px solid var(--brass); }
+  .notif-card-tool.ready:hover { box-shadow: 0 4px 14px -6px rgba(36,31,22,.2); border-color: rgba(184,146,63,.4); }
+  .notif-card-tool.overdue { border-left: 3px solid var(--err); background: rgba(139,74,61,.04); }
   .notif-card-tool.readonly { background: rgba(36,31,22,.025); }
   .notif-card-tool .meta { display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-2); font-size: 12px; color: var(--muted-on-sand); }
   .tool-phone-frame .phone-btn-row .btn-tool { flex: 1; min-height: 44px; }
@@ -62,6 +64,12 @@
           <div class="meta">#V-57 · Basement B2, bay 14 · wanted now</div>
           <div class="phone-btn-row"><button class="btn-tool btn-tool-primary">Accept</button></div>
         </div>
+        <p class="section-label">In progress — needs attention</p>
+        <div class="notif-card-tool overdue">
+          <div class="top">Room 301 — Car request<span class="time">Overdue</span></div>
+          <div class="body">Range Rover Sport — DXB 2290</div>
+          <div class="meta"><span class="badge badge-err">Overdue</span>#V-56 · Bringing car · Omar H.</div>
+        </div>
         <p class="section-label">Earlier today</p>
         <div class="notif-card-tool readonly">
           <div class="top">Room 208 — Car request<span class="time">8:52</span></div>
@@ -71,7 +79,7 @@
       </div>
       <div class="phone-tabbar"><span class="active">Requests</span><span>Completed today</span></div>
     </div>
-    <p class="state-note">Triggered when a guest asks for their car. Same card/notification pattern as the <a href="staff-waiter.html">waiter app</a>. Tab counts update live; vehicle and bay come from the guest/PMS record (<a href="valet.html">guest tablet, valet flow</a>).</p>
+    <p class="state-note">Triggered when a guest asks for their car. Same card/notification pattern as the <a href="staff-waiter.html">waiter app</a>. Tab counts update live; vehicle and bay come from the guest/PMS record (<a href="valet.html">guest tablet, valet flow</a>). A ticket already claimed by a colleague still shows here, read-only, once it runs past its SLA — so a free attendant can see it needs help without waiting for the <a href="staff-front-desk.html">front desk's oversight board</a> to flag it first.</p>
   </section>
 
   <!-- Screen 2: Status actions -->

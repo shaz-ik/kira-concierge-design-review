@@ -25,6 +25,15 @@
   .btn-row .btn { flex: 1; padding-left: var(--sp-4); padding-right: var(--sp-4); }
   .btn[disabled] { opacity: .4; cursor: not-allowed; }
   .nav-icon svg { width: 13px; height: 13px; vertical-align: -2px; }
+
+  /* Micro-interaction polish: touch targets read as tappable, not static text */
+  .quick-chip, .nav-icon, .nav-emergency { cursor: pointer; transition: background-color .15s, border-color .15s, transform .1s; }
+  .quick-chip:hover { background: rgba(244,239,227,.14); }
+  .quick-chip.selected:hover { background: var(--brass-soft); }
+  .nav-icon:hover { background: rgba(244,239,227,.12); }
+  .nav-emergency:hover { background: rgba(139,74,61,.3); }
+  .btn-ghost-dark:hover { background: rgba(244,239,227,.08); border-color: rgba(244,239,227,.5); }
+  .btn:active { transform: translateY(1px); }
 </style>
 </head>
 <body>
@@ -82,9 +91,49 @@
     <p class="state-note">Single confirm, no price/total section — intentionally lighter than dining's chargeable confirm. A spoken request pre-selects the matching chip, so voice and touch land on the same confirm.</p>
   </section>
 
-  <!-- Screen 2: Status track -->
+  <!-- Screen 2: Ticket created -->
   <section class="screen-block">
-    <h2>2. Status track (Received → In progress → Done)</h2>
+    <h2>2. Ticket created</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">Housekeeping · Request #HK-203</div>
+      <div class="tablet-body split state-idle">
+        <div class="kira-col">
+          <div class="kira-photo-wrap">
+          <img src="../assets/kira-idle.jpg" alt="Kira">
+        </div>
+          <div class="subtitle-bar">“Got it — housekeeping will have this with you within 20 minutes.”</div>
+        </div>
+        <div class="task-col">
+          <div class="task-head">
+            <span class="task-eyebrow">Request #HK-203</span>
+            <p class="task-title">Request received</p>
+          </div>
+          <div class="guest-card">
+            <div class="g-stepper">
+              <div class="g-step"><div class="g-dot active"></div><div class="g-label active">Received</div></div>
+              <div class="g-line"></div>
+              <div class="g-step"><div class="g-dot"></div><div class="g-label">In progress</div></div>
+              <div class="g-line"></div>
+              <div class="g-step"><div class="g-dot"></div><div class="g-label">Done</div></div>
+            </div>
+          </div>
+          <p class="avatar-sub">2 extra towels · expected within 20 minutes</p>
+          <div class="btn-row">
+            <button class="btn btn-ghost-dark">Back to home</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">The ticket number and ETA appear the moment the request is confirmed, before housekeeping has even picked it up — a lighter-weight moment than dining's confirm, with no payment involved. Same stepper component as screen 3, just starting one step earlier.</p>
+  </section>
+
+  <!-- Screen 3: Status track -->
+  <section class="screen-block">
+    <h2>3. Status track (Received → In progress → Done)</h2>
     <div class="tablet-frame">
       <div class="tablet-navbar">
         <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
@@ -122,6 +171,50 @@
     </div>
     <p class="state-note">Same stepper component as dining/valet/checkout, three steps instead of four. SLA/ETA shown as plain text, not a countdown timer, to avoid alarming the guest.</p>
     <p class="state-note">Fulfilled on the staff side via the housekeeping staff app (<a href="staff-housekeeping.html">Staff: Housekeeping</a>) — same Kanban pattern as the kitchen display.</p>
+  </section>
+
+  <!-- Screen 4: Completion notice -->
+  <section class="screen-block">
+    <h2>4. Completion notice</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">Housekeeping · Request #HK-203</div>
+      <div class="tablet-body split state-wake">
+        <div class="kira-col">
+          <div class="kira-photo-wrap">
+          <img src="../assets/kira-wake.jpg" alt="Kira">
+        </div>
+          <div class="subtitle-bar">“All done — your towels have been delivered.”</div>
+        </div>
+        <div class="task-col">
+          <div class="task-head">
+            <span class="task-eyebrow">Request #HK-203</span>
+            <p class="task-title">All done</p>
+          </div>
+          <div class="guest-card">
+            <div class="g-stepper">
+              <div class="g-step"><div class="g-dot done"></div><div class="g-label">Received</div></div>
+              <div class="g-line done"></div>
+              <div class="g-step"><div class="g-dot done"></div><div class="g-label">In progress</div></div>
+              <div class="g-line done"></div>
+              <div class="g-step"><div class="g-dot active"></div><div class="g-label active">Done</div></div>
+            </div>
+          </div>
+          <div class="g-banner g-banner-good">
+            Delivered
+            <span class="meta">2 extra towels · Room 412</span>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-ghost-dark">Another request</button>
+            <button class="btn btn-brass">Back to home</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Fires the moment housekeeping marks the ticket done (<a href="staff-housekeeping.html">Staff: Housekeeping</a>, screen 2) — Kira's expression brightens briefly to draw the eye, the same wake cue used for every completion screen on the tablet.</p>
   </section>
 <script src="../scale.js"></script>
 </body>

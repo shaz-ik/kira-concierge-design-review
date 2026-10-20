@@ -48,6 +48,21 @@
   .btn-row .btn { flex: 1; padding-left: var(--sp-4); padding-right: var(--sp-4); }
   .btn[disabled] { opacity: .4; cursor: not-allowed; }
   .nav-icon svg { width: 13px; height: 13px; vertical-align: -2px; }
+
+  /* Micro-interaction polish: touch targets read as tappable, not static text */
+  .quick-chip, .g-select-chip, .add-btn, .nav-icon, .nav-emergency { cursor: pointer; transition: background-color .15s, border-color .15s, transform .1s; }
+  .quick-chip:hover { background: rgba(244,239,227,.14); }
+  .quick-chip.selected:hover { background: var(--brass-soft); }
+  .add-btn:hover { background: rgba(217,184,106,.15); }
+  .nav-icon:hover { background: rgba(244,239,227,.12); }
+  .nav-emergency:hover { background: rgba(139,74,61,.3); }
+  .btn-ghost-dark:hover { background: rgba(244,239,227,.08); border-color: rgba(244,239,227,.5); }
+  .btn:active { transform: translateY(1px); }
+
+  /* Menu item — unavailable (sold out) state, reuses .menu-item shape */
+  .menu-item.unavailable { opacity: .55; }
+  .menu-item.unavailable .menu-item-name { text-decoration: line-through; }
+  .menu-item-unavailable-tag { font-size: var(--fs-small); color: var(--muted-on-dark); border: 1px solid rgba(244,239,227,.2); padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -132,6 +147,10 @@
               <div><div class="menu-item-name">Grilled hammour, saffron rice</div><div class="menu-item-tag allergen">Contains nuts, fish</div></div>
               <div class="menu-item-end"><span class="menu-item-price">AED 92</span><span class="add-btn">+</span></div>
             </div>
+            <div class="menu-item unavailable">
+              <div><div class="menu-item-name">Lentil soup</div><div class="menu-item-tag">Sold out for today</div></div>
+              <div class="menu-item-end"><span class="menu-item-unavailable-tag">Unavailable</span></div>
+            </div>
           </div>
           <div class="cart-bar">
             <span>Your order · <strong>3 items · AED 154</strong></span>
@@ -140,7 +159,7 @@
         </div>
       </div>
     </div>
-    <p class="state-note">Listening state shown with the ripple cue — the guest is mid-sentence and the live transcript sits under Kira, never over the menu. Saying “add a burger” has the same effect as tapping [+]; both update the same order bar live (touch parity). Allergen tags are always visible on the item, not hidden behind a tap.</p>
+    <p class="state-note">Listening state shown with the ripple cue — the guest is mid-sentence and the live transcript sits under Kira, never over the menu. Saying “add a burger” has the same effect as tapping [+]; both update the same order bar live (touch parity). Allergen tags are always visible on the item, not hidden behind a tap. A sold-out item (Lentil soup) stays visible rather than disappearing, shown struck through with no add control — asking Kira for it by voice gets the same answer.</p>
   </section>
 
   <!-- Screen 2b: Menu unavailable -->
@@ -215,7 +234,7 @@
         </div>
       </div>
     </div>
-    <p class="state-note">Confirm is the chargeable step — explicit tap or voice “yes” required either way, backed by a server-issued <code>confirmation_token</code> generated on entry to this screen, so a touch guest and a voice guest hit the exact same contract (<code>dev-plan/api-contracts.md</code> §3).</p>
+    <p class="state-note">Confirm is the chargeable step — explicit tap or voice “yes” required either way, backed by a server-issued <code>confirmation_token</code> generated on entry to this screen, so a touch guest and a voice guest hit the exact same order contract.</p>
   </section>
 
   <!-- Screen 3b: Submit error -->
@@ -253,9 +272,45 @@
     <p class="state-note">Same layout as the confirm screen, with a banner above the total and a single retry button — the same <code>confirmation_token</code> is reused, so a second tap can never create a duplicate order (idempotency).</p>
   </section>
 
-  <!-- Screen 4: Status track -->
+  <!-- Screen 4: Sent to kitchen -->
   <section class="screen-block">
-    <h2>4. Status track (Accepted → Preparing → Ready → Delivered)</h2>
+    <h2>4. Sent to kitchen</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">In-room dining · Order #4821</div>
+      <div class="tablet-body split state-speaking">
+        <div class="kira-col">
+          <div class="kira-photo-wrap">
+          <img src="../assets/kira-speaking.jpg" alt="Kira">
+        </div>
+          <div class="subtitle-bar">“Sent to the kitchen — I'll let you know as it's prepared.”</div>
+        </div>
+        <div class="task-col">
+          <div class="task-head">
+            <span class="task-eyebrow">Order #4821</span>
+            <p class="task-title">Sent to the kitchen</p>
+          </div>
+          <div class="g-banner g-banner-good">
+            Order confirmed
+            <span class="meta">2× Wagyu smash burger, 1× Coke · AED 177.10</span>
+          </div>
+          <p class="task-note">You'll see live updates here as your order moves through the kitchen.</p>
+          <div class="btn-row">
+            <button class="btn btn-ghost-dark">Back to home</button>
+            <button class="btn btn-brass">Track status</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">A brief hand-off screen between confirming and the live status track — reassurance that the order actually left the tablet. The same <code>confirmation_token</code> carries straight through to order #4821 on the kitchen display (<a href="staff-kitchen.html">Staff: Kitchen</a>).</p>
+  </section>
+
+  <!-- Screen 5: Status track -->
+  <section class="screen-block">
+    <h2>5. Status track (Accepted → Preparing → Ready → Delivered)</h2>
     <div class="tablet-frame">
       <div class="tablet-navbar">
         <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
@@ -295,6 +350,52 @@
       </div>
     </div>
     <p class="state-note">One screen; the stepper updates in place for all four states. Brass fill = done, brass ring = active, hollow = pending. Cancel is only enabled before “Preparing” (shown disabled here). Each step change is announced by Kira, not just shown silently. Same stepper component is reused for housekeeping, valet, and checkout-extension.</p>
+  </section>
+
+  <!-- Screen 6: Delivered -->
+  <section class="screen-block">
+    <h2>6. Delivered — order complete</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">In-room dining · Order #4821</div>
+      <div class="tablet-body split state-wake">
+        <div class="kira-col">
+          <div class="kira-photo-wrap">
+          <img src="../assets/kira-wake.jpg" alt="Kira">
+        </div>
+          <div class="subtitle-bar">“Enjoy your meal — let me know if you'd like anything else.”</div>
+        </div>
+        <div class="task-col">
+          <div class="task-head">
+            <span class="task-eyebrow">Order #4821</span>
+            <p class="task-title">Delivered</p>
+          </div>
+          <div class="guest-card">
+            <div class="g-stepper">
+              <div class="g-step"><div class="g-dot done"></div><div class="g-label">Accepted</div></div>
+              <div class="g-line done"></div>
+              <div class="g-step"><div class="g-dot done"></div><div class="g-label">Preparing</div></div>
+              <div class="g-line done"></div>
+              <div class="g-step"><div class="g-dot done"></div><div class="g-label">Ready</div></div>
+              <div class="g-line done"></div>
+              <div class="g-step"><div class="g-dot active"></div><div class="g-label active">Delivered</div></div>
+            </div>
+          </div>
+          <p class="task-note">How was it?</p>
+          <div class="quick-grid">
+            <span class="quick-chip">🙂 Good</span>
+            <span class="quick-chip">🙁 Not great</span>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-ghost-dark">Back to home</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Shown once the waiter taps Mark delivered (<a href="staff-waiter.html">Staff: Waiter</a>). The feedback prompt is sampled occasionally rather than asked after every order, so it never reads as a survey.</p>
   </section>
 <script src="../scale.js"></script>
 </body>

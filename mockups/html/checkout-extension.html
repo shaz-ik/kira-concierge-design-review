@@ -27,6 +27,15 @@
   .nav-icon svg { width: 13px; height: 13px; vertical-align: -2px; }
   .time-label { font-size: var(--fs-small); color: var(--muted-on-dark); }
   .g-banner strong { font-weight: 600; }
+
+  /* Micro-interaction polish: touch targets read as tappable, not static text */
+  .quick-chip, .g-select-chip, .nav-icon, .nav-emergency { cursor: pointer; transition: background-color .15s, border-color .15s, transform .1s; }
+  .quick-chip:hover { background: rgba(244,239,227,.14); }
+  .quick-chip.selected:hover { background: var(--brass-soft); }
+  .nav-icon:hover { background: rgba(244,239,227,.12); }
+  .nav-emergency:hover { background: rgba(139,74,61,.3); }
+  .btn-ghost-dark:hover { background: rgba(244,239,227,.08); border-color: rgba(244,239,227,.5); }
+  .btn:active { transform: translateY(1px); }
 </style>
 </head>
 <body>
@@ -183,6 +192,74 @@
       </div>
     </div>
     <p class="state-note">Same layout as approved, banner swapped and reason text shown, no charge section. The guest always has a next step — an alternative or a clean exit — rather than a dead end.</p>
+  </section>
+
+  <!-- Screen 3c: Outcome approved, no fee -->
+  <section class="screen-block">
+    <h2>3c. Outcome — approved, no fee (variant)</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 517</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">Extend checkout</div>
+      <div class="tablet-body split state-speaking">
+        <div class="kira-col">
+          <div class="kira-photo-wrap">
+          <img src="../assets/kira-speaking.jpg" alt="Kira">
+        </div>
+          <div class="subtitle-bar">“Approved — your checkout is now 1:00 PM, no charge.”</div>
+        </div>
+        <div class="task-col">
+          <div class="task-head">
+            <span class="task-eyebrow">Request approved</span>
+            <p class="task-title">Checkout extended</p>
+          </div>
+          <div class="g-banner g-banner-good">
+            Approved — new checkout: 1:00 PM
+            <span class="meta">No fee — within standard policy</span>
+          </div>
+          <p class="task-note">Nothing further to confirm — you're all set.</p>
+          <div class="btn-row">
+            <button class="btn btn-brass">Back to home</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">A short extension within policy (Room 517, approved 9:12 AM — see the <a href="staff-front-desk.html">front desk's decided-today list</a>) skips the charge step entirely: one acknowledgement, no confirm needed, since the standard fee only applies after 2:00 PM — unlike the Room 412 example in 3a.</p>
+  </section>
+
+  <!-- Screen 4: Final confirmation -->
+  <section class="screen-block">
+    <h2>4. Checkout extended — confirmation</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">Extend checkout</div>
+      <div class="tablet-body split state-wake">
+        <div class="kira-col">
+          <div class="kira-photo-wrap">
+          <img src="../assets/kira-wake.jpg" alt="Kira">
+        </div>
+          <div class="subtitle-bar">“All set — enjoy the extra time.”</div>
+        </div>
+        <div class="task-col">
+          <div class="task-head">
+            <p class="task-title">Checkout extended</p>
+          </div>
+          <div class="g-banner g-banner-good">
+            New checkout: 5:00 PM
+            <span class="meta">AED 90.00 charged to Room 412</span>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-brass">Back to home</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Closes the loop once the fee is confirmed on screen 3a — the room's new checkout time and the posted charge now match what the front desk sees on their side (<a href="staff-front-desk.html">Staff: Front Desk</a>).</p>
   </section>
 <script src="../scale.js"></script>
 </body>

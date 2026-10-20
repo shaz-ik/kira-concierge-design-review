@@ -25,6 +25,13 @@
   .btn-row .btn { flex: 1; padding-left: var(--sp-4); padding-right: var(--sp-4); }
   .btn[disabled] { opacity: .4; cursor: not-allowed; }
   .nav-icon svg { width: 13px; height: 13px; vertical-align: -2px; }
+
+  /* Micro-interaction polish: touch targets read as tappable, not static text */
+  .quick-chip, .nav-icon, .nav-emergency { cursor: pointer; transition: background-color .15s, border-color .15s, transform .1s; }
+  .nav-icon:hover { background: rgba(244,239,227,.12); }
+  .nav-emergency:hover { background: rgba(139,74,61,.3); }
+  .btn-ghost-dark:hover { background: rgba(244,239,227,.08); border-color: rgba(244,239,227,.5); }
+  .btn:active { transform: translateY(1px); }
 </style>
 </head>
 <body>
@@ -74,6 +81,39 @@
       </div>
     </div>
     <p class="state-note">Vehicle info pulled from the guest/PMS record if known; falls back to a plain confirm with no vehicle lines if not on file.</p>
+  </section>
+
+  <!-- Screen 1b: Request + confirm — vehicle not on file -->
+  <section class="screen-block">
+    <h2>1b. Request + confirm — vehicle not on file (variant)</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 226</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">Valet</div>
+      <div class="tablet-body split state-speaking">
+        <div class="kira-col">
+          <div class="kira-photo-wrap">
+          <img src="../assets/kira-speaking.jpg" alt="Kira">
+        </div>
+          <div class="subtitle-bar">“Shall I call for your car now?”</div>
+        </div>
+        <div class="task-col">
+          <div class="task-head">
+            <p class="task-title">Bring my car</p>
+          </div>
+          <div class="guest-card">
+            <div class="g-field-row"><span class="label">Pick-up</span><span class="value">Main entrance</span></div>
+          </div>
+          <p class="task-note">We don't have your vehicle on file — the valet team will confirm the details with you at the entrance.</p>
+          <div class="btn-row">
+            <button class="btn btn-brass">Bring my car</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="state-note">Same confirm action either way — only the vehicle lines are omitted when nothing is on file in the guest/PMS record.</p>
   </section>
 
   <!-- Screen 2: Status track -->

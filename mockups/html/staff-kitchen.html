@@ -17,6 +17,8 @@
   .ticket-top .rid { font-weight: 500; font-size: 12px; color: var(--muted-on-sand); }
   .ticket-tags { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-top: var(--sp-2); }
   .ticket-card.muted { opacity: .8; }
+  .kanban .ticket-card { cursor: pointer; transition: box-shadow .15s, border-color .15s, transform .15s; }
+  .kanban .ticket-card:hover { box-shadow: 0 6px 16px -8px rgba(36,31,22,.3); border-color: rgba(184,146,63,.4); transform: translateY(-1px); }
   .detail-head { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-5); }
   .detail-head .panel-title { margin-bottom: 0; font-size: var(--fs-h2); }
   .detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: var(--sp-5); align-items: start; }
