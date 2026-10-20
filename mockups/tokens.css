@@ -448,3 +448,20 @@ h1, h2, h3, p { margin: 0; }
 .ticket-room { font-weight: 700; font-size: var(--fs-small); }
 .ticket-meta { font-size: 12px; color: var(--muted-on-sand); margin-top: 2px; }
 .ticket-top { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: var(--fs-small); margin-bottom: var(--sp-1); gap: var(--sp-2); }
+
+/* ---------- Global site header (persistent cross-section nav) ---------- */
+.site-header {
+  background: var(--lagoon-deep); color: var(--ink-on-dark);
+  padding: var(--sp-3) var(--sp-5);
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--sp-3);
+}
+.site-header .brand { font-weight: 700; color: var(--brass-soft); text-decoration: none; font-size: var(--fs-small); display: flex; align-items: center; gap: 8px; }
+.site-header .brand::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  background: radial-gradient(circle at 35% 30%, #fff3d6, var(--brass-soft) 55%, var(--brass) 100%);
+  box-shadow: 0 0 7px 1px rgba(217,184,106,.55);
+}
+.site-header nav { display: flex; gap: var(--sp-4); font-size: var(--fs-small); }
+.site-header nav a { color: rgba(244,239,227,.75); text-decoration: none; }
+.site-header nav a:hover { color: var(--ink-on-dark); }
+.site-header nav a.current { color: var(--brass-soft); font-weight: 600; }

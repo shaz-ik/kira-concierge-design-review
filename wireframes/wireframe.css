@@ -247,3 +247,16 @@ hr.divider { border: none; border-top: 1px dashed var(--line-dashed); margin: 8p
 
 .panel-title { font-size: 15px; font-weight: 600; margin: 0 0 14px; }
 .panel-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+
+/* ---------- Global site header (persistent cross-section nav) ---------- */
+.site-header {
+  background: #fff; border-bottom: 1px solid var(--line);
+  margin: -32px -24px 24px;
+  padding: 12px 24px;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+}
+.site-header .brand { font-weight: 700; color: var(--ink); text-decoration: none; font-size: 14px; }
+.site-header nav { display: flex; gap: 16px; font-size: 13px; }
+.site-header nav a { color: var(--muted); text-decoration: none; padding-bottom: 2px; border-bottom: 2px solid transparent; }
+.site-header nav a:hover { color: var(--ink); }
+.site-header nav a.current { color: var(--accent); font-weight: 600; border-bottom-color: var(--accent); }
