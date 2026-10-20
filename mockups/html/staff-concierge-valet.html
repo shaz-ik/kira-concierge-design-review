@@ -6,15 +6,7 @@
 <title>Kira Concierge — Hi-Fi Mockup: Concierge &amp; Valet Staff</title>
 <link rel="stylesheet" href="../tokens.css">
 <style>
-  /* Page-scoped: same handheld stage + phone refinements as staff-waiter.html. */
-  .phone-stage { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--sp-7); padding: var(--sp-6); background: var(--sand); border: 1px solid rgba(36,31,22,.06); border-radius: var(--radius-tool); }
-  .phone-stage .device-scale, .phone-stage .tool-phone-frame { margin: 0; flex-shrink: 0; }
-  .stage-notes { flex: 1; min-width: 220px; max-width: 460px; }
-  .stage-notes .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--brass-deep); margin-bottom: var(--sp-2); }
-  .stage-notes .lead { font-weight: 600; font-size: var(--fs-body); margin-bottom: var(--sp-3); }
-  .stage-notes .state-note { margin-top: 0; }
-  .stage-notes .state-note + .state-note { margin-top: var(--sp-2); }
-
+  /* Page-scoped: phone refinements shared with staff-waiter.html. */
   .tool-phone-frame { min-height: 540px; display: flex; flex-direction: column; }
   .tool-phone-content { flex: 1; }
   .tool-phone-header { display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-body); }
@@ -55,107 +47,89 @@
   <!-- Screen 1: Incoming requests (Valet tab) -->
   <section class="screen-block">
     <h2>1. Incoming requests — Valet tab</h2>
-    <div class="phone-stage">
-      <div class="tool-phone-frame">
-        <div class="tool-phone-status"><span>Concierge &amp; Valet app</span><span>9:41</span></div>
-        <div class="tool-phone-header">
-          <div class="tabs-row">
-            <span class="tab-chip active">Valet (1)</span>
-            <span class="tab-chip">Concierge (2)</span>
-          </div>
+    <div class="tool-phone-frame">
+      <div class="tool-phone-status"><span>Concierge &amp; Valet app</span><span>9:41</span></div>
+      <div class="tool-phone-header">
+        <div class="tabs-row">
+          <span class="tab-chip active">Valet (1)</span>
+          <span class="tab-chip">Concierge (2)</span>
         </div>
-        <div class="tool-phone-content">
-          <div class="notif-card-tool ready">
-            <div class="top">Room 412 — Car request<span class="time">1 min ago</span></div>
-            <div class="body">Toyota Camry — ABC 123</div>
-            <div class="meta">#V-57 · Basement B2, bay 14 · wanted now</div>
-            <div class="phone-btn-row"><button class="btn-tool btn-tool-primary">Accept</button></div>
-          </div>
-          <p class="section-label">Earlier today</p>
-          <div class="notif-card-tool readonly">
-            <div class="top">Room 208 — Car request<span class="time">8:52</span></div>
-            <div class="body">Nissan Patrol — DXB 7781</div>
-            <div class="meta"><span class="badge badge-ok">Done</span>#V-55 · handed over at entrance</div>
-          </div>
+      </div>
+      <div class="tool-phone-content">
+        <div class="notif-card-tool ready">
+          <div class="top">Room 412 — Car request<span class="time">1 min ago</span></div>
+          <div class="body">Toyota Camry — ABC 123</div>
+          <div class="meta">#V-57 · Basement B2, bay 14 · wanted now</div>
+          <div class="phone-btn-row"><button class="btn-tool btn-tool-primary">Accept</button></div>
         </div>
-        <div class="phone-tabbar"><span class="active">Requests</span><span>Completed today</span></div>
+        <p class="section-label">Earlier today</p>
+        <div class="notif-card-tool readonly">
+          <div class="top">Room 208 — Car request<span class="time">8:52</span></div>
+          <div class="body">Nissan Patrol — DXB 7781</div>
+          <div class="meta"><span class="badge badge-ok">Done</span>#V-55 · handed over at entrance</div>
+        </div>
       </div>
-      <div class="stage-notes">
-        <p class="eyebrow">Triggered by</p>
-        <p class="lead">Guest asks for their car</p>
-        <p class="state-note">Same card/notification pattern as the <a href="staff-waiter.html">waiter app</a>. Tab counts update live; vehicle and bay come from the guest/PMS record (<a href="valet.html">guest tablet, valet flow</a>).</p>
-      </div>
+      <div class="phone-tabbar"><span class="active">Requests</span><span>Completed today</span></div>
     </div>
+    <p class="state-note">Triggered when a guest asks for their car. Same card/notification pattern as the <a href="staff-waiter.html">waiter app</a>. Tab counts update live; vehicle and bay come from the guest/PMS record (<a href="valet.html">guest tablet, valet flow</a>).</p>
   </section>
 
   <!-- Screen 2: Status actions -->
   <section class="screen-block">
     <h2>2. Status actions (Accept → In progress → Done)</h2>
-    <div class="phone-stage">
-      <div class="tool-phone-frame">
-        <div class="tool-phone-status"><span>Concierge &amp; Valet app</span><span>9:43</span></div>
-        <div class="tool-phone-header"><span>Valet #V-57 — Room 412</span><span class="badge badge-warn">Due 9:50</span></div>
-        <div class="tool-phone-content">
-          <div class="t-stepper">
-            <div class="t-step"><div class="t-dot done"></div><div class="t-label">Accepted</div></div>
-            <div class="t-line done"></div>
-            <div class="t-step"><div class="t-dot active"></div><div class="t-label active">In progress</div></div>
-            <div class="t-line"></div>
-            <div class="t-step"><div class="t-dot"></div><div class="t-label">Done</div></div>
-          </div>
-          <div class="notif-card-tool">
-            <div class="kv"><span class="k">Vehicle</span><span class="v">Toyota Camry — ABC 123</span></div>
-            <div class="kv"><span class="k">Parked at</span><span class="v">Basement B2, bay 14</span></div>
-            <div class="kv"><span class="k">Key tag</span><span class="v">57</span></div>
-            <div class="kv"><span class="k">Accepted</span><span class="v">By you at 9:42</span></div>
-          </div>
-          <div class="phone-spacer"></div>
-          <div class="phone-btn-row"><button class="btn-tool btn-tool-secondary">Back</button><button class="btn-tool btn-tool-primary">Car ready at entrance</button></div>
+    <div class="tool-phone-frame">
+      <div class="tool-phone-status"><span>Concierge &amp; Valet app</span><span>9:43</span></div>
+      <div class="tool-phone-header"><span>Valet #V-57 — Room 412</span><span class="badge badge-warn">Due 9:50</span></div>
+      <div class="tool-phone-content">
+        <div class="t-stepper">
+          <div class="t-step"><div class="t-dot done"></div><div class="t-label">Accepted</div></div>
+          <div class="t-line done"></div>
+          <div class="t-step"><div class="t-dot active"></div><div class="t-label active">In progress</div></div>
+          <div class="t-line"></div>
+          <div class="t-step"><div class="t-dot"></div><div class="t-label">Done</div></div>
         </div>
-        <div class="phone-tabbar"><span class="active">Requests</span><span>Completed today</span></div>
+        <div class="notif-card-tool">
+          <div class="kv"><span class="k">Vehicle</span><span class="v">Toyota Camry — ABC 123</span></div>
+          <div class="kv"><span class="k">Parked at</span><span class="v">Basement B2, bay 14</span></div>
+          <div class="kv"><span class="k">Key tag</span><span class="v">57</span></div>
+          <div class="kv"><span class="k">Accepted</span><span class="v">By you at 9:42</span></div>
+        </div>
+        <div class="phone-spacer"></div>
+        <div class="phone-btn-row"><button class="btn-tool btn-tool-secondary">Back</button><button class="btn-tool btn-tool-primary">Car ready at entrance</button></div>
       </div>
-      <div class="stage-notes">
-        <p class="eyebrow">Updates</p>
-        <p class="lead">Guest notified: car ready at entrance</p>
-        <p class="state-note">Tapping "Car ready at entrance" fires the guest notification and advances this stepper to Done — the guest never has to poll. If the due time passes, the request is flagged on the <a href="staff-front-desk.html">front desk oversight board</a>.</p>
-      </div>
+      <div class="phone-tabbar"><span class="active">Requests</span><span>Completed today</span></div>
     </div>
+    <p class="state-note">Tapping "Car ready at entrance" fires the guest notification and advances this stepper to Done — the guest never has to poll. If the due time passes, the request is flagged on the <a href="staff-front-desk.html">front desk oversight board</a>.</p>
   </section>
 
   <!-- Screen 3: Concierge tab -->
   <section class="screen-block">
     <h2>3. Concierge tab — bookings &amp; recommendations</h2>
-    <div class="phone-stage">
-      <div class="tool-phone-frame">
-        <div class="tool-phone-status"><span>Concierge &amp; Valet app</span><span>9:44</span></div>
-        <div class="tool-phone-header">
-          <div class="tabs-row">
-            <span class="tab-chip">Valet (0)</span>
-            <span class="tab-chip active">Concierge (2)</span>
-          </div>
+    <div class="tool-phone-frame">
+      <div class="tool-phone-status"><span>Concierge &amp; Valet app</span><span>9:44</span></div>
+      <div class="tool-phone-header">
+        <div class="tabs-row">
+          <span class="tab-chip">Valet (0)</span>
+          <span class="tab-chip active">Concierge (2)</span>
         </div>
-        <div class="tool-phone-content">
-          <div class="notif-card-tool ready">
-            <div class="top">Room 604 — Dinner booking<span class="time">4 min ago</span></div>
-            <div class="body">Table for 2, tonight 8:00 PM — terrace seating preferred</div>
-            <div class="meta">#C-31 · <span class="badge badge-ok">22 min left</span></div>
-            <div class="phone-btn-row"><button class="btn-tool btn-tool-primary">Accept</button></div>
-          </div>
-          <div class="notif-card-tool ready">
-            <div class="top">Room 208 — Desert safari<span class="time">12 min ago</span></div>
-            <div class="body">4 guests, tomorrow afternoon — asked for hotel pickup</div>
-            <div class="meta">#C-32 · <span class="badge badge-warn">8 min left</span></div>
-            <div class="phone-btn-row"><button class="btn-tool btn-tool-primary">Accept</button></div>
-          </div>
+      </div>
+      <div class="tool-phone-content">
+        <div class="notif-card-tool ready">
+          <div class="top">Room 604 — Dinner booking<span class="time">4 min ago</span></div>
+          <div class="body">Table for 2, tonight 8:00 PM — terrace seating preferred</div>
+          <div class="meta">#C-31 · <span class="badge badge-ok">22 min left</span></div>
+          <div class="phone-btn-row"><button class="btn-tool btn-tool-primary">Accept</button></div>
         </div>
-        <div class="phone-tabbar"><span class="active">Requests</span><span>Completed today</span></div>
+        <div class="notif-card-tool ready">
+          <div class="top">Room 208 — Desert safari<span class="time">12 min ago</span></div>
+          <div class="body">4 guests, tomorrow afternoon — asked for hotel pickup</div>
+          <div class="meta">#C-32 · <span class="badge badge-warn">8 min left</span></div>
+          <div class="phone-btn-row"><button class="btn-tool btn-tool-primary">Accept</button></div>
+        </div>
       </div>
-      <div class="stage-notes">
-        <p class="eyebrow">Same app, other queue</p>
-        <p class="lead">Concierge requests reuse the valet card</p>
-        <p class="state-note">Accepting opens the same Accepted → In progress → Done stepper as screen 2; the final action reads "Confirmed with guest" instead of "Car ready at entrance".</p>
-      </div>
+      <div class="phone-tabbar"><span class="active">Requests</span><span>Completed today</span></div>
     </div>
+    <p class="state-note">Same app, other queue — concierge requests reuse the valet card. Accepting opens the same Accepted → In progress → Done stepper as screen 2; the final action reads "Confirmed with guest" instead of "Car ready at entrance".</p>
   </section>
 <script src="../scale.js"></script>
 </body>
