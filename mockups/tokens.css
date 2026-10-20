@@ -86,10 +86,6 @@ h1, h2, h3, p { margin: 0; }
   padding: 0 var(--sp-5);
   overflow-x: auto;
 }
-/* Phone-frame screens are much narrower than desktop/tablet ones — give them a
-   tighter column centrally so they never read as sparse/empty, instead of each
-   page inventing its own one-off layout. */
-.screen-block:has(.tool-phone-frame) { max-width: 420px; }
 .screen-block h2 { font-size: var(--fs-h2); font-weight: 600; margin-bottom: var(--sp-4); }
 .state-note {
   max-width: 560px;
@@ -279,11 +275,13 @@ h1, h2, h3, p { margin: 0; }
 .quick-chip.selected { background: var(--brass); color: #211704; border-color: var(--brass); font-weight: 600; }
 
 /* ---------- Staff phone (handheld, still tool-mode: light, dense) ---------- */
-.device-scale { margin: 0 auto; }
-.tablet-frame, .tool-frame { margin: 0 auto; }
+/* Frames sit flush-left under their heading, like the rest of the page — never
+   centered, so a narrow phone frame never drifts away from the heading above it. */
+.device-scale { margin: 0; }
+.tablet-frame, .tool-frame { margin: 0; }
 .tool-phone-frame {
   width: 320px; flex-shrink: 0;
-  margin: 0 auto;
+  margin: 0;
   background: var(--paper);
   border: 1px solid rgba(36,31,22,.12);
   border-radius: var(--radius-tool);
