@@ -230,6 +230,8 @@ h1, h2, h3, p { margin: 0; }
 .quick-chip.selected { background: var(--brass); color: #211704; border-color: var(--brass); font-weight: 600; }
 
 /* ---------- Staff phone (handheld, still tool-mode: light, dense) ---------- */
+.device-scale { margin: 0 auto; }
+.tablet-frame, .tool-frame { margin: 0 auto; }
 .tool-phone-frame {
   width: 320px; flex-shrink: 0;
   margin: 0 auto;
