@@ -84,6 +84,7 @@ h1, h2, h3, p { margin: 0; }
   max-width: 1100px;
   margin: 0 auto var(--sp-7);
   padding: 0 var(--sp-5);
+  overflow-x: auto;
 }
 .screen-block h2 { font-size: var(--fs-h2); font-weight: 600; margin-bottom: var(--sp-4); }
 .state-note {
@@ -97,7 +98,7 @@ h1, h2, h3, p { margin: 0; }
 /* ---------- Guest tablet frame ---------- */
 .tablet-frame {
   width: 760px;
-  max-width: 100%;
+  flex-shrink: 0;
   aspect-ratio: 16/10;
   background: radial-gradient(ellipse at 50% 30%, var(--dusk-ink-2), var(--dusk-ink) 70%);
   border-radius: var(--radius-guest);
@@ -186,11 +187,12 @@ h1, h2, h3, p { margin: 0; }
 /* ---------- Guest global nav (always available, per flow-inventory §1) ---------- */
 .tablet-navbar {
   position: relative; z-index: 1; width: 100%;
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+  gap: var(--sp-2) var(--sp-4);
   padding: var(--sp-3) var(--sp-5);
   font-size: var(--fs-small);
 }
-.nav-group { display: flex; align-items: center; gap: var(--sp-3); }
+.nav-group { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); }
 .nav-chip {
   background: rgba(217,184,106,.12); border: 1px solid rgba(217,184,106,.35);
   color: var(--ink-on-dark); padding: 3px 12px; border-radius: 999px; font-size: 12.5px;
@@ -226,7 +228,7 @@ h1, h2, h3, p { margin: 0; }
 
 /* ---------- Staff phone (handheld, still tool-mode: light, dense) ---------- */
 .tool-phone-frame {
-  width: 320px; max-width: 100%;
+  width: 320px; flex-shrink: 0;
   background: var(--paper);
   border: 1px solid rgba(36,31,22,.12);
   border-radius: var(--radius-tool);
@@ -325,7 +327,7 @@ h1, h2, h3, p { margin: 0; }
 
 /* ---------- Staff / Admin shared shell (light, tool-like, tighter radius) ---------- */
 .tool-frame {
-  width: 100%; max-width: 980px;
+  width: 980px; flex-shrink: 0;
   background: var(--sand);
   border: 1px solid rgba(36,31,22,.1);
   border-radius: var(--radius-tool);
