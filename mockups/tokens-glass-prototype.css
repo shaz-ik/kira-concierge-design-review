@@ -1,0 +1,121 @@
+/* Kira Concierge — Glassmorphism / blue-cyan prototype.
+   Loaded AFTER tokens.css?v=2, overrides only what the client asked to
+   change (color scheme → glass morphism, blue/cyan, "similar to Kira" —
+   the client's other product, Kira 2, a dark-navy avatar app with a single
+   cyan glow, rounded-pill controls, and a glowing card edge).
+
+   Deliberately scoped to the dark guest-tablet surface only — the client's
+   note was in the context of reviewing the guest tablet screens, and
+   tool/staff-mode's light "paper" theme isn't part of this ask. Keeps every
+   existing custom-property NAME from tokens.css so a later full rollout is
+   a token-value swap, not a rewrite of every mockup/app file.
+
+   Not yet applied anywhere live — this is a standalone review prototype
+   (design/mockups/html/dining-glass-prototype.html). Nothing in
+   guest-app/, staff-app/, or the rest of design/ references this file.
+*/
+
+:root {
+  /* Night-water navy, cooler and darker than the original warm near-black —
+     matches the Kira 2 reference's near-black backdrop rather than the
+     original's warm charcoal. */
+  --dusk-ink: #070c14;
+  --dusk-ink-2: #0c1826;
+
+  /* The single accent family, replacing brass/gold — a clean cyan-blue glow,
+     not a blue-to-purple gradient (avoiding the generic glassmorphism
+     cliché): one hue, three weights, same as the original brass triplet. */
+  --brass: #4fc0ef;
+  --brass-deep: #1c7fae;
+  --brass-soft: #a7e3f7;
+
+  --ink-on-dark: #eef7fb;
+  --muted-on-dark: #88a8b8;
+}
+
+/* ---------- The lattice texture stays (it's the Dubai/mashrabiya identity
+   choice already approved) — just re-tinted to the new accent instead of
+   brass, and a touch softer so it reads as glass etching, not gold inlay. */
+.tablet-frame::before {
+  background-image:
+    repeating-linear-gradient(60deg, rgba(167, 227, 247, .04) 0 1px, transparent 1px 28px),
+    repeating-linear-gradient(-60deg, rgba(167, 227, 247, .04) 0 1px, transparent 1px 28px);
+}
+
+/* A soft ambient glow behind the frame so the glass blur below has real
+   depth to read against — without this, backdrop-filter blur has nothing
+   to blur and looks identical to plain translucency. */
+.tablet-frame {
+  background:
+    radial-gradient(ellipse 60% 45% at 50% 8%, rgba(79, 192, 239, .16), transparent 70%),
+    radial-gradient(ellipse 70% 50% at 50% 95%, rgba(28, 127, 174, .14), transparent 70%),
+    radial-gradient(ellipse at 50% 30%, var(--dusk-ink-2), var(--dusk-ink) 70%);
+  position: relative;
+}
+/* The glowing top edge from the Kira 2 reference — a light strip, not a
+   flat brand-color bar like the original's tool-mode top border. */
+.tablet-frame::after {
+  content: "";
+  position: absolute; top: 0; left: 8%; right: 8%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--brass-soft), transparent);
+  box-shadow: 0 0 24px 2px rgba(79, 192, 239, .5);
+  z-index: 2;
+}
+
+/* ---------- Real glass: translucent + blurred, not just translucent.
+   Every dark-mode "floating panel" class gets backdrop-filter added — this
+   is the one technical ingredient the original design never used, and the
+   actual difference between "dark mode" and "glassmorphism". */
+.guest-card, .g-banner, .subtitle-bar, .cart-bar, .other-input,
+.nav-chip, .nav-icon, .nav-emergency, .quick-chip, .tool-input {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.guest-card {
+  background: rgba(79, 192, 239, .07);
+  border: 1px solid rgba(167, 227, 247, .22);
+  box-shadow: 0 8px 32px -12px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .05);
+}
+.menu-item { border-bottom-color: rgba(167, 227, 247, .1); }
+
+.subtitle-bar {
+  background: rgba(7, 12, 20, .45);
+  border-color: rgba(167, 227, 247, .2);
+}
+
+.g-banner-pending { background: rgba(79, 192, 239, .06); border-color: rgba(167, 227, 247, .22); }
+.g-banner-good { background: rgba(91, 122, 99, .18); border-color: rgba(91, 122, 99, .4); }
+.g-banner-warn { background: rgba(166, 124, 61, .18); border-color: rgba(166, 124, 61, .45); }
+
+.cart-bar { background: rgba(79, 192, 239, .1); border-color: rgba(167, 227, 247, .3); }
+
+/* ---------- Pill controls, fully rounded (the Kira 2 reference's buttons
+   are all pills, no mixed radii) — the guest UI already uses pill shapes
+   almost everywhere via --radius-guest-sm; this just tightens the couple
+   of spots that didn't. */
+.quick-chip { background: rgba(79, 192, 239, .08); border-color: rgba(167, 227, 247, .22); }
+.quick-chip.selected { background: var(--brass); color: #04151c; border-color: var(--brass); font-weight: 600; }
+.quick-chip:hover { background: rgba(167, 227, 247, .14); }
+
+.nav-chip, .nav-icon {
+  background: rgba(79, 192, 239, .08);
+  border-color: rgba(167, 227, 247, .18);
+}
+
+.btn-brass { background: var(--brass); color: #04151c; box-shadow: 0 2px 16px -2px rgba(79, 192, 239, .5); }
+.btn-brass:hover { background: var(--brass-soft); }
+.btn-ghost-dark { border-color: rgba(167, 227, 247, .3); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+
+/* ---------- Stepper + avatar glow, same mechanism as the original (brass
+   fill/ring) just on the new hue — kept deliberately unchanged in
+   structure since only color was asked for. */
+.g-dot.done { background: var(--brass); border-color: var(--brass); }
+.g-dot.active { border-color: var(--brass); box-shadow: 0 0 0 4px rgba(79, 192, 239, .2); }
+.g-line.done { background: var(--brass); }
+
+.kira-photo-wrap { border-color: rgba(167, 227, 247, .5); box-shadow: 0 0 28px 4px rgba(79, 192, 239, .3); }
+.kira-photo-wrap.small { box-shadow: 0 0 16px 2px rgba(79, 192, 239, .3); }
+
+.menu-item-price { color: var(--brass-soft); }
+.g-select-chip { background: rgba(79, 192, 239, .16); border-color: var(--brass); color: var(--brass-soft); }

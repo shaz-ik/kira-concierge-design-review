@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kira Concierge — Color Prototype: Glass / Blue-Cyan</title>
+<link rel="stylesheet" href="../tokens.css?v=2">
+<link rel="stylesheet" href="../tokens-glass-prototype.css?v=1">
+<style>
+  .proto-banner { background: #0c1826; color: #a7e3f7; padding: var(--sp-4) var(--sp-5); font-size: var(--fs-small); border-bottom: 1px solid rgba(167,227,247,.2); }
+  .proto-banner strong { color: #eef7fb; }
+  /* Page-specific layout rules carried over from dining.html's own <style> —
+     structure is unchanged, only color/material above is new. */
+  .home-greeting { font-size: var(--fs-h1); font-weight: 700; margin-top: var(--sp-2); }
+  .home-chips { margin-top: var(--sp-3); }
+  .menu-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
+  .menu-toolbar .quick-grid { justify-content: flex-start; max-width: none; width: auto; }
+  .menu-card { padding-top: var(--sp-1); padding-bottom: var(--sp-1); }
+  .menu-item { align-items: center; }
+  .menu-item-end { display: flex; align-items: center; gap: var(--sp-3); }
+  .add-btn { width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--brass); color: var(--brass-soft); font-weight: 700; font-size: 17px; line-height: 1; }
+  .qty-pill { min-width: 30px; height: 30px; padding: 0 var(--sp-2); border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: var(--brass); color: #04151c; font-weight: 700; font-size: var(--fs-small); }
+  .cart-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); border-radius: var(--radius-guest-sm); padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4); font-size: var(--fs-small); }
+  .cart-bar strong { color: var(--brass-soft); }
+  .cart-bar .btn { padding: 8px 18px; font-size: var(--fs-small); }
+  .sum-row { display: flex; justify-content: space-between; font-size: var(--fs-small); color: var(--muted-on-dark); padding-top: var(--sp-1); }
+  .sum-row:first-of-type { padding-top: var(--sp-3); }
+  .menu-item-note { font-size: var(--fs-small); color: var(--muted-on-dark); }
+  .tablet-body.split { flex-direction: row; align-items: center; justify-content: center; gap: var(--sp-7); padding: 0 var(--sp-6) var(--sp-5); text-align: left; }
+  .kira-col { width: 196px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: var(--sp-4); text-align: center; }
+  .kira-col .subtitle-bar { max-width: 100%; border-radius: var(--radius-guest-sm); padding: var(--sp-2) var(--sp-4); line-height: 1.45; }
+  .kira-col .avatar-caption { margin-top: calc(-1 * var(--sp-2)); color: var(--brass-soft); }
+  .task-col { flex: 1; max-width: 400px; display: flex; flex-direction: column; gap: var(--sp-3); }
+  .task-col > .guest-card, .task-col > .g-banner, .task-col > .g-stepper, .task-col > .quick-grid { max-width: none; }
+  .task-head { display: flex; flex-direction: column; gap: 2px; }
+  .task-eyebrow { font-size: var(--fs-small); color: var(--brass-soft); letter-spacing: .04em; font-weight: 600; }
+  .task-title { font-size: var(--fs-h1); font-weight: 700; line-height: 1.25; }
+  .task-note { font-size: var(--fs-small); color: var(--muted-on-dark); }
+  .btn-row { display: flex; gap: var(--sp-3); margin-top: var(--sp-1); }
+  .btn-row .btn { flex: 1; padding-left: var(--sp-4); padding-right: var(--sp-4); }
+</style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="../../index.html">Kira Concierge</a>
+    <nav>
+      <a href="../../index.html">Home</a>
+      <a href="index.html">Hi-Fi Mockups</a>
+      <a href="dining.html">Original: Dining</a>
+    </nav>
+  </header>
+  <div class="proto-banner">
+    <strong>Color prototype — not yet applied anywhere else.</strong> Same screens, structure, and copy as the approved <a href="dining.html" style="color:#a7e3f7">Dining hi-fi mockup</a> — only the color scheme and surface material changed, per your note: "glass morphism, blue/cyan, similar to Kira [2]." If this direction is good, it rolls out everywhere (guest tablet, staff apps, admin dashboard) as a single token change; if not, easy to adjust before that happens.
+  </div>
+  <div class="page-header">
+    <h1>Dining — Color Prototype (Glass / Blue-Cyan)</h1>
+    <p>One representative flow, for sign-off before the full rollout.</p>
+  </div>
+
+  <!-- Screen 1: Idle -->
+  <section class="screen-block">
+    <h2>1. Idle</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">9:41 PM · 24°C, clear</div>
+      <div class="tablet-body state-idle">
+        <div class="kira-photo-wrap">
+          <img src="../assets/kira-idle.jpg" alt="Kira">
+        </div>
+        <p class="home-greeting">Good evening</p>
+        <p class="avatar-sub">Say "Hey Kira", or tap to begin</p>
+        <div class="quick-grid home-chips">
+          <span class="quick-chip">In-room dining</span>
+          <span class="quick-chip">Housekeeping</span>
+          <span class="quick-chip">Late checkout</span>
+          <span class="quick-chip">Valet</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screen 2: Menu browse -->
+  <section class="screen-block">
+    <h2>2. Menu browse</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">In-room dining</div>
+      <div class="tablet-body split state-listening">
+        <div class="kira-col">
+          <div class="kira-photo-wrap small">
+            <img src="../assets/kira-listening.jpg" alt="Kira">
+          </div>
+          <div class="avatar-caption">Listening…</div>
+          <div class="subtitle-bar">"Two burgers and a Coke, please"</div>
+        </div>
+        <div class="task-col">
+          <div class="menu-toolbar">
+            <div class="quick-grid">
+              <span class="quick-chip">Starters</span>
+              <span class="quick-chip selected">Mains</span>
+              <span class="quick-chip">Drinks</span>
+              <span class="quick-chip">Desserts</span>
+            </div>
+          </div>
+          <div class="guest-card menu-card">
+            <div class="menu-item">
+              <div><div class="menu-item-name">Wagyu smash burger</div><div class="menu-item-tag">Contains gluten, dairy</div></div>
+              <div class="menu-item-end"><span class="menu-item-price">AED 68</span><span class="qty-pill">2</span></div>
+            </div>
+            <div class="menu-item">
+              <div><div class="menu-item-name">Chicken shawarma plate</div><div class="menu-item-tag">Contains gluten</div></div>
+              <div class="menu-item-end"><span class="menu-item-price">AED 54</span><span class="add-btn">+</span></div>
+            </div>
+            <div class="menu-item">
+              <div><div class="menu-item-name">Grilled hammour, saffron rice</div><div class="menu-item-tag">Contains nuts, fish</div></div>
+              <div class="menu-item-end"><span class="menu-item-price">AED 92</span><span class="add-btn">+</span></div>
+            </div>
+          </div>
+          <div class="cart-bar">
+            <span>Your order · <strong>3 items · AED 154</strong></span>
+            <button class="btn btn-brass">Review order</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screen 3: Order summary / confirm -->
+  <section class="screen-block">
+    <h2>3. Order summary — confirm</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">In-room dining · Review your order</div>
+      <div class="tablet-body split state-speaking">
+        <div class="kira-col">
+          <div class="kira-photo-wrap">
+          <img src="../assets/kira-speaking.jpg" alt="Kira">
+        </div>
+          <div class="subtitle-bar">"That's AED 177.10 in total — shall I send it to the kitchen?"</div>
+        </div>
+        <div class="task-col">
+          <p class="task-title">Your order</p>
+          <div class="guest-card">
+            <div class="menu-item">
+              <div><div class="menu-item-name">2× Wagyu smash burger</div><div class="menu-item-note">No onion</div></div>
+              <div class="menu-item-price">AED 136.00</div>
+            </div>
+            <div class="menu-item">
+              <div class="menu-item-name">1× Coke</div>
+              <div class="menu-item-price">AED 18.00</div>
+            </div>
+            <div class="sum-row"><span>Subtotal</span><span>AED 154.00</span></div>
+            <div class="sum-row"><span>Service charge &amp; VAT</span><span>AED 23.10</span></div>
+            <div class="order-total-row"><span>Total · charged to Room 412</span><span>AED 177.10</span></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-ghost-dark">Edit order</button>
+            <button class="btn btn-brass">Confirm &amp; send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screen 5: Status track -->
+  <section class="screen-block">
+    <h2>4. Status track</h2>
+    <div class="tablet-frame">
+      <div class="tablet-navbar">
+        <div class="nav-group"><span class="nav-chip">Room 412</span><span class="nav-chip">EN ▾</span></div>
+        <div class="nav-group"><span class="nav-icon" role="button" aria-label="Mute Kira"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/><path d="M11 5.5a3.5 3.5 0 0 1 0 5"/></svg> Mute</span><span class="nav-icon" role="button" aria-label="Text size">Aa+ Aa−</span><span class="nav-emergency" role="button">Help / Emergency</span></div>
+      </div>
+      <div class="tablet-context">In-room dining · Order #4821</div>
+      <div class="tablet-body split state-speaking">
+        <div class="kira-col">
+          <div class="kira-photo-wrap">
+          <img src="../assets/kira-speaking.jpg" alt="Kira">
+        </div>
+          <div class="subtitle-bar">"Your order is being prepared now."</div>
+        </div>
+        <div class="task-col">
+          <div class="task-head">
+            <span class="task-eyebrow">Order #4821</span>
+            <p class="task-title">Being prepared</p>
+          </div>
+          <p class="task-note">2× Wagyu smash burger, 1× Coke · AED 177.10</p>
+          <div class="guest-card">
+            <div class="g-stepper">
+              <div class="g-step"><div class="g-dot done"></div><div class="g-label">Accepted</div></div>
+              <div class="g-line done"></div>
+              <div class="g-step"><div class="g-dot active"></div><div class="g-label active">Preparing</div></div>
+              <div class="g-line"></div>
+              <div class="g-step"><div class="g-dot"></div><div class="g-label">Ready</div></div>
+              <div class="g-line"></div>
+              <div class="g-step"><div class="g-dot"></div><div class="g-label">Delivered</div></div>
+            </div>
+          </div>
+          <p class="avatar-sub">Ready in about 15 minutes</p>
+          <div class="btn-row">
+            <button class="btn btn-ghost-dark" disabled>Cancel order</button>
+            <button class="btn btn-ghost-dark">Back to home</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+<script src="../scale.js?v=2"></script>
+</body>
+</html>
