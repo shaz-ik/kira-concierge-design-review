@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kira Concierge — Hi-Fi Mockup: Admin Dashboard</title>
-<link rel="stylesheet" href="../tokens.css?v=2">
+<link rel="stylesheet" href="../tokens.css?v=3">
 <style>
   /* Page-local extensions for the admin shell. Built only from tokens.css variables;
      shared classes are extended here, never redefined in tokens.css. */
@@ -23,11 +23,11 @@
   }
   .tool-sidebar .tool-link:hover { background: rgba(244,239,227,.06); color: var(--ink-on-dark); }
   .tool-sidebar .tool-link.active { box-shadow: inset 2px 0 0 var(--brass-soft); }
-  .tool-sidebar .tool-link.active:hover { background: rgba(184,146,63,.24); color: var(--brass-soft); }
+  .tool-sidebar .tool-link.active:hover { background: rgba(79,192,239,.24); color: var(--brass-soft); }
   .tool-sidebar .tool-link:focus-visible { outline: 2px solid var(--brass-soft); outline-offset: 1px; }
   .adm-nav-count {
     min-width: 20px; padding: 0 6px; border-radius: 999px; text-align: center;
-    background: var(--brass); color: #211704; font-size: 11px; font-weight: 700; line-height: 18px;
+    background: var(--brass); color: #04151c; font-size: 11px; font-weight: 700; line-height: 18px;
   }
   .adm-sidebar-foot {
     margin-top: auto; padding-top: var(--sp-4); border-top: 1px solid rgba(244,239,227,.1);
@@ -41,7 +41,7 @@
     display: inline-grid; place-items: center; font-size: 11px; font-weight: 700; letter-spacing: .02em;
     background: var(--sand-2); color: var(--lagoon-deep); border: 1px solid rgba(36,31,22,.08);
   }
-  .adm-avatar-dark { background: rgba(184,146,63,.2); color: var(--brass-soft); border-color: rgba(217,184,106,.35); }
+  .adm-avatar-dark { background: rgba(79,192,239,.2); color: var(--brass-soft); border-color: rgba(167,227,247,.35); }
 
   /* ---- Topbar breadcrumb + live indicator ---- */
   .tool-topbar { align-items: center; }
@@ -177,8 +177,8 @@
     display: block; padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-tool-sm);
     border-left: 2px solid transparent; font-size: var(--fs-small); color: var(--ink-on-sand); cursor: pointer;
   }
-  .kb-item:hover { background: rgba(184,146,63,.06); }
-  .kb-item.active { background: rgba(184,146,63,.12); border-left-color: var(--brass); font-weight: 600; }
+  .kb-item:hover { background: rgba(79,192,239,.06); }
+  .kb-item.active { background: rgba(79,192,239,.12); border-left-color: var(--brass); font-weight: 600; }
   .kb-item small { display: block; font-size: 11px; font-weight: 400; color: var(--muted-on-sand); }
   .kb-add {
     margin-top: var(--sp-2); padding: var(--sp-2); text-align: center; font-size: var(--fs-small); font-weight: 600;
@@ -198,14 +198,14 @@
   .kb-preview {
     margin-top: var(--sp-2); padding: var(--sp-3) var(--sp-4); font-size: var(--fs-small);
     background: var(--dusk-ink); color: var(--ink-on-dark);
-    border: 1px solid rgba(217,184,106,.25); border-radius: var(--radius-tool);
+    border: 1px solid rgba(167,227,247,.25); border-radius: var(--radius-tool);
   }
   .kb-preview .q { color: var(--muted-on-dark); }
   .kb-preview .a { display: flex; align-items: baseline; gap: var(--sp-2); margin-top: var(--sp-1); }
   .kb-preview .a::before {
     content: ""; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; transform: translateY(-1px);
     background: radial-gradient(circle at 35% 30%, #fff3d6, var(--brass-soft) 55%, var(--brass) 100%);
-    box-shadow: 0 0 7px 1px rgba(217,184,106,.55);
+    box-shadow: 0 0 7px 1px rgba(167,227,247,.55);
   }
   .kb-detail .adm-footer-actions { margin-top: var(--sp-4); }
 
