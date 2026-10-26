@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kira — Guest Tablet</title>
+<link rel="stylesheet" href="../shared/tokens.css?v=1">
+<link rel="stylesheet" href="../shared/proto.css?v=1">
+<style>
+  /* ---------- Stage: the tablet is a fixed 960×600 canvas scaled to fit the window ---------- */
+  html, body { height: 100%; overflow: hidden; }
+  body.guest-app { background: #03070c; display: flex; align-items: center; justify-content: center; }
+  .stage { position: relative; }
+  .tablet-frame.app { width: 960px; height: 600px; aspect-ratio: auto; transform-origin: top left; position: absolute; left: 0; top: 0; }
+  html.in-frame body.guest-app { background: #03070c; }
+  .rotate-hint { position: fixed; left: 0; right: 0; bottom: 16px; text-align: center; font-size: 12px; color: var(--muted-on-dark); display: none; }
+  @media (max-width: 600px) and (orientation: portrait) { .rotate-hint { display: block; } }
+  html.in-frame .rotate-hint { display: none; }
+
+  /* ---------- Copied from the hi-fi mockup pages (dining.html is the superset) ---------- */
+  .home-greeting { font-size: var(--fs-h1); font-weight: 700; margin-top: var(--sp-2); }
+  .home-chips { margin-top: var(--sp-3); max-width: 560px; }
+  .menu-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
+  .menu-toolbar .quick-grid { justify-content: flex-start; max-width: none; width: auto; }
+  .menu-card { padding-top: var(--sp-1); padding-bottom: var(--sp-1); }
+  .menu-item { align-items: center; }
+  .menu-item .allergen { color: #f0d9b5; }
+  .menu-item-end { display: flex; align-items: center; gap: var(--sp-3); }
+  .add-btn { width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--brass); color: var(--brass-soft); font-weight: 700; font-size: 17px; line-height: 1; background: none; padding: 0; }
+  .qty-pill { min-width: 30px; height: 30px; padding: 0 var(--sp-2); border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: var(--brass); color: #04151c; font-weight: 700; font-size: var(--fs-small); }
+  .cart-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); background: rgba(167,227,247,.1); border: 1px solid rgba(167,227,247,.3); border-radius: var(--radius-guest-sm); padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4); font-size: var(--fs-small); }
+  .cart-bar strong { color: var(--brass-soft); }
+  .cart-bar .btn { padding: 8px 18px; font-size: var(--fs-small); }
+  .sum-row { display: flex; justify-content: space-between; font-size: var(--fs-small); color: var(--muted-on-dark); padding-top: var(--sp-1); }
+  .sum-row.first { padding-top: var(--sp-3); }
+  .menu-item-note { font-size: var(--fs-small); color: var(--muted-on-dark); }
+
+  .tablet-body.split { flex-direction: row; align-items: center; justify-content: center; gap: var(--sp-7); padding: 0 var(--sp-6) var(--sp-5); text-align: left; min-height: 0; }
+  .kira-col { width: 220px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: var(--sp-4); text-align: center; }
+  .kira-col .subtitle-bar { max-width: 100%; border-radius: var(--radius-guest-sm); padding: var(--sp-2) var(--sp-4); line-height: 1.45; }
+  .kira-col .avatar-caption { margin-top: calc(-1 * var(--sp-2)); color: var(--brass-soft); }
+  .task-col { flex: 1; max-width: 460px; max-height: 100%; min-height: 0; display: flex; flex-direction: column; gap: var(--sp-3); }
+  .task-col > .guest-card, .task-col > .g-banner, .task-col > .g-stepper, .task-col > .quick-grid { max-width: none; }
+  .task-col > .quick-grid { justify-content: flex-start; }
+  .task-head { display: flex; flex-direction: column; gap: 2px; }
+  .task-eyebrow { font-size: var(--fs-small); color: var(--brass-soft); letter-spacing: .04em; font-weight: 600; }
+  .task-title { font-size: var(--fs-h1); font-weight: 700; line-height: 1.25; }
+  .task-note { font-size: var(--fs-small); color: var(--muted-on-dark); }
+  .guest-card .g-field-row { max-width: none; align-items: center; }
+  .guest-card .g-field-row + .g-field-row { border-top: 1px solid rgba(244,239,227,.08); }
+  .btn-row { display: flex; gap: var(--sp-3); margin-top: var(--sp-1); }
+  .btn-row .btn { flex: 1; padding-left: var(--sp-4); padding-right: var(--sp-4); }
+  .btn[disabled] { opacity: .4; cursor: not-allowed; }
+  .nav-icon svg { width: 13px; height: 13px; vertical-align: -2px; }
+
+  .quick-chip, .g-select-chip, .add-btn, .nav-icon, .nav-emergency, .nav-chip { cursor: pointer; transition: background-color .15s, border-color .15s, transform .1s; font-family: var(--font); }
+  .quick-chip:hover { background: rgba(244,239,227,.14); }
+  .quick-chip.selected:hover { background: var(--brass-soft); }
+  .add-btn:hover { background: rgba(167,227,247,.15); }
+  .nav-icon:hover, .nav-chip:hover { background: rgba(244,239,227,.12); }
+  .nav-emergency:hover { background: rgba(139,74,61,.3); }
+  .btn-ghost-dark:hover { background: rgba(244,239,227,.08); border-color: rgba(244,239,227,.5); }
+  .btn:active { transform: translateY(1px); }
+
+  .menu-item.unavailable { opacity: .55; }
+  .menu-item.unavailable .menu-item-name { text-decoration: line-through; }
+  .menu-item-unavailable-tag { font-size: var(--fs-small); color: var(--muted-on-dark); border: 1px solid rgba(244,239,227,.2); padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+
+  /* ---------- Prototype additions (same tokens, same component shapes) ---------- */
+  button.quick-chip, button.nav-chip, button.nav-icon, button.nav-emergency, button.g-select-chip { font-size: inherit; line-height: inherit; }
+  button.quick-chip { font-size: var(--fs-small); }
+  button.nav-chip, button.nav-icon, button.nav-emergency { font-size: 12.5px; }
+  .nav-icon .split-btn { background: none; border: none; color: inherit; font: inherit; padding: 0 2px; cursor: pointer; }
+  .nav-icon.muted { color: var(--muted-on-dark); }
+  .tablet-context { display: flex; align-items: center; gap: var(--sp-2); min-height: 18px; }
+  .tablet-context .crumb { background: none; border: none; color: var(--brass-soft); font: inherit; padding: 0; cursor: pointer; }
+  .tablet-context .crumb:hover { text-decoration: underline; }
+  .tablet-body { min-height: 0; }
+
+  .menu-card { overflow-y: auto; min-height: 0; flex: 0 1 auto; scrollbar-width: thin; scrollbar-color: rgba(167,227,247,.3) transparent; }
+  .qty-ctrl { display: inline-flex; align-items: center; gap: 6px; }
+  .add-btn.minus { border-color: rgba(244,239,227,.3); color: var(--ink-on-dark); }
+  .cart-bar.empty { color: var(--muted-on-dark); }
+
+  .kira-tap { background: none; border: none; padding: 0; cursor: pointer; border-radius: 50%; }
+  .kira-tap:focus-visible { outline: 2px solid var(--brass-soft); outline-offset: 4px; }
+  .home-active { margin-top: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); align-items: center; }
+  .track-chip { display: inline-flex; align-items: center; gap: var(--sp-2); background: rgba(79,192,239,.1); border: 1px solid rgba(167,227,247,.35); color: var(--ink-on-dark); padding: 6px 14px; border-radius: 999px; font-size: var(--fs-small); cursor: pointer; font-family: var(--font); }
+  .track-chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brass); box-shadow: 0 0 8px var(--brass); }
+  .track-chip:hover { background: rgba(79,192,239,.18); }
+
+  .text-field { width: 100%; font-family: var(--font); font-size: var(--fs-body); color: var(--ink-on-dark); background: rgba(7,12,20,.45); border: 1px solid rgba(167,227,247,.3); border-radius: var(--radius-guest-sm); padding: 10px 14px; }
+  .text-field::placeholder { color: var(--muted-on-dark); }
+  .text-field:focus { outline: none; border-color: var(--brass); }
+  .link-btn { background: none; border: none; padding: 0; color: var(--brass-soft); font: inherit; font-size: var(--fs-small); cursor: pointer; text-align: left; }
+  .link-btn:hover { text-decoration: underline; }
+  .hk-qty { display: flex; align-items: center; justify-content: space-between; }
+  .hk-qty .qty-ctrl .qty-pill { min-width: 36px; }
+
+  .time-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-2); }
+  .time-list .quick-chip { text-align: center; }
+
+  /* Voice: listening sheet */
+  .voice-panel { display: flex; flex-direction: column; gap: var(--sp-3); }
+  .voice-examples { display: flex; flex-direction: column; gap: var(--sp-2); }
+  .voice-examples .quick-chip { text-align: left; border-radius: var(--radius-guest-sm); padding: 10px 14px; }
+  .voice-row { display: flex; gap: var(--sp-2); }
+  .voice-row .text-field { flex: 1; }
+  .voice-row .btn { padding: 10px 18px; font-size: var(--fs-small); }
+  .mic-btn.live { background: rgba(139,74,61,.35); border-color: rgba(240,199,189,.6); }
+
+  /* Overlay sheet (help, language) */
+  .sheet-scrim { position: absolute; inset: 0; z-index: 20; background: rgba(3,7,12,.6); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  .sheet { width: 440px; max-width: calc(100% - 48px); background: rgba(12,24,38,.92); border: 1px solid rgba(167,227,247,.25); border-radius: var(--radius-guest); padding: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-3); box-shadow: 0 30px 60px -20px rgba(0,0,0,.7); }
+  .sheet .task-title { font-size: var(--fs-h2); }
+  .sheet .btn { width: 100%; }
+  .btn-danger { background: rgba(139,74,61,.85); color: #fff3ef; border: 1px solid rgba(240,199,189,.4); }
+  .btn-danger:hover { background: rgba(139,74,61,1); }
+  .lang-list { display: flex; flex-direction: column; gap: var(--sp-2); }
+  .lang-list .quick-chip { display: flex; justify-content: space-between; border-radius: var(--radius-guest-sm); padding: 10px 14px; }
+  .lang-list .quick-chip[disabled] { opacity: .45; cursor: not-allowed; }
+
+  /* Live notification from Kira (a request changed while the guest was elsewhere) */
+  .kira-notice { position: absolute; top: 58px; right: 20px; z-index: 15; width: 300px; display: flex; gap: var(--sp-3); align-items: center; padding: var(--sp-3); border-radius: var(--radius-guest-sm); background: rgba(12,24,38,.88); border: 1px solid rgba(167,227,247,.35); box-shadow: 0 16px 40px -16px rgba(0,0,0,.7); animation: notice-in .25s ease-out; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  .kira-notice img { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(167,227,247,.5); }
+  .kira-notice .txt { flex: 1; font-size: var(--fs-small); line-height: 1.4; }
+  .kira-notice .txt strong { display: block; color: var(--brass-soft); font-weight: 600; }
+  .kira-notice .btn { padding: 6px 14px; font-size: var(--fs-small); }
+  @keyframes notice-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+
+  .scroll-col { overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: var(--sp-3); scrollbar-width: thin; scrollbar-color: rgba(167,227,247,.3) transparent; padding-right: 2px; }
+</style>
+</head>
+<body class="guest-app">
+  <div class="stage" id="stage">
+    <div class="tablet-frame app" id="tablet">
+      <div class="tablet-navbar">
+        <div class="nav-group">
+          <span class="nav-chip" id="room-chip">Room 412</span>
+          <button class="nav-chip" id="lang-btn" aria-haspopup="dialog">EN ▾</button>
+        </div>
+        <div class="nav-group">
+          <button class="nav-icon" id="mute-btn" aria-pressed="false"></button>
+          <span class="nav-icon" role="group" aria-label="Text size"><button class="split-btn" id="text-up" aria-label="Larger text">Aa+</button> <button class="split-btn" id="text-down" aria-label="Smaller text">Aa−</button></span>
+          <button class="nav-emergency" id="help-btn">Help / Emergency</button>
+        </div>
+      </div>
+      <div class="tablet-context" id="context"></div>
+      <div class="tablet-body" id="body"></div>
+      <div id="overlay"></div>
+      <div id="notice"></div>
+    </div>
+  </div>
+  <p class="rotate-hint">Rotate your phone for a bigger tablet view</p>
+<script src="../shared/kira.js?v=1"></script>
+<script src="guest.js?v=1"></script>
+</body>
+</html>
