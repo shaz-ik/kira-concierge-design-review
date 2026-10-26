@@ -12,12 +12,28 @@
   };
   var CHECKOUT_TIMES = ['12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM'];
   var QUICK_TIMES = ['1:00 PM', '3:00 PM', '5:00 PM', '6:00 PM'];
-  var HK_CHOICES = [
-    { id: 'towels',     label: 'Extra towels',  qty: true, noun: ['extra towel', 'extra towels'], done: 'your towels have been delivered' },
-    { id: 'pillows',    label: 'Extra pillows', qty: true, noun: ['extra pillow', 'extra pillows'], done: 'your pillows have been delivered' },
-    { id: 'clean',      label: 'Clean room',    title: 'Clean room', ask: 'a room clean', done: 'your room has been cleaned' },
-    { id: 'toiletries', label: 'Toiletries',    title: 'Toiletries refill', ask: 'a toiletries refill', done: 'your toiletries have been refilled' },
-    { id: 'other',      label: 'Other…',        done: 'housekeeping has finished your request' }
+  // Housekeeping: guests pick as many of these as they like in one request (touch or voice).
+  // max 1 = an on/off item; otherwise a quantity stepper.
+  var HK_ITEMS = [
+    { id: 'towels',     name: 'Extra towels',         info: 'Bath and hand towels',               max: 6, def: 2, re: /towels?/ },
+    { id: 'pillows',    name: 'Extra pillows',        info: 'Soft or firm — tell Kira if you have a preference', max: 4, def: 2, re: /pillows?/ },
+    { id: 'blanket',    name: 'Extra blanket',        info: 'Warm wool throw',                    max: 3, def: 1, re: /blankets?|duvet|throw/ },
+    { id: 'toiletries', name: 'Toiletries refill',    info: 'Shampoo, soap, dental kit',          max: 1, def: 1, re: /toiletr|shampoo|soap|toothbrush|dental/ },
+    { id: 'robes',      name: 'Bathrobe & slippers',  info: 'One set per guest',                  max: 4, def: 1, re: /robes?|bathrobes?|slippers/ },
+    { id: 'iron',       name: 'Iron & ironing board', info: 'Brought up and collected later',     max: 1, def: 1, re: /\biron/ },
+    { id: 'clean',      name: 'Clean my room',        info: 'A full clean, now or while you’re out', max: 1, def: 1, re: /clean (my |the )?room|room clean|tidy|make up (the |my )?room|clean up/ }
+  ];
+  var ICONS = {
+    dining: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>',
+    housekeeping: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg>',
+    checkout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+    valet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>'
+  };
+  var TILES = [
+    { act: 'menu',     icon: 'dining',       name: 'In-room dining', info: 'Order food and drinks, brought to your room' },
+    { act: 'hk',       icon: 'housekeeping', name: 'Housekeeping',   info: 'Towels, pillows, toiletries or a room clean' },
+    { act: 'checkout', icon: 'checkout',     name: 'Late checkout',  info: 'Ask the front desk to stay a little longer' },
+    { act: 'valet',    icon: 'valet',        name: 'Valet',          info: 'Have your car brought round to the entrance' }
   ];
   var NUM_WORDS = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, couple: 2, pair: 2 };
   var NUM_SAY = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
@@ -32,7 +48,8 @@
     deliveryNote: '', showNote: false,
     token: null, sending: false, sendFailedOnce: false, menuFailedOnce: false,
     trackId: null,
-    hk: { choice: 'towels', qty: 2, other: '' },
+    hk: { basket: {}, other: '', voiceAck: '' },
+    voiceFrom: null,
     co: { to: '5:00 PM', showAll: false },
     heard: '',             // last thing the guest "said" (shown under Kira)
     reply: '',             // Kira's spoken reply to it
@@ -100,7 +117,7 @@
 
   /* ---------------- Kira: what she shows and says ---------------- */
 
-  var lastLine = '', speakUntil = 0, kiraKey = '', speakTimer = null;
+  var lastLine = '', speakUntil = 0, kiraKey = '', speakTimer = null, speakDelay = null;
 
   function speak(text) {
     if (ui.muted || !('speechSynthesis' in window)) return;
@@ -120,8 +137,11 @@
     var now = Date.now();
     if (k.line && k.line !== lastLine) {
       lastLine = k.line;
-      if (k.mood !== 'listening') {
-        speak(k.line);
+      if (k.mood !== 'listening' && !k.quiet) {
+        // Each line is said once; a short delay drops lines the guest skips straight past.
+        var said = k.line;
+        clearTimeout(speakDelay);
+        speakDelay = setTimeout(function () { if (lastLine === said) speak(said); }, 400);
         speakUntil = now + Math.min(6000, 900 + k.line.split(/\s+/).length * 330);
         clearTimeout(speakTimer);
         speakTimer = setTimeout(render, speakUntil - now + 20);
@@ -258,49 +278,56 @@
         '<div class="btn-row">' + btn('Cancel order', 'cancel-order', { arg: r.id, disabled: r.status !== 'incoming' }) + back + '</div>' };
   };
 
-  function hkChoice() { return HK_CHOICES.filter(function (c) { return c.id === ui.hk.choice; })[0]; }
-  function hkTitle() {
-    var c = hkChoice();
-    if (c.qty) return ui.hk.qty + '× ' + cap(c.noun[1]);
-    if (c.id === 'other') return ui.hk.other.trim();
-    return c.title;
+  function hkItem(id) { return HK_ITEMS.filter(function (x) { return x.id === id; })[0]; }
+  function hkLines() {
+    return HK_ITEMS.filter(function (x) { return ui.hk.basket[x.id] > 0; }).map(function (x) { return { id: x.id, name: x.name, qty: ui.hk.basket[x.id] }; });
   }
-  function hkAsk() {
-    var c = hkChoice();
-    if (c.qty) return sayNum(ui.hk.qty) + ' ' + c.noun[ui.hk.qty > 1 ? 1 : 0];
-    if (c.id === 'other') return ui.hk.other.trim() || 'that';
-    return c.ask;
+  function hkCount() { return hkLines().length + (ui.hk.other.trim() ? 1 : 0); }
+  // "2× Extra towels, 2× Extra pillows, Clean my room, Other: hairdryer"
+  function hkTitle() {
+    var parts = hkLines().map(function (l) { return hkItem(l.id).max > 1 ? l.qty + '× ' + l.name : l.name; });
+    if (ui.hk.other.trim()) parts.push(ui.hk.other.trim());
+    return parts.join(', ');
   }
 
   VIEWS.hk = function () {
-    var c = hkChoice();
-    var chips = HK_CHOICES.map(function (x) {
-      return '<button class="quick-chip' + (x.id === c.id ? ' selected' : '') + '" data-act="hk-choice" data-arg="' + x.id + '" aria-pressed="' + (x.id === c.id) + '">' + esc(x.label) + '</button>';
-    }).join('');
-    var ask;
-    if (c.qty) {
-      ask = '<div class="g-field-row hk-qty"><span class="label">You asked for</span><span class="qty-ctrl"><button class="add-btn minus" data-act="hk-dec" aria-label="Fewer">−</button><span class="qty-pill">' + ui.hk.qty + '</span><button class="add-btn" data-act="hk-inc" aria-label="More">+</button><span class="value">' + esc(c.noun[ui.hk.qty > 1 ? 1 : 0]) + '</span></span></div>';
-    } else if (c.id === 'other') {
-      ask = '<div class="g-field-row"><input class="text-field" id="hk-other" data-model="hk.other" maxlength="80" placeholder="Tell us what you need" value="' + esc(ui.hk.other) + '" aria-label="What do you need?"></div>';
-    } else {
-      ask = '<div class="g-field-row"><span class="label">You asked for</span><span class="value">' + esc(c.title) + '</span></div>';
-    }
-    var ready = c.id !== 'other' || ui.hk.other.trim();
-    return { context: 'Housekeeping',
-      kira: { mood: 'speaking', line: ready ? cap(hkAsk()) + ' — shall I send that to housekeeping?' : 'What can housekeeping bring you?' },
-      html: head('', 'What can we bring you?') + '<div class="quick-grid">' + chips + '</div>' +
-        '<div class="guest-card">' + ask + '<div class="g-field-row"><span class="label">Delivered to</span><span class="value">Room ' + ROOM + '</span></div></div>' +
-        '<div class="btn-row">' + btn('Confirm request', 'hk-send', { primary: true, disabled: !ready }) + '</div>' };
+    var rows = HK_ITEMS.map(function (x) {
+      var q = ui.hk.basket[x.id] || 0, ctrl;
+      if (x.max === 1) {
+        ctrl = q ? '<button class="add-btn on" data-act="hk-set" data-arg="' + x.id + ':0" aria-label="Remove ' + esc(x.name) + '" aria-pressed="true">✓</button>'
+                 : '<button class="add-btn" data-act="hk-set" data-arg="' + x.id + ':1" aria-label="Add ' + esc(x.name) + '" aria-pressed="false">+</button>';
+      } else if (q) {
+        ctrl = '<span class="qty-ctrl"><button class="add-btn minus" data-act="hk-set" data-arg="' + x.id + ':' + (q - 1) + '" aria-label="Fewer ' + esc(x.name.toLowerCase()) + '">−</button>' +
+          '<span class="qty-pill" aria-label="' + q + ' requested">' + q + '</span>' +
+          '<button class="add-btn" data-act="hk-set" data-arg="' + x.id + ':' + Math.min(x.max, q + 1) + '" aria-label="More ' + esc(x.name.toLowerCase()) + '"' + (q >= x.max ? ' disabled' : '') + '>+</button></span>';
+      } else {
+        ctrl = '<button class="add-btn" data-act="hk-set" data-arg="' + x.id + ':' + x.def + '" aria-label="Add ' + esc(x.name) + '">+</button>';
+      }
+      return '<div class="hk-row' + (q ? ' selected' : '') + '"><div><div class="menu-item-name">' + esc(x.name) + '</div><div class="menu-item-tag">' + esc(x.info) + '</div></div>' + ctrl + '</div>';
+    }).join('') +
+      '<div class="hk-row"><input class="text-field" id="hk-other" data-model="hk.other" maxlength="80" placeholder="Something else? Type it here" value="' + esc(ui.hk.other) + '" aria-label="Something else"></div>';
+    var n = hkCount();
+    var bar = n
+      ? '<div class="cart-bar"><span>Your request · <strong>' + n + ' item' + (n > 1 ? 's' : '') + '</strong> · to Room ' + ROOM + '</span><button class="btn btn-brass" data-act="hk-send">Send request</button></div>'
+      : '<div class="cart-bar empty"><span>Choose as many as you like — or just tell Kira</span><button class="btn btn-brass" disabled>Send request</button></div>';
+    // Kira speaks once when the screen opens (or once to acknowledge something said by voice) —
+    // she doesn't re-read the list on every tap; the summary bar shows it.
+    var kira = ui.hk.voiceAck
+      ? { mood: 'speaking', line: ui.hk.voiceAck }
+      : { mood: 'speaking', line: 'What can housekeeping bring you? Choose as many as you like.' };
+    return { context: 'Housekeeping', kira: kira,
+      html: head('', 'What can we bring you?') + '<div class="guest-card hk-list" data-scroll="hk">' + rows + '</div>' + bar };
   };
 
   VIEWS['hk-track'] = function () {
     var r = S.find(ui.trackId);
     if (!r) return VIEWS.home();
     var labels = ['Received', 'In progress', 'Done'], ctx = 'Housekeeping · Request ' + r.ref, eyebrow = 'Request ' + r.ref;
-    var choice = HK_CHOICES.filter(function (c) { return c.id === r.kind; })[0] || HK_CHOICES[4];
+    var what = '<p class="task-note">' + esc(r.title) + ' · Room ' + ROOM + '</p>';
+    var onlyClean = r.items && r.items.length === 1 && r.items[0].id === 'clean' && !r.other;
     if (r.status === 'done') {
-      return { context: ctx, kira: { mood: 'wake', line: 'All done — ' + choice.done + '.' },
-        html: head(eyebrow, 'All done') + '<div class="guest-card">' + stepper(labels, 2, true) + '</div>' + banner('good', 'Delivered', r.title + ' · Room ' + ROOM) +
+      return { context: ctx, kira: { mood: 'wake', line: onlyClean ? 'All done — your room has been cleaned.' : 'All done — everything you asked for has been delivered.' },
+        html: head(eyebrow, 'All done') + what + '<div class="guest-card">' + stepper(labels, 2, true) + '</div>' + banner('good', onlyClean ? 'Room cleaned' : 'Delivered', r.title) +
           '<div class="btn-row">' + btn('Another request', 'hk') + btn('Back to home', 'home', { primary: true }) + '</div>' };
     }
     if (r.status === 'cancelled') {
@@ -309,12 +336,12 @@
     }
     if (r.status === 'received') {
       return { context: ctx, kira: { mood: 'idle', line: 'Got it — housekeeping will have this with you within 20 minutes.' },
-        html: head(eyebrow, 'Request received') + '<div class="guest-card">' + stepper(labels, 0) + '</div>' +
-          '<p class="avatar-sub">' + esc(r.title) + ' · expected within 20 minutes</p><div class="btn-row">' + btn('Back to home', 'home') + '</div>' };
+        html: head(eyebrow, 'Request received') + what + '<div class="guest-card">' + stepper(labels, 0) + '</div>' +
+          '<p class="avatar-sub">Expected within 20 minutes</p><div class="btn-row">' + btn('Back to home', 'home') + '</div>' };
     }
     var m = minsLeft(r, 20);
     return { context: ctx, kira: { mood: 'speaking', line: 'Housekeeping is on it — about ' + m + ' minutes.' },
-      html: head(eyebrow, r.title) + '<div class="guest-card">' + stepper(labels, 1) + '</div>' +
+      html: head(eyebrow, 'On its way') + what + '<div class="guest-card">' + stepper(labels, 1) + '</div>' +
         '<p class="avatar-sub">Expected within ' + m + ' minutes</p><div class="btn-row">' + btn('Another request', 'hk') + btn('Back to home', 'home') + '</div>' };
   };
 
@@ -328,7 +355,7 @@
     }).join('') + '</div>' : '';
     var valid = F.hourOf(to) > F.hourOf(cur);
     return { context: 'Extend checkout',
-      kira: { mood: 'speaking', line: valid ? 'Shall I ask the front desk for a ' + to + ' checkout?' : 'What time would you like to check out?' },
+      kira: { mood: 'speaking', line: ui.co.voiceTo ? 'Shall I ask the front desk for a ' + ui.co.voiceTo + ' checkout?' : 'What time would you like to check out? Pick a time and I’ll ask the front desk.', quiet: ui.co.quiet },
       html: '<p class="task-title">Extend checkout</p><div class="guest-card"><div class="g-field-row"><span class="label">Current checkout</span><span class="value">' + esc(cur) + '</span></div>' +
         '<div class="g-field-row"><span class="label">Requested</span><button class="g-select-chip" data-act="co-all" aria-expanded="' + ui.co.showAll + '">' + (valid ? to : 'Choose') + ' ▾</button></div></div>' +
         (ui.co.showAll ? all : '<div class="quick-grid">' + chips + '</div>') +
@@ -408,7 +435,7 @@
         '<div class="btn-row">' + btn('Back to home', 'home') + '</div>' };
   };
 
-  var PHRASES = ['Two burgers and a Coke, please — no onion', 'Can I get two extra towels?', 'I’d like a late checkout at 5', 'Bring my car around', 'What time does the pool close?'];
+  var PHRASES = ['Two burgers and a Coke, please — no onion', 'Two extra towels and two pillows, please', 'I’d like a late checkout at 5', 'Bring my car around', 'What time does the pool close?'];
   var Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   var recognizing = false;
 
@@ -420,7 +447,7 @@
       : { mood: 'listening', line: 'I’m listening — what can I do for you?', caption: 'Listening…' };
     var examples = PHRASES.map(function (p) { return '<button class="quick-chip" data-act="say" data-arg="' + esc(p) + '"' + (v.busy ? ' disabled' : '') + '>“' + esc(p) + '”</button>'; }).join('');
     return { context: 'Talk to Kira', kira: kira,
-      html: '<div class="voice-panel">' + head('Voice', 'Just ask') +
+      html: '<div class="voice-panel">' + head('', 'Just ask') +
         '<p class="task-note">On the real tablet you simply speak. Here, tap a phrase' + (Recognition ? ', use the microphone,' : '') + ' or type what you’d say.</p>' +
         '<div class="voice-examples">' + examples + '</div>' +
         '<form class="voice-row" data-form="voice"><input class="text-field" id="voice-text" data-model="voice.text" placeholder="Type to Kira…" value="' + esc(v.text) + '" aria-label="Say something to Kira" autocomplete="off"' + (v.busy ? ' disabled' : '') + '>' +
@@ -433,14 +460,14 @@
   function renderHome() {
     if (body.dataset.layout !== 'home') {
       body.dataset.layout = 'home';
-      body.className = 'tablet-body state-idle';
+      body.className = 'tablet-body home state-idle';
       kiraKey = ''; lastLine = '';
       body.innerHTML =
         '<button class="kira-tap" data-act="voice" aria-label="Talk to Kira"><div class="kira-photo-wrap"><img src="' + IMG.idle + '" alt="Kira"></div></button>' +
         '<p class="home-greeting">' + greeting() + '</p><p class="avatar-sub">Say “Hey Kira”, or tap to begin</p>' +
-        '<div class="quick-grid home-chips">' +
-        '<button class="quick-chip" data-act="menu">In-room dining</button><button class="quick-chip" data-act="hk">Housekeeping</button>' +
-        '<button class="quick-chip" data-act="checkout">Late checkout</button><button class="quick-chip" data-act="valet">Valet</button></div>' +
+        '<div class="home-tiles">' + TILES.map(function (t) {
+          return '<button class="home-tile" data-act="' + t.act + '"><span class="ico">' + ICONS[t.icon] + '</span><span class="name">' + esc(t.name) + '</span><span class="info">' + esc(t.info) + '</span></button>';
+        }).join('') + '</div>' +
         '<div class="home-active" id="home-active"></div>';
     }
     var open = myRequests().filter(function (r) { return S.isOpen(r) && r.dept !== 'help'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
@@ -470,7 +497,7 @@
         body.innerHTML = '<div class="kira-col" id="kira-col"></div><div class="task-col" id="task-col"></div>';
         kiraKey = '';
       }
-      context.innerHTML = '<button class="crumb" data-act="home">‹ Home</button><span aria-hidden="true">·</span><span>' + esc(v.context) + '</span>';
+      context.textContent = v.context;
       setKira(v.kira);
       document.getElementById('task-col').innerHTML = v.html;
     }
@@ -485,12 +512,13 @@
   }
 
   function renderNav() {
+    document.getElementById('home-btn').hidden = ui.view === 'home';
     var mute = document.getElementById('mute-btn');
     mute.setAttribute('aria-pressed', String(ui.muted));
     mute.classList.toggle('muted', ui.muted);
     mute.setAttribute('aria-label', ui.muted ? 'Unmute Kira' : 'Mute Kira');
-    mute.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6H5l3.5-3v10L5 10H2.5Z"/>' +
-      (ui.muted ? '<path d="m11 6 4 4M15 6l-4 4"/>' : '<path d="M11 5.5a3.5 3.5 0 0 1 0 5"/>') + '</svg> ' + (ui.muted ? 'Unmute' : 'Mute');
+    mute.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/>' +
+      (ui.muted ? '<path d="m22 9-6 6M16 9l6 6"/>' : '<path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>') + '</svg>' + (ui.muted ? 'Unmute' : 'Mute');
     document.getElementById('room-chip').textContent = 'Room ' + ROOM;
   }
 
@@ -501,7 +529,7 @@
       h = '<p class="task-title">How can we help?</p><p class="task-note">The front desk is staffed around the clock.</p>' +
         '<button class="btn btn-ghost-dark" data-act="help-call">Call me back — front desk</button>' +
         '<button class="btn btn-danger" data-act="help-emergency">Emergency — alert security now</button>' +
-        '<button class="link-btn" data-act="overlay-close">Close</button>';
+        btn('Close', 'overlay-close');
     } else if (ui.overlay === 'help-confirm') {
       h = '<p class="task-title">Alert security and the duty manager?</p><p class="task-note">Someone will come to Room ' + ROOM + ' immediately.</p>' +
         '<div class="btn-row">' + btn('Cancel', 'overlay-close') + '<button class="btn btn-danger" data-act="help-send" data-arg="emergency">Yes, alert them</button></div>';
@@ -515,7 +543,7 @@
       var langs = [['English', 'EN', true], ['العربية', 'AR'], ['Русский', 'RU'], ['中文', 'ZH'], ['Français', 'FR'], ['Deutsch', 'DE']];
       h = '<p class="task-title">Language</p><p class="task-note">Kira understands guests in any of these by voice. The on-screen translation isn’t part of this prototype yet.</p><div class="lang-list">' +
         langs.map(function (l) { return '<button class="quick-chip' + (l[2] ? ' selected' : '') + '"' + (l[2] ? ' data-act="overlay-close"' : ' disabled') + '><span>' + l[0] + '</span><span>' + (l[2] ? '✓' : 'Soon') + '</span></button>'; }).join('') +
-        '</div><button class="link-btn" data-act="overlay-close">Close</button>';
+        '</div>' + btn('Close', 'overlay-close');
     } else if (ui.overlay === 'day-use') {
       h = '<p class="task-title">Day-use options</p><div class="guest-card"><div class="g-field-row"><span class="label">Day-use room until 6:00 PM</span><span class="value">AED 250</span></div><div class="g-field-row"><span class="label">Spa &amp; pool day pass</span><span class="value">AED 120</span></div><div class="g-field-row"><span class="label">Luggage held at the bell desk</span><span class="value">Free</span></div></div>' +
         '<p class="task-note">Ask the front desk to book any of these.</p><button class="btn btn-brass" data-act="overlay-close">Close</button>';
@@ -615,11 +643,18 @@
       var note = /no onions?/.test(t) ? 'No onion' : '';
       return { type: 'dining', items: found, note: note };
     }
-    if (/towel|pillow|clean|tidy|make up|toiletr|shampoo|soap/.test(t)) {
-      var choice = /towel/.test(t) ? 'towels' : /pillow/.test(t) ? 'pillows' : /toiletr|shampoo|soap/.test(t) ? 'toiletries' : 'clean';
-      var m2 = /(\d+|a|an|one|two|three|four|five|six|couple|pair)( of)? (more |extra )?(towel|pillow)/.exec(t);
-      return { type: 'hk', choice: choice, qty: m2 ? (+m2[1] || NUM_WORDS[m2[1]] || 1) : 2 };
-    }
+    // Housekeeping: every item mentioned, each with its own quantity ("two towels and a blanket").
+    var hkFound = [];
+    HK_ITEMS.forEach(function (x) {
+      var m = x.re.exec(t);
+      if (!m) return;
+      var words = t.slice(0, m.index).trim().split(' '), q = null;
+      for (var k = words.length - 1; k >= Math.max(0, words.length - 3) && q == null; k--) {
+        if (/^\d+$/.test(words[k])) q = +words[k]; else if (NUM_WORDS[words[k]]) q = NUM_WORDS[words[k]];
+      }
+      hkFound.push({ id: x.id, qty: Math.min(x.max, Math.max(1, q || x.def)) });
+    });
+    if (hkFound.length) return { type: 'hk', items: hkFound };
     if (/late checkout|check out|checkout|extend|stay longer|leave later/.test(t)) {
       var tm = /(?:at|until|till|to|for)? ?(\d{1,2})(?::(\d{2}))? ?(am|pm|oclock|o clock)?/.exec(t.replace(/checkout|check out/g, ''));
       var to = null;
@@ -658,10 +693,17 @@
       openMenu(true);
       return;
     }
-    if (intent.type === 'hk') { ui.hk.choice = intent.choice; ui.hk.qty = Math.min(6, Math.max(1, intent.qty)); ui.view = 'hk'; return; }
+    if (intent.type === 'hk') {
+      // Spoken from the housekeeping screen: add to what's there. From anywhere else: start fresh.
+      if (ui.voiceFrom !== 'hk') { ui.hk.basket = {}; ui.hk.other = ''; }
+      intent.items.forEach(function (f) { ui.hk.basket[f.id] = f.qty; });
+      ui.hk.voiceAck = 'Got it — anything else?'; // one short acknowledgement; the list shows what was added
+      ui.view = 'hk'; return;
+    }
     if (intent.type === 'checkout') {
       var open = openOf('checkout');
       if (open) { ui.trackId = open.id; ui.view = 'checkout-track'; return; }
+      ui.co.voiceTo = intent.to || null; ui.co.quiet = false;
       if (intent.to) ui.co.to = intent.to;
       ui.view = 'checkout'; return;
     }
@@ -763,24 +805,28 @@
     track: track,
     'cancel-order': function (id) { S.setStatus(id, 'cancelled', { text: 'Cancelled by guest before preparation', patch: { cancelledBy: 'guest' } }); },
     feedback: function (a) { ui.feedback[ui.trackId] = a; S.patch(ui.trackId, { feedback: a }, a === 'good' ? 'Guest feedback: good' : 'Guest feedback: not great'); },
-    hk: function () { ui.hk.other = ''; ui.trackId = null; go('hk'); },
-    'hk-choice': function (a) { ui.hk.choice = a; render(); if (a === 'other') { var el = document.getElementById('hk-other'); if (el) el.focus(); } },
-    'hk-inc': function () { ui.hk.qty = Math.min(6, ui.hk.qty + 1); render(); },
-    'hk-dec': function () { ui.hk.qty = Math.max(1, ui.hk.qty - 1); render(); },
+    hk: function () { ui.hk = { basket: {}, other: '', voiceAck: '' }; ui.trackId = null; go('hk'); },
+    'hk-set': function (a) {
+      var p = a.split(':'), q = +p[1];
+      if (q > 0) ui.hk.basket[p[0]] = q; else delete ui.hk.basket[p[0]];
+      render();
+    },
     'hk-send': function () {
       var title = hkTitle();
       if (!title) return;
-      var r = S.createRequest({ dept: 'housekeeping', room: ROOM, title: title, kind: ui.hk.choice, channel: ui.heard ? 'voice' : 'tablet' });
-      known[r.id] = r.status; ui.heard = ''; ui.trackId = r.id; go('hk-track');
+      var r = S.createRequest({ dept: 'housekeeping', room: ROOM, title: title, items: hkLines(), other: ui.hk.other.trim(), channel: ui.heard ? 'voice' : 'tablet' });
+      known[r.id] = r.status; ui.heard = ''; ui.trackId = r.id;
+      ui.hk = { basket: {}, other: '', voiceAck: '' };
+      go('hk-track');
     },
     checkout: function () {
       var open = openOf('checkout');
       if (open) { track(open.id); return; }
       var cur = F.hourOf(room().checkout);
       if (!(F.hourOf(ui.co.to) > cur)) ui.co.to = CHECKOUT_TIMES.filter(function (t) { return F.hourOf(t) > cur; })[0] || '';
-      ui.co.showAll = false; go('checkout');
+      ui.co.showAll = false; ui.co.voiceTo = null; ui.co.quiet = false; go('checkout');
     },
-    'co-time': function (a) { ui.co.to = a; ui.co.showAll = false; render(); },
+    'co-time': function (a) { ui.co.to = a; ui.co.showAll = false; if (ui.co.voiceTo) { ui.co.voiceTo = null; ui.co.quiet = true; } render(); },
     'co-all': function () { ui.co.showAll = !ui.co.showAll; render(); },
     'co-send': function () {
       var r = S.createRequest({ dept: 'checkout', room: ROOM, from: room().checkout, to: ui.co.to, fee: S.lateFeeFor(ui.co.to), channel: ui.heard ? 'voice' : 'tablet' });
@@ -799,7 +845,7 @@
       var r = S.createRequest({ dept: 'valet', room: ROOM, vehicle: room().vehicle, title: 'Car to entrance', channel: ui.heard ? 'voice' : 'tablet' });
       known[r.id] = r.status; ui.heard = ''; ui.trackId = r.id; go('valet-track');
     },
-    voice: function () { if (ui.view !== 'voice') { ui.reply = ''; ui.voice.text = ''; go('voice'); setTimeout(function () { var el = document.getElementById('voice-text'); if (el && !('ontouchstart' in window)) el.focus(); }, 50); } },
+    voice: function () { if (ui.view !== 'voice') { ui.voiceFrom = ui.view; ui.reply = ''; ui.voice.text = ''; go('voice'); setTimeout(function () { var el = document.getElementById('voice-text'); if (el && !('ontouchstart' in window)) el.focus(); }, 50); } },
     say: function (a) { hear(a); },
     mic: toggleMic,
     'overlay-close': function () { ui.overlay = null; render(); },

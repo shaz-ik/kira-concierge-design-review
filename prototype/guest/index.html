@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kira — Guest Tablet</title>
 <link rel="stylesheet" href="../shared/tokens.css?v=1">
-<link rel="stylesheet" href="../shared/proto.css?v=1">
+<link rel="stylesheet" href="../shared/proto.css?v=2">
 <style>
   /* ---------- Stage: the tablet is a fixed 960×600 canvas scaled to fit the window ---------- */
   html, body { height: 100%; overflow: hidden; }
@@ -129,6 +129,106 @@
   @keyframes notice-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
 
   .scroll-col { overflow-y: auto; min-height: 0; display: flex; flex-direction: column; gap: var(--sp-3); scrollbar-width: thin; scrollbar-color: rgba(167,227,247,.3) transparent; padding-right: 2px; }
+
+  /* =====================================================================
+     Review pass (26 Oct): fewer strokes — surfaces are separated by fill and
+     shadow, not outlines — and every control is a 44px+ touch target.
+     Strokes that remain are content (stepper rail, icons) or focus.
+     ===================================================================== */
+
+  /* Top bar: full-size touch buttons */
+  .tablet-navbar { padding: 14px 20px 10px; gap: 12px; flex-wrap: nowrap; }
+  .tablet-navbar .nav-group { flex-wrap: nowrap; gap: 10px; }
+  .nav-btn {
+    height: 44px; min-width: 44px; padding: 0 16px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: none; border-radius: 999px; background: rgba(244,239,227,.09); color: var(--ink-on-dark);
+    font: 600 14px/1 var(--font); cursor: pointer; white-space: nowrap;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); transition: background-color .15s, transform .1s;
+  }
+  .nav-btn:hover { background: rgba(244,239,227,.15); }
+  .nav-btn:active { transform: scale(.97); }
+  .nav-btn[hidden] { display: none; }
+  .nav-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .nav-btn.muted { color: var(--muted-on-dark); }
+  .nav-room { font-size: 14px; font-weight: 600; color: var(--muted-on-dark); padding: 0 6px; }
+  .nav-seg { display: inline-flex; border-radius: 999px; background: rgba(244,239,227,.09); }
+  .nav-seg .nav-btn { background: none; width: 52px; padding: 0; gap: 1px; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .nav-seg .nav-btn:hover { background: rgba(244,239,227,.1); }
+  .a-sm { font-size: 13px; } .a-lg { font-size: 18px; }
+  .nav-help { background: rgba(139,74,61,.42); color: #ffdcd3; }
+  .nav-help:hover { background: rgba(139,74,61,.58); }
+  .tablet-context { font-size: 12.5px; margin: 0 0 6px; min-height: 16px; }
+
+  /* Surfaces: fill, no outline */
+  .kira-photo-wrap { border: none; box-shadow: 0 0 0 6px rgba(79,192,239,.1), 0 0 30px 6px rgba(167,227,247,.22); }
+  .kira-photo-wrap.small { box-shadow: 0 0 0 4px rgba(79,192,239,.1), 0 0 16px 2px rgba(167,227,247,.22); }
+  .guest-card { border: none; background: rgba(79,192,239,.09); box-shadow: 0 12px 32px -16px rgba(0,0,0,.6); }
+  .subtitle-bar { border: none; background: rgba(7,12,20,.55); }
+  .g-banner { border: none; }
+  .g-banner-pending { background: rgba(244,239,227,.08); }
+  .g-banner-good { background: rgba(91,122,99,.3); }
+  .g-banner-warn { background: rgba(166,124,61,.26); }
+  .btn-ghost-dark { border: none; background: rgba(244,239,227,.09); }
+  .btn-ghost-dark:hover { border: none; background: rgba(244,239,227,.16); }
+  .btn-danger { border: none; }
+  .cart-bar { border: none; background: rgba(79,192,239,.14); min-height: 60px; padding: 8px 8px 8px 18px; font-size: 14px; }
+  .cart-bar .btn { padding: 12px 22px; font-size: 14px; }
+  .sheet, .kira-notice { border: none; }
+  .kira-notice img { border: none; }
+  .track-chip { border: none; min-height: 44px; padding: 0 18px; background: rgba(79,192,239,.12); }
+  .menu-item-unavailable-tag { border: none; background: rgba(244,239,227,.08); }
+  .text-field { border: none; background: rgba(7,12,20,.5); min-height: 48px; }
+  .text-field:focus { box-shadow: inset 0 0 0 2px var(--brass); }
+
+  /* Rows inside a card: spacing, not divider lines */
+  .menu-item { border-bottom: none; padding: 10px 0; }
+  .guest-card .g-field-row + .g-field-row { border-top: none; }
+  .g-field-row { padding: 6px 0; }
+  .order-total-row { border-top: none; margin-top: 10px; padding: 12px 14px; border-radius: 12px; background: rgba(79,192,239,.12); }
+
+  /* Touch targets */
+  .quick-chip { border: none; background: rgba(244,239,227,.09); min-height: 44px; padding: 0 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
+  .quick-chip:hover { background: rgba(244,239,227,.15); }
+  .add-btn { width: 44px; height: 44px; border: none; background: rgba(79,192,239,.2); color: var(--brass-soft); font-size: 22px; font-weight: 600; }
+  .add-btn:hover { background: rgba(79,192,239,.3); }
+  .add-btn.minus { border: none; background: rgba(244,239,227,.1); color: var(--ink-on-dark); }
+  .add-btn.on { background: var(--brass); color: #04151c; font-size: 18px; }
+  .qty-pill { min-width: 36px; height: 44px; background: none; color: var(--ink-on-dark); font-size: 16px; }
+  .qty-ctrl { gap: 4px; }
+  .g-select-chip { border: none; background: rgba(79,192,239,.2); min-height: 44px; padding: 0 18px; display: inline-flex; align-items: center; font-size: 15px; }
+  .link-btn { min-height: 44px; font-size: 14px; }
+  .btn { min-height: 52px; }
+
+  /* Home: four big service tiles */
+  .tablet-body.home { gap: 0; padding-top: 4px; }
+  .tablet-body.home .kira-photo-wrap { width: 112px; }
+  .tablet-body.home .home-greeting { margin-top: 14px; }
+  .tablet-body.home .avatar-sub { font-size: 15px; margin-top: 2px; }
+  .home-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; width: 100%; max-width: 880px; margin-top: 22px; }
+  .home-tile {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-height: 156px; padding: 18px;
+    border: none; border-radius: 22px; background: rgba(79,192,239,.09); color: var(--ink-on-dark); text-align: left; cursor: pointer; font-family: var(--font);
+    box-shadow: 0 14px 34px -18px rgba(0,0,0,.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); transition: background-color .15s, transform .1s;
+  }
+  .home-tile:hover { background: rgba(79,192,239,.16); }
+  .home-tile:active { transform: scale(.98); }
+  .home-tile .ico { width: 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center; background: rgba(79,192,239,.2); color: var(--brass-soft); }
+  .home-tile .ico svg { width: 24px; height: 24px; }
+  .home-tile .name { font-size: 17px; font-weight: 700; line-height: 1.2; margin-top: 2px; }
+  .home-tile .info { font-size: 13px; line-height: 1.4; color: var(--muted-on-dark); }
+  .home-active { margin-top: 16px; flex-direction: row; flex-wrap: wrap; justify-content: center; }
+
+  /* Housekeeping: pick as many as you like */
+  .hk-list { overflow-y: auto; min-height: 0; padding-top: 6px; padding-bottom: 6px; scrollbar-width: thin; scrollbar-color: rgba(167,227,247,.3) transparent; }
+  .hk-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 0; }
+  .hk-row .menu-item-name { font-size: 15px; }
+  .hk-row .menu-item-tag { font-size: 12.5px; }
+  .hk-row .text-field { min-height: 44px; font-size: 15px; }
+  .hk-row.selected .menu-item-name { color: var(--brass-soft); }
+
+  /* Voice: phrases as a 2-up grid so the screen fits without scrolling */
+  .voice-examples { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .voice-examples .quick-chip { justify-content: flex-start; text-align: left; padding: 10px 14px; min-height: 56px; line-height: 1.35; border-radius: var(--radius-guest-sm); }
 </style>
 </head>
 <body class="guest-app">
@@ -136,13 +236,14 @@
     <div class="tablet-frame app" id="tablet">
       <div class="tablet-navbar">
         <div class="nav-group">
-          <span class="nav-chip" id="room-chip">Room 412</span>
-          <button class="nav-chip" id="lang-btn" aria-haspopup="dialog">EN ▾</button>
+          <button class="nav-btn" id="home-btn" data-act="home" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Home</button>
+          <span class="nav-room" id="room-chip">Room 412</span>
+          <button class="nav-btn" id="lang-btn" aria-haspopup="dialog" aria-label="Language: English"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>EN</button>
         </div>
         <div class="nav-group">
-          <button class="nav-icon" id="mute-btn" aria-pressed="false"></button>
-          <span class="nav-icon" role="group" aria-label="Text size"><button class="split-btn" id="text-up" aria-label="Larger text">Aa+</button> <button class="split-btn" id="text-down" aria-label="Smaller text">Aa−</button></span>
-          <button class="nav-emergency" id="help-btn">Help / Emergency</button>
+          <button class="nav-btn" id="mute-btn" aria-pressed="false"></button>
+          <span class="nav-seg" role="group" aria-label="Text size"><button class="nav-btn" id="text-down" aria-label="Smaller text"><span class="a-sm">A</span>−</button><button class="nav-btn" id="text-up" aria-label="Larger text"><span class="a-lg">A</span>+</button></span>
+          <button class="nav-btn nav-help" id="help-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.93 4.93 4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M4.93 19.07l4.24-4.24"/></svg>Help / Emergency</button>
         </div>
       </div>
       <div class="tablet-context" id="context"></div>
@@ -152,7 +253,7 @@
     </div>
   </div>
   <p class="rotate-hint">Rotate your phone for a bigger tablet view</p>
-<script src="../shared/kira.js?v=1"></script>
-<script src="guest.js?v=1"></script>
+<script src="../shared/kira.js?v=2"></script>
+<script src="guest.js?v=3"></script>
 </body>
 </html>
