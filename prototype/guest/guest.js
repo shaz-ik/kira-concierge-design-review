@@ -245,14 +245,24 @@
         '<div class="btn-row">' + btn('Edit order', 'menu', { disabled: ui.sending }) + btn(ui.sending ? 'Sending…' : 'Try again', 'send', { hero: true, disabled: ui.sending }) + '</div>' };
   };
 
+  // Status screens (waiting / progress / outcome) follow the home's 60 / 40 rule:
+  // what's happening on the left, what you can do about it on the right (main action first).
+  function statusLayout(detail, actions, hint) {
+    return '<div class="status-split"><section class="status-detail">' + detail + '</section>' +
+      '<aside class="status-actions" aria-label="Options"><p class="status-actions-label">Options</p>' +
+      '<div class="status-btns">' + actions.join('') + '</div>' +
+      (hint ? '<p class="status-hint">' + esc(hint) + '</p>' : '') + '</aside></div>';
+  }
+
   VIEWS['dining-sent'] = function () {
     var r = S.find(ui.trackId);
     if (!r) return VIEWS.home();
     return { context: 'In-room dining · Order ' + r.ref,
       kira: { mood: 'speaking', line: 'Sent to the kitchen — I’ll let you know as it’s prepared.' },
-      html: head('Order ' + r.ref, 'Sent to the kitchen') + banner('good', 'Order confirmed', itemsText(r.items) + ' · ' + F.money(r.total)) +
-        '<p class="task-note">You’ll see live updates here as your order moves through the kitchen.</p>' +
-        '<div class="btn-row">' + btn('Back to home', 'home') + btn('Track status', 'track', { primary: true, arg: r.id }) + '</div>' };
+      html: statusLayout(
+        head('Order ' + r.ref, 'Sent to the kitchen') + banner('good', 'Order confirmed', itemsText(r.items) + ' · ' + F.money(r.total)) +
+          '<p class="task-note">You’ll see live updates here as your order moves through the kitchen.</p>',
+        [btn('Track status', 'track', { primary: true, arg: r.id }), btn('Back to home', 'home')]) };
   };
 
   VIEWS.dining = function () {
@@ -261,32 +271,35 @@
     var labels = ['Accepted', 'Preparing', 'Ready', 'Delivered'];
     var summary = '<p class="task-note">' + esc(itemsText(r.items)) + ' · ' + F.money(r.total) + '</p>';
     var ctx = 'In-room dining · Order ' + r.ref, eyebrow = 'Order ' + r.ref;
-    var back = btn('Back to home', 'home');
     if (r.status === 'cancelled') {
       var byGuest = r.cancelledBy === 'guest';
       var why = byGuest ? 'Nothing has been charged.' : (r.history[r.history.length - 1].text.replace(/^Rejected by kitchen — /, '') + ' Nothing has been charged.');
       return { context: ctx, kira: { mood: 'speaking', line: byGuest ? 'I’ve cancelled that order — nothing has been charged.' : 'I’m sorry — the kitchen couldn’t take that order. Nothing has been charged.' },
-        html: head(eyebrow, 'Order cancelled') + banner('warn', byGuest ? 'You cancelled this order' : 'The kitchen couldn’t take this order', why) +
-          '<div class="btn-row">' + back + btn('Order something else', 'menu', { primary: true }) + '</div>' };
+        html: statusLayout(
+          head(eyebrow, 'Order cancelled') + summary + banner('warn', byGuest ? 'You cancelled this order' : 'The kitchen couldn’t take this order', why),
+          [btn('Order something else', 'menu', { primary: true }), btn('Back to home', 'home')]) };
     }
     if (r.status === 'delivered') {
       var fb = ui.feedback[r.id];
+      var rate = fb ? '<p class="status-hint">Thanks for the feedback.</p>'
+        : '<p class="status-actions-label">How was it?</p><div class="status-rate"><button class="quick-chip" data-act="feedback" data-arg="good">🙂 Good</button><button class="quick-chip" data-act="feedback" data-arg="bad">🙁 Not great</button></div>';
       return { context: ctx, kira: { mood: 'wake', line: fb ? (fb === 'good' ? 'Wonderful — thank you!' : 'I’m sorry about that — I’ve let the restaurant manager know.') : 'Enjoy your meal — let me know if you’d like anything else.' },
-        html: head(eyebrow, 'Delivered') + '<div class="guest-card">' + stepper(labels, 3, true) + '</div>' +
-          (fb ? '<p class="task-note">Thanks for the feedback.</p>' :
-            '<p class="task-note">How was it?</p><div class="quick-grid"><button class="quick-chip" data-act="feedback" data-arg="good">🙂 Good</button><button class="quick-chip" data-act="feedback" data-arg="bad">🙁 Not great</button></div>') +
-          '<div class="btn-row">' + back + '</div>' };
+        html: statusLayout(
+          head(eyebrow, 'Delivered') + summary + '<div class="guest-card">' + stepper(labels, 3, true) + '</div>',
+          [btn('Back to home', 'home', { primary: true }), btn('Order something else', 'menu'), rate]) };
     }
     var map = {
-      incoming:  { i: 0, title: 'Order accepted',      line: 'The kitchen has your order — I’ll tell you when they start on it.', eta: 'Ready in about ' + minsLeft(r, 20) + ' minutes' },
-      preparing: { i: 1, title: 'Being prepared',      line: 'Your order is being prepared now.',                 eta: 'Ready in about ' + minsLeft(r, 20) + ' minutes' },
-      ready:     { i: 2, title: 'Ready',               line: 'Your order is ready — it’ll be with you in a few minutes.', eta: 'A waiter is collecting it now' },
-      out:       { i: 2, title: 'On its way to you',   line: 'Your order is on its way up now.',                  eta: 'Arriving in a few minutes' }
+      incoming:  { i: 0, title: 'Order accepted',    line: 'The kitchen has your order — I’ll tell you when they start on it.', eta: 'Ready in about ' + minsLeft(r, 20) + ' minutes' },
+      preparing: { i: 1, title: 'Being prepared',    line: 'Your order is being prepared now.',                 eta: 'Ready in about ' + minsLeft(r, 20) + ' minutes' },
+      ready:     { i: 2, title: 'Ready',             line: 'Your order is ready — it’ll be with you in a few minutes.', eta: 'A waiter is collecting it now' },
+      out:       { i: 2, title: 'On its way to you', line: 'Your order is on its way up now.',                  eta: 'Arriving in a few minutes' }
     }[r.status];
+    var canCancel = r.status === 'incoming';
     return { context: ctx, kira: { mood: 'speaking', line: map.line },
-      html: head(eyebrow, map.title) + summary + '<div class="guest-card">' + stepper(labels, map.i) + '</div>' +
-        '<p class="avatar-sub">' + esc(map.eta) + '</p>' +
-        '<div class="btn-row">' + btn('Cancel order', 'cancel-order', { arg: r.id, disabled: r.status !== 'incoming' }) + back + '</div>' };
+      html: statusLayout(
+        head(eyebrow, map.title) + summary + '<div class="guest-card">' + stepper(labels, map.i) + '</div>' + '<p class="avatar-sub">' + esc(map.eta) + '</p>',
+        [btn('Back to home', 'home', { primary: true }), btn('Cancel order', 'cancel-order', { arg: r.id, disabled: !canCancel })],
+        canCancel ? 'You can cancel until the kitchen starts preparing it.' : 'The kitchen has started, so this order can no longer be cancelled.') };
   };
 
   function hkItem(id) { return HK_ITEMS.filter(function (x) { return x.id === id; })[0]; }
@@ -338,22 +351,27 @@
     var onlyClean = r.items && r.items.length === 1 && r.items[0].id === 'clean' && !r.other;
     if (r.status === 'done') {
       return { context: ctx, kira: { mood: 'wake', line: onlyClean ? 'All done — your room has been cleaned.' : 'All done — everything you asked for has been delivered.' },
-        html: head(eyebrow, 'All done') + what + '<div class="guest-card">' + stepper(labels, 2, true) + '</div>' + banner('good', onlyClean ? 'Room cleaned' : 'Delivered', r.title) +
-          '<div class="btn-row">' + btn('Another request', 'hk') + btn('Back to home', 'home', { primary: true }) + '</div>' };
+        html: statusLayout(
+          head(eyebrow, 'All done') + what + '<div class="guest-card">' + stepper(labels, 2, true) + '</div>' + banner('good', onlyClean ? 'Room cleaned' : 'Delivered', r.title),
+          [btn('Back to home', 'home', { primary: true }), btn('Another request', 'hk')]) };
     }
     if (r.status === 'cancelled') {
       return { context: ctx, kira: { mood: 'speaking', line: 'Housekeeping couldn’t complete that one — I’m sorry.' },
-        html: head(eyebrow, 'Request closed') + banner('warn', 'This request was closed', r.title) + '<div class="btn-row">' + btn('Another request', 'hk') + btn('Back to home', 'home', { primary: true }) + '</div>' };
+        html: statusLayout(
+          head(eyebrow, 'Request closed') + banner('warn', 'This request was closed', r.title),
+          [btn('Another request', 'hk', { primary: true }), btn('Back to home', 'home')]) };
     }
     if (r.status === 'received') {
       return { context: ctx, kira: { mood: 'idle', line: 'Got it — housekeeping will have this with you within 20 minutes.' },
-        html: head(eyebrow, 'Request received') + what + '<div class="guest-card">' + stepper(labels, 0) + '</div>' +
-          '<p class="avatar-sub">Expected within 20 minutes</p><div class="btn-row">' + btn('Back to home', 'home') + '</div>' };
+        html: statusLayout(
+          head(eyebrow, 'Request received') + what + '<div class="guest-card">' + stepper(labels, 0) + '</div>' + '<p class="avatar-sub">Expected within 20 minutes</p>',
+          [btn('Back to home', 'home', { primary: true }), btn('Another request', 'hk')]) };
     }
     var m = minsLeft(r, 20);
     return { context: ctx, kira: { mood: 'speaking', line: 'Housekeeping is on it — about ' + m + ' minutes.' },
-      html: head(eyebrow, 'On its way') + what + '<div class="guest-card">' + stepper(labels, 1) + '</div>' +
-        '<p class="avatar-sub">Expected within ' + m + ' minutes</p><div class="btn-row">' + btn('Another request', 'hk') + btn('Back to home', 'home') + '</div>' };
+      html: statusLayout(
+        head(eyebrow, 'On its way') + what + '<div class="guest-card">' + stepper(labels, 1) + '</div>' + '<p class="avatar-sub">Expected within ' + m + ' minutes</p>',
+        [btn('Back to home', 'home', { primary: true }), btn('Another request', 'hk')]) };
   };
 
   VIEWS.checkout = function () {
@@ -380,38 +398,50 @@
     var ctx = 'Extend checkout';
     if (r.status === 'pending') {
       return { context: ctx, kira: { mood: 'idle', line: 'I’ve sent that to the front desk.' },
-        html: head('Request sent', 'Waiting for the front desk') + banner('pending', 'Waiting for front desk approval', 'Requested: checkout at ' + r.to + ' (currently ' + r.from + ')') +
-          '<p class="task-note">You’ll be notified here as soon as they reply — feel free to carry on.</p>' +
-          '<div class="btn-row">' + btn('Cancel request', 'co-cancel', { arg: r.id }) + btn('Back to home', 'home') + '</div>' };
+        html: statusLayout(
+          head('Request sent', 'Waiting for the front desk') + banner('pending', 'Waiting for front desk approval', 'Requested: checkout at ' + r.to + ' (currently ' + r.from + ')') +
+            '<p class="task-note">You’ll be notified here as soon as they reply — feel free to carry on.</p>',
+          [btn('Back to home', 'home', { primary: true }), btn('Cancel request', 'co-cancel', { arg: r.id })],
+          'Cancelling keeps your ' + r.from + ' checkout.') };
     }
     if (r.status === 'approved') {
       return { context: ctx, kira: { mood: 'speaking', line: 'Approved — there’s a late checkout fee of AED ' + r.fee + '. Shall I confirm?' },
-        html: banner('good', 'Approved — new checkout: ' + r.to) +
-          '<div class="guest-card"><div class="g-field-row"><span class="label">Late checkout fee</span><span class="value">' + F.money(r.fee) + '</span></div><div class="g-field-row"><span class="label">Charged to</span><span class="value">Room ' + ROOM + '</span></div></div>' +
-          '<p class="task-note">Declining keeps your original ' + esc(r.from) + ' checkout.</p>' +
-          '<div class="btn-row">' + btn('Decline', 'co-decline', { arg: r.id }) + btn('Confirm charge', 'co-confirm', { hero: true, arg: r.id }) + '</div>' };
+        html: statusLayout(
+          head('Front desk replied', 'Approved') + banner('good', 'Approved — new checkout: ' + r.to) +
+            '<div class="guest-card"><div class="g-field-row"><span class="label">Late checkout fee</span><span class="value">' + F.money(r.fee) + '</span></div><div class="g-field-row"><span class="label">Charged to</span><span class="value">Room ' + ROOM + '</span></div></div>',
+          [btn('Confirm charge', 'co-confirm', { hero: true, arg: r.id }), btn('Decline', 'co-decline', { arg: r.id })],
+          'Declining keeps your original ' + r.from + ' checkout.') };
     }
     if (r.status === 'confirmed' && r.fee) {
       return { context: ctx, kira: { mood: 'wake', line: 'All set — enjoy the extra time.' },
-        html: head('', 'Checkout extended') + banner('good', 'New checkout: ' + r.to, F.money(r.fee) + ' charged to Room ' + ROOM) + '<div class="btn-row">' + btn('Back to home', 'home', { primary: true }) + '</div>' };
+        html: statusLayout(
+          head('All set', 'Checkout extended') + banner('good', 'New checkout: ' + r.to, F.money(r.fee) + ' charged to Room ' + ROOM),
+          [btn('Back to home', 'home', { primary: true })]) };
     }
     if (r.status === 'confirmed') {
       return { context: ctx, kira: { mood: 'wake', line: 'Approved — your checkout is now ' + r.to + ', no charge.' },
-        html: head('Request approved', 'Checkout extended') + banner('good', 'Approved — new checkout: ' + r.to, 'No fee — within standard policy') +
-          '<p class="task-note">Nothing further to confirm — you’re all set.</p><div class="btn-row">' + btn('Back to home', 'home', { primary: true }) + '</div>' };
+        html: statusLayout(
+          head('Request approved', 'Checkout extended') + banner('good', 'Approved — new checkout: ' + r.to, 'No fee — within standard policy') +
+            '<p class="task-note">Nothing further to confirm — you’re all set.</p>',
+          [btn('Back to home', 'home', { primary: true })]) };
     }
     if (r.status === 'denied') {
       return { context: ctx, kira: { mood: 'speaking', line: 'Sorry, the front desk couldn’t approve that one.' },
-        html: banner('warn', 'Not approved', (r.reason ? r.reason.replace(/\.?$/, '.') + ' ' : '') + 'Your checkout stays at ' + r.from + '.') +
-          '<p class="task-note">You can request a later checkout on another day, or ask about a day-use room.</p>' +
-          '<div class="btn-row">' + btn('Day-use options', 'day-use') + btn('Done', 'home', { primary: true }) + '</div>' };
+        html: statusLayout(
+          head('Front desk replied', 'Not approved') + banner('warn', 'Your checkout stays at ' + r.from, r.reason ? r.reason.replace(/\.?$/, '.') : '') +
+            '<p class="task-note">You can request a later checkout on another day, or ask about a day-use room.</p>',
+          [btn('Done', 'home', { primary: true }), btn('Day-use options', 'day-use')]) };
     }
     if (r.status === 'declined') {
       return { context: ctx, kira: { mood: 'speaking', line: 'No problem — your checkout stays at ' + r.from + '.' },
-        html: head('', 'Checkout unchanged') + banner('pending', 'You kept your ' + r.from + ' checkout', 'Nothing has been charged.') + '<div class="btn-row">' + btn('Back to home', 'home', { primary: true }) + '</div>' };
+        html: statusLayout(
+          head('', 'Checkout unchanged') + banner('pending', 'You kept your ' + r.from + ' checkout', 'Nothing has been charged.'),
+          [btn('Back to home', 'home', { primary: true })]) };
     }
     return { context: ctx, kira: { mood: 'speaking', line: 'I’ve withdrawn that request.' },
-      html: head('', 'Request cancelled') + banner('pending', 'Your checkout stays at ' + r.from) + '<div class="btn-row">' + btn('Back to home', 'home', { primary: true }) + '</div>' };
+      html: statusLayout(
+        head('', 'Request cancelled') + banner('pending', 'Your checkout stays at ' + r.from),
+        [btn('Back to home', 'home', { primary: true })]) };
   };
 
   VIEWS.valet = function () {
@@ -432,18 +462,23 @@
     var car = r.vehicle ? r.vehicle.model + ' · ' + r.vehicle.plate : 'Your car';
     if (r.status === 'done') {
       return { context: ctx, kira: { mood: 'wake', line: 'Your car is ready at the main entrance.' },
-        html: banner('good', 'Your car is ready', car + ' — waiting at the main entrance') + '<div class="guest-card">' + stepper(labels, 2, true) + '</div>' +
-          '<div class="btn-row">' + btn('Done', 'home', { primary: true }) + '</div>' };
+        html: statusLayout(
+          head(eyebrow, 'Your car is ready') + banner('good', 'Waiting at the main entrance', car) + '<div class="guest-card">' + stepper(labels, 2, true) + '</div>',
+          [btn('Done', 'home', { primary: true })]) };
     }
     if (r.status === 'cancelled') {
       return { context: ctx, kira: { mood: 'speaking', line: 'That valet request was closed — please call the front desk if you still need your car.' },
-        html: head(eyebrow, 'Request closed') + '<div class="btn-row">' + btn('Back to home', 'home', { primary: true }) + '</div>' };
+        html: statusLayout(
+          head(eyebrow, 'Request closed') + '<p class="task-note">Please call the front desk if you still need your car.</p>',
+          [btn('Back to home', 'home', { primary: true })]) };
     }
     var received = r.status === 'received';
     return { context: ctx, kira: { mood: received ? 'idle' : 'speaking', line: received ? 'I’ve let the valet team know.' : 'Your car is being brought around now.' },
-      html: head(eyebrow, received ? 'Calling the valet' : 'Bringing your car') + '<div class="guest-card">' + stepper(labels, received ? 0 : 1) + '</div>' +
-        '<p class="avatar-sub">' + esc(car) + '</p><p class="task-note">We’ll let you know here the moment it’s at the main entrance.</p>' +
-        '<div class="btn-row">' + btn('Back to home', 'home') + '</div>' };
+      html: statusLayout(
+        head(eyebrow, received ? 'Calling the valet' : 'Bringing your car') + '<p class="task-note">' + esc(car) + ' · Main entrance</p>' +
+          '<div class="guest-card">' + stepper(labels, received ? 0 : 1) + '</div>' +
+          '<p class="avatar-sub">We’ll let you know here the moment it’s at the main entrance.</p>',
+        [btn('Back to home', 'home', { primary: true })]) };
   };
 
   var PHRASES = ['Two burgers and a Coke, please — no onion', 'Two extra towels and two pillows, please', 'I’d like a late checkout at 5', 'Bring my car around', 'What time does the pool close?'];
