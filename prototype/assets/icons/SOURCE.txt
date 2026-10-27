@@ -1,7 +1,11 @@
-Home-tile icons: Microsoft Fluent Emoji (3D style)
+Guest tablet icons: Microsoft Fluent Emoji (3D style)
 https://github.com/microsoft/fluentui-emoji — MIT License, see LICENSE-fluent-emoji.txt
 
 dining.png        Fork and knife with plate
 housekeeping.png  Bed
 checkout.png      Alarm clock
 valet.png         Automobile
+
+status-check.png    Check mark button
+status-waiting.png  Hourglass not done
+status-warning.png  Warning
