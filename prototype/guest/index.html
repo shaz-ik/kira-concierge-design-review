@@ -375,6 +375,13 @@
   html.theme-light .g-dot.active { background: #FFFFFF; border-color: #8C4EF6; box-shadow: 0 0 0 4px rgba(140,78,246,.18); }
   html.theme-light :is(.menu-card, .hk-list, .scroll-col) { scrollbar-color: rgba(91,43,184,.3) transparent; }
   html.theme-light .proto-pill { color: #FFFFFF; }
+
+  /* Home tiles: centred, with 3D icons (Microsoft Fluent Emoji 3D, MIT — assets/icons/SOURCE.txt) */
+  .home-tile { align-items: center; text-align: center; gap: 8px; padding: 18px 16px 22px; }
+  .home-tile .ico, html.theme-light .home-tile .ico { width: 72px; height: 72px; background: none; border-radius: 0; }
+  .home-tile .ico img { width: 68px; height: 68px; filter: drop-shadow(0 10px 14px rgba(0,0,0,.4)); transition: transform .2s ease; }
+  .home-tile:hover .ico img { transform: translateY(-2px) scale(1.04); }
+  html.theme-light .home-tile .ico img { filter: drop-shadow(0 10px 14px rgba(60,40,120,.22)); }
 </style>
 </head>
 <body class="guest-app">
@@ -401,6 +408,6 @@
   </div>
   <p class="rotate-hint">Rotate your phone for a bigger tablet view</p>
 <script src="../shared/kira.js?v=3"></script>
-<script src="guest.js?v=5"></script>
+<script src="guest.js?v=6"></script>
 </body>
 </html>

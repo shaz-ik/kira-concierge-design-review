@@ -1,0 +1,7 @@
+Home-tile icons: Microsoft Fluent Emoji (3D style)
+https://github.com/microsoft/fluentui-emoji — MIT License, see LICENSE-fluent-emoji.txt
+
+dining.png        Fork and knife with plate
+housekeeping.png  Bed
+checkout.png      Alarm clock
+valet.png         Automobile

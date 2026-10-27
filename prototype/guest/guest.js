@@ -466,7 +466,7 @@
         '<button class="kira-tap" data-act="voice" aria-label="Talk to Kira"><div class="kira-photo-wrap"><img src="' + IMG.idle + '" alt="Kira"></div></button>' +
         '<p class="home-greeting">' + greeting() + '</p><p class="avatar-sub">Say “Hey Kira”, or tap to begin</p>' +
         '<div class="home-tiles">' + TILES.map(function (t) {
-          return '<button class="home-tile" data-act="' + t.act + '"><span class="ico">' + ICONS[t.icon] + '</span><span class="name">' + esc(t.name) + '</span><span class="info">' + esc(t.info) + '</span></button>';
+          return '<button class="home-tile" data-act="' + t.act + '"><span class="ico"><img src="../assets/icons/' + t.icon + '.png" alt="" width="64" height="64"></span><span class="name">' + esc(t.name) + '</span><span class="info">' + esc(t.info) + '</span></button>';
         }).join('') + '</div>' +
         '<div class="home-active" id="home-active"></div>';
     }
