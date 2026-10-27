@@ -557,7 +557,7 @@
         '<button class="kira-tap" data-act="voice" aria-label="Talk to Kira"><div class="kira-photo-wrap"><img src="' + IMG.idle + '" alt="Kira"></div></button>' +
         '<p class="home-greeting">' + greeting() + '</p><p class="avatar-sub">Say “Hey Kira”, or tap to begin</p>' +
         '<button class="btn btn-ghost-dark talk-btn" data-act="voice">' + MIC + 'Talk to Kira</button>' +
-        '<div class="home-active" id="home-active"></div>' +
+        '<div class="home-active" id="home-active" data-scroll="requests" hidden></div>' +
       '</div>';
   }
   function voiceShellHTML() {
@@ -576,14 +576,25 @@
       '<div class="task-col flow-body" id="task-col"></div>';
   }
 
+  // Open requests: one horizontal, swipeable row of compact cards under "Talk to Kira".
+  var REQ_STATUS = {
+    dining: { incoming: 'Accepted', preparing: 'Being prepared', ready: 'Ready', out: 'On its way' },
+    housekeeping: { received: 'Received', progress: 'On its way' },
+    valet: { received: 'Received', progress: 'Bringing your car' },
+    checkout: { pending: 'Waiting for front desk', approved: 'Approved — confirm fee' }
+  };
+  var REQ_NAME = { dining: 'Order', housekeeping: 'Housekeeping', valet: 'Valet', checkout: 'Late checkout' };
   function renderHomeActive() {
     var el = document.getElementById('home-active');
     if (!el) return;
-    var open = myRequests().filter(function (r) { return S.isOpen(r) && r.dept !== 'help'; }).sort(function (a, b) { return b.createdAt - a.createdAt; }).slice(0, 3);
+    var open = myRequests().filter(function (r) { return S.isOpen(r) && REQ_NAME[r.dept]; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+    el.hidden = !open.length;
     el.innerHTML = open.map(function (r) {
-      var what = { dining: 'Order ', housekeeping: 'Housekeeping ', valet: 'Valet ', checkout: 'Late checkout ' }[r.dept] || '';
-      var label = r.dept === 'checkout' ? (r.status === 'approved' ? 'approved — confirm fee' : 'waiting for front desk') : S.statusLabel(r).toLowerCase();
-      return '<button class="track-chip" data-act="track" data-arg="' + r.id + '"><span class="dot"></span>' + what + r.ref + ' · ' + esc(label) + ' — Track</button>';
+      var status = (REQ_STATUS[r.dept] && REQ_STATUS[r.dept][r.status]) || S.statusLabel(r);
+      var title = REQ_NAME[r.dept] + ' ' + (r.dept === 'checkout' ? '· ' + r.to : r.ref);
+      return '<button class="req-card" data-act="track" data-arg="' + r.id + '" aria-label="' + esc(title + ', ' + status + '. Track') + '">' +
+        '<img src="../assets/icons/' + r.dept + '.png" alt="" width="30" height="30">' +
+        '<span class="req-text"><span class="req-title">' + esc(title) + '</span><span class="req-status"><span class="dot"></span>' + esc(status) + '</span></span></button>';
     }).join('');
   }
 
@@ -594,7 +605,7 @@
     var active = document.activeElement, focusId = active && active.id, selStart = null;
     try { selStart = active && active.selectionStart; } catch (e) {}
     var scrolls = {};
-    body.querySelectorAll('[data-scroll]').forEach(function (el) { scrolls[el.dataset.scroll] = el.scrollTop; });
+    body.querySelectorAll('[data-scroll]').forEach(function (el) { scrolls[el.dataset.scroll] = [el.scrollTop, el.scrollLeft]; });
 
     ensureShell();
     var mode = modeOf(ui.view), viewChanged = ui.view !== lastView;
@@ -627,7 +638,7 @@
     lastView = ui.view;
     ui.bump = null;
 
-    body.querySelectorAll('[data-scroll]').forEach(function (el) { if (scrolls[el.dataset.scroll]) el.scrollTop = scrolls[el.dataset.scroll]; });
+    body.querySelectorAll('[data-scroll]').forEach(function (el) { var p = scrolls[el.dataset.scroll]; if (p) { el.scrollTop = p[0]; el.scrollLeft = p[1]; } });
     if (focusId) {
       var el = document.getElementById(focusId);
       if (el && el !== document.activeElement) { el.focus(); try { if (selStart != null) el.setSelectionRange(selStart, selStart); } catch (e) {} }
@@ -1040,6 +1051,11 @@
     else if (TICK_ACTS[el.dataset.act]) sound('tick');
     e.preventDefault(); fn(el.dataset.arg);
   });
+  tablet.addEventListener('wheel', function (e) {
+    var row = e.target.closest && e.target.closest('.home-active');
+    if (!row || row.scrollWidth <= row.clientWidth || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    row.scrollLeft += e.deltaY; e.preventDefault();
+  }, { passive: false });
   tablet.addEventListener('input', function (e) {
     var path = e.target.dataset && e.target.dataset.model;
     if (!path) return;

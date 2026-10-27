@@ -571,6 +571,36 @@
   .side-amt { color: var(--brass-soft); white-space: nowrap; }
   .side-total { display: flex; justify-content: space-between; font-size: 14px; font-weight: 500; padding: 10px 12px; border-radius: 12px; background: rgba(140,78,246,.18); }
   html.theme-light .side-total { background: #EFE7FD; }
+
+  /* Open requests on home: one swipeable row of compact cards */
+  .tablet-body.bento-home .ai-home .home-active {
+    width: calc(100% + 48px); margin: 18px -24px 0; padding: 4px 24px 6px;
+    display: flex; flex-direction: row; flex-wrap: nowrap; gap: 10px; justify-content: flex-start;
+    overflow-x: auto; overflow-y: hidden; scroll-snap-type: x proximity; scroll-padding: 0 24px; scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+  }
+  .home-active::-webkit-scrollbar { display: none; }
+  .home-active[hidden] { display: none !important; }
+  .home-active > :first-child { margin-left: auto; }
+  .home-active > :last-child { margin-right: auto; }
+  .req-card {
+    flex: 0 0 auto; scroll-snap-align: start; display: flex; align-items: center; gap: 10px; min-height: 56px; max-width: 250px;
+    padding: 8px 16px 8px 10px; border: none; border-radius: 18px; text-align: left; cursor: pointer; font-family: inherit; color: var(--ink-on-dark);
+    background: var(--glass); box-shadow: var(--glass-edge), 0 10px 24px -16px rgba(0,0,0,.8);
+    transition: transform .14s cubic-bezier(.3,.7,.4,1.4), background-color .2s;
+  }
+  .req-card:hover { background: var(--glass-strong); }
+  .req-card:active { transform: scale(.96); }
+  .req-card img { width: 30px; height: 30px; flex-shrink: 0; filter: drop-shadow(0 4px 6px rgba(0,0,0,.35)); }
+  .req-text { display: flex; flex-direction: column; min-width: 0; }
+  .req-title { font-size: 14px; font-weight: 500; white-space: nowrap; }
+  .req-status { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted-on-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .req-status .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: var(--brass-soft); box-shadow: 0 0 8px rgba(196,166,255,.9); animation: pulse-dot 2s ease-in-out infinite; }
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+  html.theme-light .req-card { box-shadow: var(--glass-edge), 0 8px 20px -14px rgba(60,40,120,.3); }
+  html.theme-light .req-status .dot { background: #8C4EF6; box-shadow: 0 0 6px rgba(140,78,246,.6); }
+  html.theme-light .req-card img { filter: drop-shadow(0 4px 6px rgba(60,40,120,.2)); }
 </style>
 </head>
 <body class="guest-app">
@@ -596,6 +626,6 @@
   </div>
   <p class="rotate-hint">Rotate your phone for a bigger tablet view</p>
 <script src="../shared/kira.js?v=3"></script>
-<script src="guest.js?v=10"></script>
+<script src="guest.js?v=11"></script>
 </body>
 </html>
