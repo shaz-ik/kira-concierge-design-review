@@ -56,7 +56,7 @@
     voice: { text: '', typing: '', busy: false },
     overlay: null, helpKind: null, helpId: null,
     feedback: {},
-    muted: false, textScale: 0
+    muted: false, volume: 0.8, textScale: 0
   };
   var seededAt = S.get().seededAt;
   var ROOM = S.get().guestRoom;
@@ -120,11 +120,11 @@
   var lastLine = '', speakUntil = 0, kiraKey = '', speakTimer = null, speakDelay = null;
 
   function speak(text) {
-    if (ui.muted || !('speechSynthesis' in window)) return;
+    if (ui.muted || ui.volume <= 0 || !('speechSynthesis' in window)) return;
     try {
       window.speechSynthesis.cancel();
       var u = new SpeechSynthesisUtterance(text.replace(/[“”"]/g, '').replace(/(\d+)×\s*/g, '$1 ').replace(/AED\s*([\d.]+)/g, '$1 dirhams'));
-      u.rate = 1.02; u.pitch = 1.05;
+      u.rate = 1.02; u.pitch = 1.05; u.volume = ui.volume;
       var voices = window.speechSynthesis.getVoices();
       var pick = voices.filter(function (v) { return /en(-|_)(GB|US)/i.test(v.lang) && /female|samantha|serena|karen|moira|google uk english female|zira/i.test(v.name); })[0] ||
                  voices.filter(function (v) { return /^en/i.test(v.lang); })[0];
@@ -524,16 +524,17 @@
     var v = ui.voice;
     var kira = v.busy === 'thinking' ? { mood: 'thinking', line: '“' + v.typing + '”', caption: 'Thinking…' }
       : v.typing ? { mood: 'listening', line: '“' + v.typing + '”', caption: 'Listening…' }
+      : recognizing ? { mood: 'listening', line: 'I’m listening — what can I do for you?', caption: 'Listening…' }
       : ui.reply ? { mood: 'speaking', line: ui.reply }
-      : { mood: 'listening', line: 'I’m listening — what can I do for you?', caption: 'Listening…' };
+      : { mood: 'idle', line: Recognition ? 'Tap “Talk to Kira” and ask me anything.' : 'Tap a phrase, or type what you’d like.' };
     var examples = PHRASES.map(function (p) { return '<button class="quick-chip" data-act="say" data-arg="' + esc(p) + '"' + (v.busy ? ' disabled' : '') + '>“' + esc(p) + '”</button>'; }).join('');
     return { context: 'Talk to Kira', kira: kira,
       html: '<div class="voice-panel">' + head('', 'Just ask') +
-        '<p class="task-note">On the real tablet you simply speak. Here, tap a phrase' + (Recognition ? ', use the microphone,' : '') + ' or type what you’d say.</p>' +
+        '<p class="task-note">' + (Recognition ? 'Just speak — or tap a phrase, or type what you’d like.' : 'Tap a phrase, or type what you’d like.') + '</p>' +
         '<div class="voice-examples">' + examples + '</div>' +
         '<form class="voice-row" data-form="voice"><input class="text-field" id="voice-text" data-model="voice.text" placeholder="Type to Kira…" value="' + esc(v.text) + '" aria-label="Say something to Kira" autocomplete="off"' + (v.busy ? ' disabled' : '') + '>' +
         '<button class="btn btn-brass" type="submit"' + (v.busy ? ' disabled' : '') + '>Send</button></form>' +
-        (Recognition ? '<button class="btn btn-ghost-dark mic-btn' + (recognizing ? ' live' : '') + '" data-act="mic">' + MIC + (recognizing ? 'Listening… tap to stop' : 'Use microphone') + '</button>' : '') + '</div>' };
+        (Recognition ? '<button class="btn mic-btn ' + (recognizing ? 'btn-ghost-dark live' : 'btn-hero') + '" data-act="mic"' + (v.busy ? ' disabled' : '') + '>' + MIC + (recognizing ? 'Listening… tap to stop' : 'Talk to Kira') + '</button>' : '') + '</div>' };
   };
 
   /* ---------------- One bento grid, three modes ----------------
@@ -668,14 +669,52 @@
     tb.innerHTML = light ? MOON : SUN;
     tb.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
     tb.title = tb.getAttribute('aria-label');
-    var mute = document.getElementById('mute-btn');
-    mute.setAttribute('aria-pressed', String(ui.muted));
-    mute.classList.toggle('muted', ui.muted);
-    mute.setAttribute('aria-label', ui.muted ? 'Unmute Kira' : 'Mute Kira');
-    mute.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/>' +
-      (ui.muted ? '<path d="m22 9-6 6M16 9l6 6"/>' : '<path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>') + '</svg>' + (ui.muted ? 'Unmute' : 'Mute');
+    renderVolume();
     document.getElementById('room-chip').textContent = 'Room ' + ROOM;
   }
+
+  /* ---------------- Volume control ----------------
+     A speaker button in the top bar. Tapping it widens into a slider + mute button
+     (pushing the other buttons left); 3 s without a touch, it folds back. */
+  var SPK = '<path d="M11 5 6 9H2v6h4l5 4V5Z"/>';
+  function speakerIcon(level) {
+    var waves = level === 'off' ? '<path d="m22 9-6 6M16 9l6 6"/>' : level === 'low' ? '<path d="M15.5 8.5a5 5 0 0 1 0 7"/>' : '<path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>';
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + SPK + waves + '</svg>';
+  }
+  var volEl = document.getElementById('vol'), volBtn = document.getElementById('vol-btn'), volRange = document.getElementById('vol-range'), muteBtn = document.getElementById('mute-btn');
+  var volTimer = null, volKey = '';
+  function renderVolume() {
+    var silent = ui.muted || ui.volume <= 0, pct = Math.round(ui.volume * 100);
+    var level = silent ? 'off' : ui.volume < 0.5 ? 'low' : 'high';
+    var key = level + '|' + pct + '|' + ui.muted;
+    if (key === volKey) return;
+    volKey = key;
+    volBtn.innerHTML = speakerIcon(level);
+    volBtn.setAttribute('aria-label', silent ? 'Volume — muted' : 'Volume ' + pct + '%');
+    if (document.activeElement !== volRange) volRange.value = pct;
+    volRange.style.setProperty('--val', (ui.muted ? 0 : pct) + '%');
+    volRange.setAttribute('aria-valuetext', ui.muted ? 'Muted' : pct + '%');
+    volEl.classList.toggle('is-muted', silent);
+    muteBtn.innerHTML = speakerIcon(ui.muted ? 'high' : 'off');
+    muteBtn.setAttribute('aria-pressed', String(ui.muted));
+    muteBtn.setAttribute('aria-label', ui.muted ? 'Unmute Kira' : 'Mute Kira');
+    muteBtn.title = muteBtn.getAttribute('aria-label');
+  }
+  function volKeepOpen() { clearTimeout(volTimer); volTimer = setTimeout(volClose, 3000); }
+  function volOpen() { volEl.classList.add('open'); volBtn.setAttribute('aria-expanded', 'true'); volKeepOpen(); }
+  function volClose() { clearTimeout(volTimer); volEl.classList.remove('open'); volBtn.setAttribute('aria-expanded', 'false'); }
+  function saveVolume() { try { localStorage.setItem('kira-guest-volume', String(ui.volume)); localStorage.setItem('kira-guest-muted', ui.muted ? '1' : '0'); } catch (e) {} }
+  volBtn.addEventListener('click', function () { if (volEl.classList.contains('open')) volClose(); else { sound('tick'); volOpen(); } });
+  volRange.addEventListener('input', function () {
+    ui.volume = volRange.value / 100;
+    if (ui.volume > 0 && ui.muted) ui.muted = false;
+    saveVolume(); renderVolume(); volKeepOpen();
+  });
+  volRange.addEventListener('change', function () { sound('tick'); volKeepOpen(); });
+  ['pointerdown', 'pointermove', 'keydown', 'focusin'].forEach(function (ev) {
+    volEl.addEventListener(ev, function () { if (volEl.classList.contains('open')) volKeepOpen(); });
+  });
+  document.addEventListener('pointerdown', function (e) { if (volEl.classList.contains('open') && !volEl.contains(e.target)) volClose(); });
 
   var overlayKey = '';
   function renderOverlay() {
@@ -894,23 +933,36 @@
     })();
   }
 
-  var recognizer = null;
+  var recognizer = null, heardSomething = false;
   function toggleMic() {
     if (!Recognition) return;
     if (recognizing && recognizer) { recognizer.stop(); return; }
     try {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel(); // don't let the mic hear Kira
+      heardSomething = false; ui.reply = '';
       recognizer = new Recognition();
       recognizer.lang = 'en-GB'; recognizer.interimResults = true; recognizer.maxAlternatives = 1;
       recognizer.onresult = function (e) {
         var res = e.results[e.results.length - 1], txt = res[0].transcript;
+        heardSomething = true;
         if (res.isFinal) { recognizing = false; hear(txt); }
         else { ui.voice.typing = txt; render(); }
       };
-      recognizer.onerror = function (e) { recognizing = false; ui$.toast(e.error === 'not-allowed' ? 'Microphone access was blocked' : 'Didn’t catch that — try again', 'warn'); render(); };
-      recognizer.onend = function () { recognizing = false; render(); };
+      recognizer.onerror = function (e) {
+        recognizing = false;
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { ui.reply = 'I can’t use the microphone here — tap a phrase or type instead.'; heardSomething = true; }
+        if (ui.view === 'voice') render();
+      };
+      recognizer.onend = function () {
+        recognizing = false;
+        if (ui.view !== 'voice') return;
+        if (!heardSomething && !ui.voice.busy) { ui.voice.typing = ''; ui.reply = 'I didn’t catch that — tap “Talk to Kira” to try again.'; }
+        render();
+      };
       recognizer.start(); recognizing = true; render();
-    } catch (e) { recognizing = false; ui$.toast('Microphone isn’t available here', 'warn'); }
+    } catch (e) { recognizing = false; ui.reply = 'The microphone isn’t available here — tap a phrase or type instead.'; render(); }
   }
+  function stopMic() { if (recognizing && recognizer) { try { recognizer.abort(); } catch (e) {} recognizing = false; } }
 
   /* ---------------- Tap sounds ----------------
      'select' — a soft two-note pop when a service is chosen; 'tick' — a light tap for in-flow
@@ -918,7 +970,7 @@
   var audio = null;
   var TICK_ACTS = { inc: 1, dec: 1, 'hk-set': 1, cat: 1, 'co-time': 1, 'co-all': 1, feedback: 1, say: 1, back: 1 };
   function sound(kind) {
-    if (ui.muted) return;
+    if (ui.muted || ui.volume <= 0) return;
     try {
       audio = audio || new (window.AudioContext || window.webkitAudioContext)();
       if (audio.state === 'suspended') audio.resume();
@@ -930,7 +982,7 @@
         o.frequency.setValueAtTime(n[0], t + n[1]);
         o.frequency.exponentialRampToValueAtTime(n[0] * 0.85, t + n[1] + n[2]);
         g.gain.setValueAtTime(0.0001, t + n[1]);
-        g.gain.exponentialRampToValueAtTime(n[3], t + n[1] + 0.008);
+        g.gain.exponentialRampToValueAtTime(Math.max(0.0002, n[3] * ui.volume * 1.25), t + n[1] + 0.008);
         g.gain.exponentialRampToValueAtTime(0.0001, t + n[1] + n[2]);
         o.connect(g); g.connect(audio.destination);
         o.start(t + n[1]); o.stop(t + n[1] + n[2] + 0.02);
@@ -940,7 +992,7 @@
 
   /* ---------------- Actions ---------------- */
 
-  function go(view) { ui.view = view; if (view !== 'voice') { ui.reply = ui.reply && view === 'menu' ? ui.reply : ''; } render(); }
+  function go(view) { if (view !== 'voice') stopMic(); ui.view = view; if (view !== 'voice') { ui.reply = ui.reply && view === 'menu' ? ui.reply : ''; } render(); }
 
   function openMenu(fromVoice) {
     if (!fromVoice) { ui.heard = ''; ui.reply = ''; }
@@ -983,6 +1035,7 @@
   var HANDLERS = {
     home: function () { ui.heard = ''; ui.reply = ''; ui.overlay = null; go('home'); },
     back: function () {
+      stopMic();
       if (ui.view === 'voice' && ui.voiceFrom && ui.voiceFrom !== 'home' && ui.voiceFrom !== 'voice' && VIEWS[ui.voiceFrom]) { ui.reply = ''; go(ui.voiceFrom); return; }
       var prev = { review: 'menu', 'send-error': 'review' }[ui.view];
       if (prev) { ui.view = prev; render(); return; }
@@ -1040,7 +1093,12 @@
       var r = S.createRequest({ dept: 'valet', room: ROOM, vehicle: room().vehicle, title: 'Car to entrance', channel: ui.heard ? 'voice' : 'tablet' });
       known[r.id] = r.status; ui.heard = ''; ui.trackId = r.id; go('valet-track');
     },
-    voice: function () { if (ui.view !== 'voice') { ui.voiceFrom = ui.view; ui.reply = ''; ui.voice.text = ''; go('voice'); setTimeout(function () { var el = document.getElementById('voice-text'); if (el && !('ontouchstart' in window)) el.focus(); }, 50); } },
+    voice: function () {
+      if (ui.view === 'voice') return;
+      ui.voiceFrom = ui.view; ui.reply = ''; ui.voice.text = ''; ui.voice.typing = '';
+      go('voice');
+      if (Recognition) toggleMic();
+    },
     say: function (a) { hear(a); },
     mic: toggleMic,
     'overlay-close': function () { ui.overlay = null; render(); },
@@ -1082,11 +1140,12 @@
     if (e.target.dataset.form === 'voice') { e.preventDefault(); hear(ui.voice.text); }
   });
 
-  document.getElementById('mute-btn').addEventListener('click', function () {
+  muteBtn.addEventListener('click', function () {
     ui.muted = !ui.muted;
+    if (!ui.muted && ui.volume <= 0) ui.volume = 0.5;
     if (ui.muted && 'speechSynthesis' in window) window.speechSynthesis.cancel();
-    try { localStorage.setItem('kira-guest-muted', ui.muted ? '1' : '0'); } catch (e) {}
-    renderNav();
+    saveVolume(); renderVolume(); volKeepOpen();
+    if (!ui.muted) sound('tick');
   });
   document.getElementById('theme-btn').addEventListener('click', function () {
     var light = document.documentElement.classList.toggle('theme-light');
@@ -1119,7 +1178,11 @@
 
   /* ---------------- Boot ---------------- */
 
-  try { ui.muted = localStorage.getItem('kira-guest-muted') === '1'; } catch (e) {}
+  try {
+    ui.muted = localStorage.getItem('kira-guest-muted') === '1';
+    var savedVol = parseFloat(localStorage.getItem('kira-guest-volume'));
+    if (!isNaN(savedVol)) ui.volume = Math.max(0, Math.min(1, savedVol));
+  } catch (e) {}
   myRequests().forEach(function (r) { known[r.id] = r.status; });
   if (location.hash === '#menu') openMenu(false);
 
