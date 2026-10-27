@@ -938,14 +938,16 @@
 
   function openMenu(fromVoice) {
     if (!fromVoice) { ui.heard = ''; ui.reply = ''; }
-    var failures = st().settings.failures;
+    // The menu is already on the tablet, so open it straight away. The "loading" step only
+    // runs when Simulate failures is on, to lead into the "menu couldn't load" screen —
+    // showing it every time made the panel flash a loading screen before the menu.
+    if (!st().settings.failures || ui.menuFailedOnce) { ui.view = 'menu'; render(); return; }
     ui.view = 'menu-loading'; render();
     setTimeout(function () {
       if (ui.view !== 'menu-loading') return;
-      if (failures && !ui.menuFailedOnce) { ui.menuFailedOnce = true; ui.view = 'menu-error'; }
-      else ui.view = 'menu';
+      ui.menuFailedOnce = true; ui.view = 'menu-error';
       render();
-    }, fromVoice ? 350 : 700);
+    }, 900);
   }
 
   function sendOrder() {
