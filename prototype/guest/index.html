@@ -427,6 +427,109 @@
   html.theme-light .svc-row { background: rgba(255,255,255,.62); }
   html.theme-light .svc-row:hover { background: rgba(255,255,255,.92); }
   html.theme-light .svc-row img { filter: drop-shadow(0 6px 8px rgba(60,40,120,.2)); }
+
+  /* =====================================================================
+     Morphing bento (27 Oct): one grid, three modes, animated.
+       home    → Kira 60% | services 40%
+       service → services panel grows to full width = the flow screen (Back in its header)
+       kira    → Kira panel grows to full width for talking
+     ===================================================================== */
+  .tablet-context { display: none; }
+  .tablet-body.bento-home {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); column-gap: 16px;
+    transition: grid-template-columns .6s cubic-bezier(.22,.9,.24,1), column-gap .6s cubic-bezier(.22,.9,.24,1);
+  }
+  .tablet-body.bento-home.mode-service { grid-template-columns: minmax(0, 0fr) minmax(0, 1fr); column-gap: 0; }
+  .tablet-body.bento-home.mode-kira    { grid-template-columns: minmax(0, 1fr) minmax(0, 0fr); column-gap: 0; }
+  .bento { min-width: 0; overflow: hidden; transition: opacity .3s ease, transform .6s cubic-bezier(.22,.9,.24,1), padding .6s cubic-bezier(.22,.9,.24,1), background-color .4s; }
+  .mode-service .bento-ai, .mode-kira .bento-services { opacity: 0; transform: scale(.94); pointer-events: none; }
+  .tablet-body.bento-home.mode-service .bento-ai, .tablet-body.bento-home.mode-kira .bento-services { padding-left: 0; padding-right: 0; }
+
+  /* Kira panel */
+  .tablet-body.bento-home .bento-ai { justify-content: flex-start; align-items: stretch; padding: 20px 24px 24px; }
+  .ai-home { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .tablet-body.bento-home .ai-home .home-greeting { margin-top: 20px; font-size: 32px; }
+  .tablet-body.bento-home .ai-home .avatar-sub { margin-top: 4px; font-size: 15px; }
+
+  /* Services panel */
+  .mode-service .bento-services { padding: 16px 20px 20px; }
+  .svc-row { min-height: 0; }
+
+  /* Header of an expanded panel: Back · title · (mini Kira) */
+  .panel-head { display: flex; align-items: center; gap: 14px; min-height: 48px; flex-shrink: 0; }
+  .back-btn { padding: 0 18px 0 12px; gap: 4px; }
+  .back-btn svg { width: 20px; height: 20px; }
+  .panel-title { margin: 0; font-size: 16px; font-weight: 500; color: var(--muted-on-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kira-mini { margin-left: auto; display: flex; align-items: center; gap: 10px; max-width: 460px; min-width: 0; }
+  .kira-photo-wrap.tiny { width: 44px; box-shadow: 0 0 0 3px rgba(140,78,246,.18), 0 0 14px 2px rgba(140,78,246,.3); }
+  .kira-mini .subtitle-bar { border-radius: 16px; padding: 8px 14px; font-size: 13.5px; line-height: 1.4; text-align: left; max-width: 400px; animation: sub-in .35s cubic-bezier(.22,.9,.24,1); }
+
+  /* Flow content at full width */
+  .task-col.flow-body { max-width: 780px; width: 100%; max-height: none; margin: 0 auto; flex: 1; min-height: 0; padding-top: 10px; }
+  .task-col.flow-body > :first-child { margin-top: auto; }
+  .task-col.flow-body > :last-child { margin-bottom: auto; }
+  .task-col.flow-body:has(.menu-card, .hk-list) > :first-child { margin-top: 0; }
+  .task-col.flow-body:has(.menu-card, .hk-list) > :last-child { margin-bottom: 0; }
+  .flow-body .menu-card, .flow-body .hk-list { display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px; align-content: start; }
+  .flow-body .hk-list .hk-row:last-child { grid-column: 1 / -1; }
+  .flow-body .voice-panel { max-width: none; }
+  .flow-body .g-stepper { max-width: none; }
+
+  /* Talk to Kira at full width: Kira on the left, ways to ask on the right */
+  .voice-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1.15fr; gap: 36px; align-items: center; padding: 8px 12px 0; }
+  .kira-stage { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
+  .tablet-body.bento-home .kira-stage .kira-photo-wrap { width: 210px; }
+  .kira-stage .subtitle-bar { max-width: 340px; border-radius: 16px; padding: 10px 16px; line-height: 1.45; animation: sub-in .35s cubic-bezier(.22,.9,.24,1); }
+  .kira-stage .avatar-caption { color: var(--brass-soft); margin-top: -6px; }
+  .voice-side { min-width: 0; text-align: left; }
+  .mic-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; }
+  .mic-btn svg { width: 18px; height: 18px; }
+
+  /* ---------- Motion ---------- */
+  @keyframes rise-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes sub-in { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }
+  @keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.28); } 100% { transform: scale(1); } }
+  @keyframes sheet-in { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: none; } }
+  @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(196,166,255,.55); } 100% { box-shadow: 0 0 0 10px rgba(196,166,255,0); } }
+  @keyframes img-in { from { opacity: .4; } to { opacity: 1; } }
+
+  /* A panel whose content just changed: its blocks rise in, lists one after another */
+  .bento.swap > * { animation: rise-in .55s cubic-bezier(.22,.9,.24,1) both; animation-delay: .22s; }
+  .bento.swap .ai-home > * { animation: rise-in .55s cubic-bezier(.22,.9,.24,1) both; }
+  .bento.swap .ai-home > :nth-child(1) { animation-delay: .18s; } .bento.swap .ai-home > :nth-child(2) { animation-delay: .24s; }
+  .bento.swap .ai-home > :nth-child(3) { animation-delay: .29s; } .bento.swap .ai-home > :nth-child(4) { animation-delay: .34s; }
+  .bento.swap .ai-home > :nth-child(5) { animation-delay: .39s; }
+  .bento.swap .svc-list > * { animation: rise-in .5s cubic-bezier(.22,.9,.24,1) both; }
+  .bento.swap .svc-list > :nth-child(1) { animation-delay: .2s; } .bento.swap .svc-list > :nth-child(2) { animation-delay: .26s; }
+  .bento.swap .svc-list > :nth-child(3) { animation-delay: .32s; } .bento.swap .svc-list > :nth-child(4) { animation-delay: .38s; }
+  .bento.swap .task-col > *, .enter > * { animation: rise-in .45s cubic-bezier(.22,.9,.24,1) both; }
+  .bento.swap .task-col > :nth-child(1), .enter > :nth-child(1) { animation-delay: .26s; }
+  .bento.swap .task-col > :nth-child(2), .enter > :nth-child(2) { animation-delay: .31s; }
+  .bento.swap .task-col > :nth-child(3), .enter > :nth-child(3) { animation-delay: .36s; }
+  .bento.swap .task-col > :nth-child(4), .enter > :nth-child(4) { animation-delay: .41s; }
+  .bento.swap .task-col > :nth-child(n+5), .enter > :nth-child(n+5) { animation-delay: .46s; }
+  .enter > :nth-child(1) { animation-delay: .02s; } .enter > :nth-child(2) { animation-delay: .07s; }
+  .enter > :nth-child(3) { animation-delay: .12s; } .enter > :nth-child(4) { animation-delay: .17s; } .enter > :nth-child(n+5) { animation-delay: .22s; }
+  .enter .voice-examples > *, .bento.swap .voice-examples > * { animation: rise-in .45s cubic-bezier(.22,.9,.24,1) both; animation-delay: .3s; }
+
+  /* Press feedback everywhere */
+  .btn, .nav-btn, .quick-chip, .add-btn, .svc-row, .track-chip, .g-select-chip, .home-tile { transition: transform .14s cubic-bezier(.3,.7,.4,1.4), background-color .2s, box-shadow .2s, color .2s; }
+  .btn:active:not(:disabled), .nav-btn:active, .quick-chip:active, .track-chip:active, .g-select-chip:active { transform: scale(.95); }
+  .add-btn:active:not(:disabled) { transform: scale(.88); }
+  .svc-row:hover { transform: translateX(3px); }
+  .svc-row:active { transform: scale(.97); }
+  .qty-pill.bump, .add-btn.bump { animation: pop .32s cubic-bezier(.3,.7,.4,1.4); }
+  .g-dot.active { animation: pulse-ring 1.8s ease-out infinite; }
+  .kira-stage img, .kira-mini img { animation: img-in .35s ease; }
+  .sheet-scrim { animation: fade-in .2s ease; }
+  .sheet { animation: sheet-in .32s cubic-bezier(.22,.9,.24,1.15); }
+  .kira-notice { animation: sheet-in .32s cubic-bezier(.22,.9,.24,1.15); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tablet-body.bento-home, .bento { transition-duration: .01s; }
+    .bento.swap *, .enter > *, .g-dot.active, .sheet, .sheet-scrim, .kira-notice, .qty-pill.bump { animation: none !important; }
+  }
 </style>
 </head>
 <body class="guest-app">
@@ -434,7 +537,6 @@
     <div class="tablet-frame app" id="tablet">
       <div class="tablet-navbar">
         <div class="nav-group">
-          <button class="nav-btn" id="home-btn" data-act="home" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Home</button>
           <span class="nav-room" id="room-chip">Room 412</span>
           <button class="nav-btn" id="lang-btn" aria-haspopup="dialog" aria-label="Language: English"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>EN</button>
         </div>
@@ -453,6 +555,6 @@
   </div>
   <p class="rotate-hint">Rotate your phone for a bigger tablet view</p>
 <script src="../shared/kira.js?v=3"></script>
-<script src="guest.js?v=7"></script>
+<script src="guest.js?v=8"></script>
 </body>
 </html>

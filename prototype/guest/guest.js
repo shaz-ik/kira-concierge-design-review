@@ -133,7 +133,13 @@
     } catch (e) {}
   }
 
-  function setKira(k) {
+  var MOODS = ['idle', 'listening', 'thinking', 'speaking', 'wake'];
+  function setMood(m) {
+    MOODS.forEach(function (x) { body.classList.toggle('state-' + x, x === m); });
+  }
+
+  // size: 'mini' (avatar + line in a flow's header) or 'big' (the Talk to Kira stage)
+  function setKira(k, targetId, size) {
     var now = Date.now();
     if (k.line && k.line !== lastLine) {
       lastLine = k.line;
@@ -148,15 +154,20 @@
       }
     }
     var mood = k.mood === 'speaking' && now > speakUntil ? 'idle' : k.mood;
-    body.className = 'tablet-body split state-' + mood;
-    var key = mood + '|' + k.line + '|' + (k.caption || '') + '|' + (k.small ? 1 : 0);
+    setMood(mood);
+    var col = document.getElementById(targetId);
+    if (!col) return;
+    var key = targetId + '|' + mood + '|' + k.line + '|' + (k.caption || '');
     if (key === kiraKey) return;
     kiraKey = key;
-    var col = document.getElementById('kira-col');
-    col.innerHTML =
-      '<button class="kira-tap" data-act="voice" aria-label="Talk to Kira"><div class="kira-photo-wrap' + (k.small ? ' small' : '') + '"><img src="' + IMG[mood] + '" alt="Kira"></div></button>' +
-      (k.caption ? '<div class="avatar-caption">' + esc(k.caption) + '</div>' : '') +
-      (k.line ? '<div class="subtitle-bar">' + esc(k.line) + '</div>' : '');
+    if (size === 'mini') {
+      col.innerHTML = '<button class="kira-tap" data-act="voice" aria-label="Talk to Kira"><div class="kira-photo-wrap tiny"><img src="' + IMG[mood] + '" alt="Kira"></div></button>' +
+        (k.line ? '<div class="subtitle-bar">' + esc(k.line) + '</div>' : '');
+    } else {
+      col.innerHTML = '<div class="kira-photo-wrap"><img src="' + IMG[mood] + '" alt="Kira"></div>' +
+        (k.caption ? '<div class="avatar-caption">' + esc(k.caption) + '</div>' : '') +
+        (k.line ? '<div class="subtitle-bar">' + esc(k.line) + '</div>' : '');
+    }
   }
 
   /* ---------------- Views ---------------- */
@@ -188,7 +199,7 @@
           '<div class="menu-item-end"><span class="menu-item-unavailable-tag">Unavailable</span></div></div>';
       }
       var ctrl = qty > 0
-        ? '<span class="qty-ctrl"><button class="add-btn minus" data-act="dec" data-arg="' + m.id + '" aria-label="Remove one ' + esc(m.name) + '">−</button><span class="qty-pill" aria-label="' + qty + ' in order">' + qty + '</span><button class="add-btn" data-act="inc" data-arg="' + m.id + '" aria-label="Add another ' + esc(m.name) + '">+</button></span>'
+        ? '<span class="qty-ctrl"><button class="add-btn minus" data-act="dec" data-arg="' + m.id + '" aria-label="Remove one ' + esc(m.name) + '">−</button><span class="qty-pill' + (ui.bump === m.id ? ' bump' : '') + '" aria-label="' + qty + ' in order">' + qty + '</span><button class="add-btn" data-act="inc" data-arg="' + m.id + '" aria-label="Add another ' + esc(m.name) + '">+</button></span>'
         : '<button class="add-btn" data-act="inc" data-arg="' + m.id + '" aria-label="Add ' + esc(m.name) + '">+</button>';
       return '<div class="menu-item"><div><div class="menu-item-name">' + esc(m.name) + '</div>' +
         '<div class="menu-item-tag allergen">' + (m.allergens ? 'Contains ' + esc(m.allergens.toLowerCase()) : 'No listed allergens') + '</div>' +
@@ -294,11 +305,11 @@
     var rows = HK_ITEMS.map(function (x) {
       var q = ui.hk.basket[x.id] || 0, ctrl;
       if (x.max === 1) {
-        ctrl = q ? '<button class="add-btn on" data-act="hk-set" data-arg="' + x.id + ':0" aria-label="Remove ' + esc(x.name) + '" aria-pressed="true">✓</button>'
+        ctrl = q ? '<button class="add-btn on' + (ui.bump === x.id ? ' bump' : '') + '" data-act="hk-set" data-arg="' + x.id + ':0" aria-label="Remove ' + esc(x.name) + '" aria-pressed="true">✓</button>'
                  : '<button class="add-btn" data-act="hk-set" data-arg="' + x.id + ':1" aria-label="Add ' + esc(x.name) + '" aria-pressed="false">+</button>';
       } else if (q) {
         ctrl = '<span class="qty-ctrl"><button class="add-btn minus" data-act="hk-set" data-arg="' + x.id + ':' + (q - 1) + '" aria-label="Fewer ' + esc(x.name.toLowerCase()) + '">−</button>' +
-          '<span class="qty-pill" aria-label="' + q + ' requested">' + q + '</span>' +
+          '<span class="qty-pill' + (ui.bump === x.id ? ' bump' : '') + '" aria-label="' + q + ' requested">' + q + '</span>' +
           '<button class="add-btn" data-act="hk-set" data-arg="' + x.id + ':' + Math.min(x.max, q + 1) + '" aria-label="More ' + esc(x.name.toLowerCase()) + '"' + (q >= x.max ? ' disabled' : '') + '>+</button></span>';
       } else {
         ctrl = '<button class="add-btn" data-act="hk-set" data-arg="' + x.id + ':' + x.def + '" aria-label="Add ' + esc(x.name) + '">+</button>';
@@ -452,51 +463,66 @@
         '<div class="voice-examples">' + examples + '</div>' +
         '<form class="voice-row" data-form="voice"><input class="text-field" id="voice-text" data-model="voice.text" placeholder="Type to Kira…" value="' + esc(v.text) + '" aria-label="Say something to Kira" autocomplete="off"' + (v.busy ? ' disabled' : '') + '>' +
         '<button class="btn btn-brass" type="submit"' + (v.busy ? ' disabled' : '') + '>Send</button></form>' +
-        '<div class="btn-row">' + (Recognition ? '<button class="btn btn-ghost-dark mic-btn' + (recognizing ? ' live' : '') + '" data-act="mic">' + (recognizing ? '● Listening… tap to stop' : '🎙 Use microphone') + '</button>' : '') + btn('Back to home', 'home') + '</div></div>' };
+        (Recognition ? '<button class="btn btn-ghost-dark mic-btn' + (recognizing ? ' live' : '') + '" data-act="mic">' + MIC + (recognizing ? 'Listening… tap to stop' : 'Use microphone') + '</button>' : '') + '</div>' };
   };
 
-  /* ---------------- Home (centred, not split) ---------------- */
+  /* ---------------- One bento grid, three modes ----------------
+     home    → Kira 60% | services 40%
+     service → the services panel grows to full width and becomes the flow screen
+     kira    → the Kira panel grows to full width for talking
+     Both panels stay in the DOM so the grid can animate between modes. */
 
-  // Home layout: 'bento' (Kira 60% | services 40%) by default; ?home=tiles shows the four-tile row.
-  var HOME_LAYOUT = /[?&]home=tiles\b/.test(location.search) ? 'tiles' : 'bento';
   var MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/></svg>';
-  var CHEVRON = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
+  var BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
+  var panelKeys = { ai: '', svc: '' }, lastView = null;
 
-  function renderHome() {
-    if (body.dataset.layout !== 'home' && HOME_LAYOUT === 'bento') {
-      body.dataset.layout = 'home';
-      body.className = 'tablet-body home bento-home state-idle';
-      kiraKey = ''; lastLine = '';
-      body.innerHTML =
-        '<section class="bento bento-ai" aria-label="Kira">' +
-          '<p class="bento-meta" id="home-time"></p>' +
-          '<button class="kira-tap" data-act="voice" aria-label="Talk to Kira"><div class="kira-photo-wrap"><img src="' + IMG.idle + '" alt="Kira"></div></button>' +
-          '<p class="home-greeting">' + greeting() + '</p><p class="avatar-sub">Say “Hey Kira”, or tap to begin</p>' +
-          '<button class="btn btn-ghost-dark talk-btn" data-act="voice">' + MIC + 'Talk to Kira</button>' +
-          '<div class="home-active" id="home-active"></div>' +
-        '</section>' +
-        '<section class="bento bento-services" aria-label="Services">' +
-          '<p class="bento-label">Or choose a service</p>' +
-          '<div class="svc-list">' + TILES.map(function (t) {
-            return '<button class="svc-row" data-act="' + t.act + '"><img src="../assets/icons/' + t.icon + '.png" alt="" width="44" height="44">' +
-              '<span class="svc-text"><span class="name">' + esc(t.name) + '</span><span class="info">' + esc(t.info) + '</span></span>' + CHEVRON + '</button>';
-          }).join('') + '</div>' +
-        '</section>';
-    }
-    if (body.dataset.layout !== 'home') {
-      body.dataset.layout = 'home';
-      body.className = 'tablet-body home state-idle';
-      kiraKey = ''; lastLine = '';
-      body.innerHTML =
+  function modeOf(view) { return view === 'home' ? 'home' : view === 'voice' ? 'kira' : 'service'; }
+
+  function ensureShell() {
+    if (body.dataset.layout === 'bento') return;
+    body.dataset.layout = 'bento';
+    body.className = 'tablet-body bento-home mode-home state-idle';
+    body.innerHTML = '<section class="bento bento-ai" id="panel-ai" aria-label="Kira"></section><section class="bento bento-services" id="panel-svc" aria-label="Services"></section>';
+  }
+
+  // Restart a one-shot entrance animation, then drop the class so later re-renders don't replay it.
+  var animTimers = {};
+  function play(el, cls, ms) {
+    el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+    clearTimeout(animTimers[el.id + cls]);
+    animTimers[el.id + cls] = setTimeout(function () { el.classList.remove(cls); }, ms || 900);
+  }
+
+  function homeKiraHTML() {
+    return '<p class="bento-meta" id="home-time"></p>' +
+      '<div class="ai-home">' +
         '<button class="kira-tap" data-act="voice" aria-label="Talk to Kira"><div class="kira-photo-wrap"><img src="' + IMG.idle + '" alt="Kira"></div></button>' +
         '<p class="home-greeting">' + greeting() + '</p><p class="avatar-sub">Say “Hey Kira”, or tap to begin</p>' +
-        '<div class="home-tiles">' + TILES.map(function (t) {
-          return '<button class="home-tile" data-act="' + t.act + '"><span class="ico"><img src="../assets/icons/' + t.icon + '.png" alt="" width="64" height="64"></span><span class="name">' + esc(t.name) + '</span><span class="info">' + esc(t.info) + '</span></button>';
-        }).join('') + '</div>' +
-        '<div class="home-active" id="home-active"></div>';
-    }
+        '<button class="btn btn-ghost-dark talk-btn" data-act="voice">' + MIC + 'Talk to Kira</button>' +
+        '<div class="home-active" id="home-active"></div>' +
+      '</div>';
+  }
+  function voiceShellHTML() {
+    return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title">Talk to Kira</p></div>' +
+      '<div class="voice-grid"><div class="kira-stage" id="kira-big"></div><div class="voice-side" id="voice-col"></div></div>';
+  }
+  function serviceListHTML() {
+    return '<p class="bento-label">Or choose a service</p>' +
+      '<div class="svc-list">' + TILES.map(function (t) {
+        return '<button class="svc-row" data-act="' + t.act + '"><img src="../assets/icons/' + t.icon + '.png" alt="" width="44" height="44">' +
+          '<span class="svc-text"><span class="name">' + esc(t.name) + '</span><span class="info">' + esc(t.info) + '</span></span></button>';
+      }).join('') + '</div>';
+  }
+  function flowShellHTML() {
+    return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title" id="flow-title"></p><div class="kira-mini" id="kira-mini"></div></div>' +
+      '<div class="task-col flow-body" id="task-col"></div>';
+  }
+
+  function renderHomeActive() {
+    var el = document.getElementById('home-active');
+    if (!el) return;
     var open = myRequests().filter(function (r) { return S.isOpen(r) && r.dept !== 'help'; }).sort(function (a, b) { return b.createdAt - a.createdAt; }).slice(0, 3);
-    document.getElementById('home-active').innerHTML = open.map(function (r) {
+    el.innerHTML = open.map(function (r) {
       var what = { dining: 'Order ', housekeeping: 'Housekeeping ', valet: 'Valet ', checkout: 'Late checkout ' }[r.dept] || '';
       var label = r.dept === 'checkout' ? (r.status === 'approved' ? 'approved — confirm fee' : 'waiting for front desk') : S.statusLabel(r).toLowerCase();
       return '<button class="track-chip" data-act="track" data-arg="' + r.id + '"><span class="dot"></span>' + what + r.ref + ' · ' + esc(label) + ' — Track</button>';
@@ -512,29 +538,42 @@
     var scrolls = {};
     body.querySelectorAll('[data-scroll]').forEach(function (el) { scrolls[el.dataset.scroll] = el.scrollTop; });
 
-    if (ui.view === 'home') {
-      renderHome();
-      var when = esc(F.time()) + ' · 24°C, clear';
-      if (HOME_LAYOUT === 'bento') { context.textContent = ''; document.getElementById('home-time').innerHTML = when; }
-      else context.innerHTML = when;
+    ensureShell();
+    var mode = modeOf(ui.view), viewChanged = ui.view !== lastView;
+    ['home', 'service', 'kira'].forEach(function (m) { body.classList.toggle('mode-' + m, m === mode); });
+    var ai = document.getElementById('panel-ai'), svc = document.getElementById('panel-svc');
+    var aiKey = mode === 'kira' ? 'voice' : 'home', svcKey = mode === 'service' ? 'flow' : 'list';
+    if (panelKeys.ai !== aiKey) { panelKeys.ai = aiKey; ai.innerHTML = aiKey === 'voice' ? voiceShellHTML() : homeKiraHTML(); kiraKey = ''; play(ai, 'swap', 1100); }
+    var svcSwapped = panelKeys.svc !== svcKey;
+    if (svcSwapped) { panelKeys.svc = svcKey; svc.innerHTML = svcKey === 'flow' ? flowShellHTML() : serviceListHTML(); kiraKey = ''; play(svc, 'swap', 1100); }
+
+    if (mode === 'home') {
+      setMood('idle'); lastLine = '';
+      document.getElementById('home-time').innerHTML = esc(F.time()) + ' · 24°C, clear';
+      renderHomeActive();
     } else {
       var v = VIEWS[ui.view]();
-      if (body.dataset.layout !== 'split') {
-        body.dataset.layout = 'split';
-        body.innerHTML = '<div class="kira-col" id="kira-col"></div><div class="task-col" id="task-col"></div>';
-        kiraKey = '';
+      if (mode === 'kira') {
+        setKira(v.kira, 'kira-big', 'big');
+        var vc = document.getElementById('voice-col');
+        vc.innerHTML = v.html;
+        if (viewChanged) play(vc, 'enter');
+      } else {
+        document.getElementById('flow-title').textContent = v.context;
+        setKira(v.kira, 'kira-mini', 'mini');
+        var tc = document.getElementById('task-col');
+        tc.innerHTML = v.html;
+        if (viewChanged && !svcSwapped) play(tc, 'enter');
       }
-      context.textContent = v.context;
-      setKira(v.kira);
-      document.getElementById('task-col').innerHTML = v.html;
     }
+    lastView = ui.view;
+    ui.bump = null;
 
     body.querySelectorAll('[data-scroll]').forEach(function (el) { if (scrolls[el.dataset.scroll]) el.scrollTop = scrolls[el.dataset.scroll]; });
     if (focusId) {
       var el = document.getElementById(focusId);
       if (el && el !== document.activeElement) { el.focus(); try { if (selStart != null) el.setSelectionRange(selStart, selStart); } catch (e) {} }
     }
-    tablet.classList.toggle('is-home-bento', ui.view === 'home' && HOME_LAYOUT === 'bento');
     renderOverlay();
     renderNav();
   }
@@ -543,7 +582,6 @@
   var MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
 
   function renderNav() {
-    document.getElementById('home-btn').hidden = ui.view === 'home';
     var light = document.documentElement.classList.contains('theme-light');
     var tb = document.getElementById('theme-btn');
     tb.innerHTML = light ? MOON : SUN;
@@ -558,7 +596,12 @@
     document.getElementById('room-chip').textContent = 'Room ' + ROOM;
   }
 
+  var overlayKey = '';
   function renderOverlay() {
+    var hr = ui.helpId && S.find(ui.helpId);
+    var key = (ui.overlay || '') + '|' + (hr ? hr.status : '');
+    if (key === overlayKey) return;
+    overlayKey = key;
     if (!ui.overlay) { overlay.innerHTML = ''; return; }
     var h = '';
     if (ui.overlay === 'help') {
@@ -788,6 +831,32 @@
     } catch (e) { recognizing = false; ui$.toast('Microphone isn’t available here', 'warn'); }
   }
 
+  /* ---------------- Tap sounds ----------------
+     'select' — a soft two-note pop when a service is chosen; 'tick' — a light tap for in-flow
+     choices (+/−, chips, times, Back). Synthesised with WebAudio, so no audio files; silent when muted. */
+  var audio = null;
+  var TICK_ACTS = { inc: 1, dec: 1, 'hk-set': 1, cat: 1, 'co-time': 1, 'co-all': 1, feedback: 1, say: 1, back: 1 };
+  function sound(kind) {
+    if (ui.muted) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state === 'suspended') audio.resume();
+      var t = audio.currentTime + 0.005;
+      var notes = kind === 'select' ? [[660, 0, 0.11, 0.08], [990, 0.06, 0.14, 0.06]] : [[1320, 0, 0.05, 0.035]];
+      notes.forEach(function (n) {
+        var o = audio.createOscillator(), g = audio.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(n[0], t + n[1]);
+        o.frequency.exponentialRampToValueAtTime(n[0] * 0.85, t + n[1] + n[2]);
+        g.gain.setValueAtTime(0.0001, t + n[1]);
+        g.gain.exponentialRampToValueAtTime(n[3], t + n[1] + 0.008);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + n[1] + n[2]);
+        o.connect(g); g.connect(audio.destination);
+        o.start(t + n[1]); o.stop(t + n[1] + n[2] + 0.02);
+      });
+    } catch (e) {}
+  }
+
   /* ---------------- Actions ---------------- */
 
   function go(view) { ui.view = view; if (view !== 'voice') { ui.reply = ui.reply && view === 'menu' ? ui.reply : ''; } render(); }
@@ -830,11 +899,17 @@
 
   var HANDLERS = {
     home: function () { ui.heard = ''; ui.reply = ''; ui.overlay = null; go('home'); },
+    back: function () {
+      if (ui.view === 'voice' && ui.voiceFrom && ui.voiceFrom !== 'home' && ui.voiceFrom !== 'voice' && VIEWS[ui.voiceFrom]) { ui.reply = ''; go(ui.voiceFrom); return; }
+      var prev = { review: 'menu', 'send-error': 'review' }[ui.view];
+      if (prev) { ui.view = prev; render(); return; }
+      HANDLERS.home();
+    },
     menu: function () { if (ui.view === 'review' || ui.view === 'send-error' || ui.view === 'menu-error') { ui.view = 'menu'; render(); } else openMenu(false); },
     'retry-menu': function () { openMenu(false); },
     cat: function (a) { ui.cat = a; ui.reply = ''; render(); },
-    inc: function (a) { var l = ui.cart[a] || (ui.cart[a] = { qty: 0, note: '' }); l.qty = Math.min(9, l.qty + 1); ui.reply = ''; render(); },
-    dec: function (a) { var l = ui.cart[a]; if (l) { l.qty--; if (l.qty <= 0) delete ui.cart[a]; } ui.reply = ''; render(); },
+    inc: function (a) { var l = ui.cart[a] || (ui.cart[a] = { qty: 0, note: '' }); l.qty = Math.min(9, l.qty + 1); ui.reply = ''; ui.bump = a; render(); },
+    dec: function (a) { var l = ui.cart[a]; if (l) { l.qty--; if (l.qty <= 0) delete ui.cart[a]; } ui.reply = ''; ui.bump = a; render(); },
     review: function () { if (!ui.token) ui.token = 'ct_' + Math.random().toString(36).slice(2, 10); go('review'); },
     'show-note': function () { ui.showNote = true; render(); var el = document.getElementById('dnote'); if (el) el.focus(); },
     send: sendOrder,
@@ -845,6 +920,7 @@
     'hk-set': function (a) {
       var p = a.split(':'), q = +p[1];
       if (q > 0) ui.hk.basket[p[0]] = q; else delete ui.hk.basket[p[0]];
+      ui.bump = p[0];
       render();
     },
     'hk-send': function () {
@@ -901,7 +977,10 @@
     if (!el || el.disabled || !tablet.contains(el)) return;
     if (el.dataset.act === 'scrim' && e.target !== el) return; // clicks inside the sheet
     var fn = HANDLERS[el.dataset.act];
-    if (fn) { e.preventDefault(); fn(el.dataset.arg); }
+    if (!fn) return;
+    if (el.classList.contains('svc-row')) sound('select');
+    else if (TICK_ACTS[el.dataset.act]) sound('tick');
+    e.preventDefault(); fn(el.dataset.arg);
   });
   tablet.addEventListener('input', function (e) {
     var path = e.target.dataset && e.target.dataset.model;
