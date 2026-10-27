@@ -607,6 +607,17 @@
   .side-heading { font-size: 18px; font-weight: 500; letter-spacing: -.01em; }
   .side-cta { margin-top: auto; padding-top: 8px; }
   .status-split:not(.fill) .status-actions.is-summary { min-height: 100%; }
+
+  /* Light theme: controls that sit inside a white card get a soft grey fill (glass-on-glass vanished) */
+  html.theme-light { --ctrl: rgba(19,19,19,.065); --ctrl-hover: rgba(19,19,19,.11); }
+  html.theme-light :is(.quick-chip:not(.selected), .add-btn:not(.on), .add-btn.minus, .g-select-chip, .btn-ghost-dark, .text-field,
+    .panel-head .nav-btn, .req-card, .svc-row, .menu-item-unavailable-tag) {
+    background: var(--ctrl); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+  }
+  html.theme-light :is(.quick-chip:not(.selected), .add-btn:not(.on), .g-select-chip, .btn-ghost-dark, .panel-head .nav-btn, .req-card, .svc-row):hover:not(:disabled) { background: var(--ctrl-hover); }
+  html.theme-light .svc-row { background: rgba(19,19,19,.045); }
+  html.theme-light .text-field:focus { background: #FFFFFF; box-shadow: inset 0 0 0 2px #8C4EF6, 0 0 0 4px rgba(140,78,246,.14); }
+  html.theme-light .btn-ghost-dark:disabled { background: rgba(19,19,19,.04); color: #8A8994; opacity: 1; }
 </style>
 </head>
 <body class="guest-app">
