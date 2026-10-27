@@ -177,12 +177,17 @@
 
   // Every flow screen follows the home's 60 / 40 rule: the content on the left (60%), the
   // actions on the right (40%) — buttons at the top, main one first, then any summary or hint.
-  // opts: { hint, below (html under the buttons), fill (left panel fills the height, top-aligned) }
+  // opts: { hint, below (html under the buttons), fill (left panel fills the height, top-aligned),
+  //         summary (heading — turns the right panel into a summary with the button pinned to the bottom) }
   function splitLayout(detail, actions, opts) {
     opts = opts || {};
+    var btns = '<div class="status-btns">' + actions.join('') + '</div>';
+    var hint = opts.hint ? '<p class="status-hint">' + esc(opts.hint) + '</p>' : '';
+    var aside = opts.summary
+      ? '<p class="side-heading">' + esc(opts.summary) + '</p>' + (opts.below || '') + hint + '<div class="side-cta">' + btns + '</div>'
+      : btns + hint + (opts.below || '');
     return '<div class="status-split' + (opts.fill ? ' fill' : '') + '"><section class="status-detail">' + detail + '</section>' +
-      '<aside class="status-actions" aria-label="Actions"><div class="status-btns">' + actions.join('') + '</div>' +
-      (opts.hint ? '<p class="status-hint">' + esc(opts.hint) + '</p>' : '') + (opts.below || '') + '</aside></div>';
+      '<aside class="status-actions' + (opts.summary ? ' is-summary' : '') + '" aria-label="' + (opts.summary ? esc(opts.summary) : 'Actions') + '">' + aside + '</aside></div>';
   }
   function statusLayout(detail, actions, hint) { return splitLayout(detail, actions, { hint: hint }); }
 
@@ -196,7 +201,8 @@
 
   VIEWS['menu-loading'] = function () {
     return { context: 'In-room dining', kira: { mood: 'thinking', line: 'One moment — getting tonight’s menu…' },
-      html: splitLayout(head('', 'In-room dining') + '<p class="task-note">Loading the menu…</p>', [btn('Review order', 'review', { primary: true, disabled: true })]) };
+      html: splitLayout(head('', 'In-room dining') + '<p class="task-note">Loading the menu…</p>', [btn('Review & confirm', 'review', { hero: true, disabled: true })],
+        { summary: 'Order summary', below: summaryList('Your order', [], 'Nothing yet — tap + or just tell Kira.') }) };
   };
 
   VIEWS['menu-error'] = function () {
@@ -235,8 +241,8 @@
     return { context: 'In-room dining', kira: kira,
       html: splitLayout(
         '<div class="menu-toolbar"><div class="quick-grid">' + cats + '</div></div><div class="guest-card menu-card" data-scroll="menu">' + rows + '</div>',
-        [btn('Review order', 'review', { primary: true, disabled: !n })],
-        { fill: true, below: summary }) };
+        [btn('Review & confirm', 'review', { hero: true, disabled: !n })],
+        { fill: true, summary: 'Order summary', below: summary }) };
   };
 
   VIEWS.review = function () {
@@ -358,7 +364,7 @@
       html: splitLayout(
         head('', 'What can we bring you?') + '<div class="guest-card hk-list" data-scroll="hk">' + rows + '</div>',
         [btn('Send request', 'hk-send', { hero: true, disabled: !n })],
-        { fill: true, below: summaryList('Your request' + (n ? ' · ' + n + ' item' + (n > 1 ? 's' : '') : ''), picked, 'Choose as many as you like — or just tell Kira.') +
+        { fill: true, summary: 'Request summary', below: summaryList('Your request' + (n ? ' · ' + n + ' item' + (n > 1 ? 's' : '') : ''), picked, 'Choose as many as you like — or just tell Kira.') +
           '<p class="status-hint">Delivered to Room ' + ROOM + ', usually within 20 minutes.</p>' }) };
   };
 
@@ -409,7 +415,7 @@
           '<div class="g-field-row"><span class="label">Requested</span><button class="g-select-chip" data-act="co-all" aria-expanded="' + ui.co.showAll + '">' + (valid ? to : 'Choose') + ' ▾</button></div></div>' +
           (ui.co.showAll ? all : '<div class="quick-grid">' + chips + '</div>'),
         [btn('Request extension', 'co-send', { hero: true, disabled: !valid })],
-        { below: summaryList('Your request', valid ? [['Checkout at ' + to, ''], ['Currently ' + cur, '']] : [], 'Pick a time on the left.') +
+        { summary: 'Request summary', below: summaryList('Your request', valid ? [['Checkout at ' + to, ''], ['Currently ' + cur, '']] : [], 'Pick a time on the left.') +
           '<p class="status-hint">A late checkout fee may apply — you’ll see it and confirm before anything is charged.</p>' }) };
   };
 

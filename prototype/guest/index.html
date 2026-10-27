@@ -601,6 +601,12 @@
   html.theme-light .req-card { box-shadow: var(--glass-edge), 0 8px 20px -14px rgba(60,40,120,.3); }
   html.theme-light .req-status .dot { background: #8C4EF6; box-shadow: 0 0 6px rgba(140,78,246,.6); }
   html.theme-light .req-card img { filter: drop-shadow(0 4px 6px rgba(60,40,120,.2)); }
+
+  /* Summary panels (menu, housekeeping, late checkout): heading, summary, button pinned to the bottom */
+  .status-actions.is-summary { gap: 12px; }
+  .side-heading { font-size: 18px; font-weight: 500; letter-spacing: -.01em; }
+  .side-cta { margin-top: auto; padding-top: 8px; }
+  .status-split:not(.fill) .status-actions.is-summary { min-height: 100%; }
 </style>
 </head>
 <body class="guest-app">
@@ -626,6 +632,6 @@
   </div>
   <p class="rotate-hint">Rotate your phone for a bigger tablet view</p>
 <script src="../shared/kira.js?v=3"></script>
-<script src="guest.js?v=11"></script>
+<script src="guest.js?v=12"></script>
 </body>
 </html>
