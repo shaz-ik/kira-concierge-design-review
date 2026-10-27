@@ -457,7 +457,32 @@
 
   /* ---------------- Home (centred, not split) ---------------- */
 
+  // Home layout: 'bento' (Kira 60% | services 40%) by default; ?home=tiles shows the four-tile row.
+  var HOME_LAYOUT = /[?&]home=tiles\b/.test(location.search) ? 'tiles' : 'bento';
+  var MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/></svg>';
+  var CHEVRON = '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
+
   function renderHome() {
+    if (body.dataset.layout !== 'home' && HOME_LAYOUT === 'bento') {
+      body.dataset.layout = 'home';
+      body.className = 'tablet-body home bento-home state-idle';
+      kiraKey = ''; lastLine = '';
+      body.innerHTML =
+        '<section class="bento bento-ai" aria-label="Kira">' +
+          '<p class="bento-meta" id="home-time"></p>' +
+          '<button class="kira-tap" data-act="voice" aria-label="Talk to Kira"><div class="kira-photo-wrap"><img src="' + IMG.idle + '" alt="Kira"></div></button>' +
+          '<p class="home-greeting">' + greeting() + '</p><p class="avatar-sub">Say “Hey Kira”, or tap to begin</p>' +
+          '<button class="btn btn-ghost-dark talk-btn" data-act="voice">' + MIC + 'Talk to Kira</button>' +
+          '<div class="home-active" id="home-active"></div>' +
+        '</section>' +
+        '<section class="bento bento-services" aria-label="Services">' +
+          '<p class="bento-label">Or choose a service</p>' +
+          '<div class="svc-list">' + TILES.map(function (t) {
+            return '<button class="svc-row" data-act="' + t.act + '"><img src="../assets/icons/' + t.icon + '.png" alt="" width="44" height="44">' +
+              '<span class="svc-text"><span class="name">' + esc(t.name) + '</span><span class="info">' + esc(t.info) + '</span></span>' + CHEVRON + '</button>';
+          }).join('') + '</div>' +
+        '</section>';
+    }
     if (body.dataset.layout !== 'home') {
       body.dataset.layout = 'home';
       body.className = 'tablet-body home state-idle';
@@ -470,7 +495,7 @@
         }).join('') + '</div>' +
         '<div class="home-active" id="home-active"></div>';
     }
-    var open = myRequests().filter(function (r) { return S.isOpen(r) && r.dept !== 'help'; }).sort(function (a, b) { return b.createdAt - a.createdAt; });
+    var open = myRequests().filter(function (r) { return S.isOpen(r) && r.dept !== 'help'; }).sort(function (a, b) { return b.createdAt - a.createdAt; }).slice(0, 3);
     document.getElementById('home-active').innerHTML = open.map(function (r) {
       var what = { dining: 'Order ', housekeeping: 'Housekeeping ', valet: 'Valet ', checkout: 'Late checkout ' }[r.dept] || '';
       var label = r.dept === 'checkout' ? (r.status === 'approved' ? 'approved — confirm fee' : 'waiting for front desk') : S.statusLabel(r).toLowerCase();
@@ -489,7 +514,9 @@
 
     if (ui.view === 'home') {
       renderHome();
-      context.innerHTML = esc(F.time()) + ' · 24°C, clear';
+      var when = esc(F.time()) + ' · 24°C, clear';
+      if (HOME_LAYOUT === 'bento') { context.textContent = ''; document.getElementById('home-time').innerHTML = when; }
+      else context.innerHTML = when;
     } else {
       var v = VIEWS[ui.view]();
       if (body.dataset.layout !== 'split') {
@@ -507,6 +534,7 @@
       var el = document.getElementById(focusId);
       if (el && el !== document.activeElement) { el.focus(); try { if (selStart != null) el.setSelectionRange(selStart, selStart); } catch (e) {} }
     }
+    tablet.classList.toggle('is-home-bento', ui.view === 'home' && HOME_LAYOUT === 'bento');
     renderOverlay();
     renderNav();
   }

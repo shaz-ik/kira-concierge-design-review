@@ -382,6 +382,51 @@
   .home-tile .ico img { width: 48px; height: 48px; filter: drop-shadow(0 8px 10px rgba(0,0,0,.4)); transition: transform .2s ease; }
   .home-tile:hover .ico img { transform: translateY(-2px) scale(1.04); }
   html.theme-light .home-tile .ico img { filter: drop-shadow(0 10px 14px rgba(60,40,120,.22)); }
+
+  /* =====================================================================
+     Home — bento layout: two rounded glass panels, Kira 60% | services 40%.
+     (?home=tiles keeps the previous four-tile row.)
+     ===================================================================== */
+  .tablet-frame.is-home-bento .tablet-context { display: none; }
+  .tablet-body.bento-home { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; padding: 6px 20px 20px; text-align: left; align-items: stretch; justify-content: stretch; }
+  .bento {
+    position: relative; min-height: 0; border-radius: 28px;
+    background: var(--glass); box-shadow: var(--glass-edge), 0 20px 50px -26px rgba(0,0,0,.85);
+    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  }
+  .tablet-body.bento-home .bento-ai {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 28px; overflow: hidden;
+    background: radial-gradient(circle at 50% 36%, rgba(140,78,246,.3), transparent 58%), var(--glass);
+  }
+  .bento-meta { position: absolute; top: 20px; left: 24px; font-size: 13px; color: var(--muted-on-dark); }
+  .tablet-body.bento-home .bento-ai .kira-photo-wrap { width: 168px; }
+  .tablet-body.bento-home .bento-ai .home-greeting { margin-top: 20px; font-size: 32px; }
+  .tablet-body.bento-home .bento-ai .avatar-sub { margin-top: 4px; font-size: 15px; }
+  .talk-btn { margin-top: 22px; display: inline-flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 24px; font-size: 15px; border-radius: 999px; }
+  .talk-btn svg { width: 18px; height: 18px; }
+  .tablet-body.bento-home .home-active { margin-top: 14px; }
+
+  .bento-services { display: flex; flex-direction: column; gap: 12px; padding: 20px 14px 14px; }
+  .bento-label { font-size: 13px; color: var(--muted-on-dark); padding: 0 8px; }
+  .svc-list { flex: 1; min-height: 0; display: grid; grid-template-rows: repeat(4, 1fr); gap: 10px; }
+  .svc-row {
+    display: flex; align-items: center; gap: 14px; padding: 12px 14px; border: none; border-radius: 20px;
+    background: rgba(255,255,255,.05); color: var(--ink-on-dark); text-align: left; font-family: inherit; cursor: pointer;
+    transition: background-color .15s, transform .1s;
+  }
+  .svc-row:hover { background: rgba(255,255,255,.1); }
+  .svc-row:active { transform: scale(.985); }
+  .svc-row img { width: 44px; height: 44px; flex-shrink: 0; filter: drop-shadow(0 6px 8px rgba(0,0,0,.35)); }
+  .svc-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .svc-row .name { font-size: 16px; font-weight: 500; }
+  .svc-row .info { font-size: 13px; line-height: 1.35; color: var(--muted-on-dark); }
+  .svc-row .chev { width: 18px; height: 18px; flex-shrink: 0; color: var(--muted-on-dark); }
+
+  html.theme-light .bento { box-shadow: var(--glass-edge), 0 18px 44px -24px rgba(60,40,120,.3); }
+  html.theme-light .tablet-body.bento-home .bento-ai { background: radial-gradient(circle at 50% 36%, rgba(140,78,246,.16), transparent 58%), var(--glass); }
+  html.theme-light .svc-row { background: rgba(255,255,255,.62); }
+  html.theme-light .svc-row:hover { background: rgba(255,255,255,.92); }
+  html.theme-light .svc-row img { filter: drop-shadow(0 6px 8px rgba(60,40,120,.2)); }
 </style>
 </head>
 <body class="guest-app">
@@ -408,6 +453,6 @@
   </div>
   <p class="rotate-hint">Rotate your phone for a bigger tablet view</p>
 <script src="../shared/kira.js?v=3"></script>
-<script src="guest.js?v=6"></script>
+<script src="guest.js?v=7"></script>
 </body>
 </html>
