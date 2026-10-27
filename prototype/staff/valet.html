@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kira Concierge — Concierge &amp; Valet</title>
+<link rel="stylesheet" href="../shared/tokens.css?v=3">
+<link rel="stylesheet" href="../shared/proto.css?v=3">
+<style>
+  /* Page-scoped: phone refinements shared with staff-waiter.html. */
+  .tool-phone-frame { min-height: 540px; display: flex; flex-direction: column; }
+  .tool-phone-content { flex: 1; }
+  .tool-phone-header { display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-body); }
+  .tool-phone-header .sub { font-weight: 400; font-size: 12px; color: var(--muted-on-sand); }
+  .phone-tabbar { display: flex; border-top: 1px solid rgba(19,19,19,.1); background: var(--paper); }
+  .phone-tabbar span { flex: 1; text-align: center; padding: var(--sp-3) 0; font-size: 12px; font-weight: 600; color: var(--muted-on-sand); }
+  .phone-tabbar span.active { color: var(--brass-deep); box-shadow: inset 0 2px 0 var(--brass); }
+
+  .notif-card-tool { box-shadow: 0 1px 2px rgba(19,19,19,.05); transition: box-shadow .15s, border-color .15s; }
+  .notif-card-tool.ready { border-left: 3px solid var(--brass); }
+  .notif-card-tool.ready:hover { box-shadow: 0 4px 14px -6px rgba(19,19,19,.2); border-color: rgba(140,78,246,.4); }
+  .notif-card-tool.overdue { border-left: 3px solid var(--err); background: rgba(239,68,68,.04); }
+  .notif-card-tool.readonly { background: rgba(19,19,19,.025); }
+  .notif-card-tool .meta { display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-2); font-size: 12px; color: var(--muted-on-sand); }
+  .tool-phone-frame .phone-btn-row .btn-tool { flex: 1; min-height: 44px; }
+  .tool-phone-frame .phone-btn-row .btn-tool-secondary { flex: 0 0 auto; padding-left: 20px; padding-right: 20px; }
+  .kv { display: flex; justify-content: space-between; gap: var(--sp-3); padding: 6px 0; font-size: var(--fs-small); border-bottom: 1px solid rgba(19,19,19,.06); }
+  .kv:last-child { border-bottom: none; }
+  .kv .k { color: var(--muted-on-sand); }
+  .kv .v { font-weight: 600; text-align: right; }
+  .phone-spacer { flex: 1; }
+  .section-label { font-size: 12px; font-weight: 700; color: var(--muted-on-sand); margin-top: var(--sp-1); }
+
+  /* ---- Prototype additions ---- */
+  .tool-phone-content > * { flex-shrink: 0; }
+  .tool-phone-content > .phone-spacer { flex-shrink: 1; }
+  .tool-phone-header { gap: var(--sp-3); }
+  .tool-phone-header > span:first-child { min-width: 0; }
+  .tool-phone-header .badge { white-space: nowrap; flex-shrink: 0; }
+  .tool-phone-status [data-clock] { font-variant-numeric: tabular-nums; }
+  .notif-card-tool .top { gap: var(--sp-2); }
+  .notif-card-tool .time { white-space: nowrap; flex-shrink: 0; }
+  .notif-card-tool .meta > span { min-width: 0; }
+  .notif-card-tool .meta .badge { white-space: nowrap; flex-shrink: 0; }
+  .notif-card-tool .body.missing { color: var(--warn); }
+  /* My own in-progress requests: tappable to reopen the status screen */
+  .notif-card-tool.mine { border-left: 3px solid var(--brass-deep); cursor: pointer; }
+  .notif-card-tool.mine:hover { box-shadow: 0 4px 14px -6px rgba(19,19,19,.2); border-color: rgba(140,78,246,.4); }
+  .notif-card-tool.mine .open { margin-left: auto; font-weight: 600; color: var(--brass-deep); }
+  .kv .v { min-width: 0; overflow-wrap: anywhere; }
+  .kv .v.missing { color: var(--warn); }
+  .kv-note { font-size: 12px; color: var(--muted-on-sand); padding: 6px 0 2px; }
+  .phone-empty.compact { padding: var(--sp-3) var(--sp-4) var(--sp-2); }
+  .status-note { font-size: 12px; color: var(--muted-on-sand); text-align: center; }
+  .tool-phone-frame .phone-btn-row .btn-tool.solo { flex: 1; }
+  .link-btn { background: none; border: none; padding: 4px 0; font: inherit; font-size: 12px; font-weight: 600; color: var(--brass-deep); cursor: pointer; align-self: flex-start; }
+  .link-btn:hover { text-decoration: underline; }
+  .phone-tabbar { padding-bottom: env(safe-area-inset-bottom, 0); }
+
+</style>
+</head>
+<body class="phone-app">
+  <div class="tool-phone-frame app">
+    <div class="tool-phone-status"><span>Concierge &amp; Valet app</span><span data-clock></span></div>
+    <div class="tool-phone-header" id="header"></div>
+    <main class="tool-phone-content" id="content"></main>
+    <nav class="phone-tabbar" id="tabbar" aria-label="Sections"></nav>
+  </div>
+
+<script src="../shared/kira.js?v=4"></script>
+<script>
+(function () {
+  'use strict';
+
+  var ME = 'Karim B.';
+  var MIN = 60000;
+  var esc = Kira.fmt.esc;
+  var QUEUES = { valet: 'Valet', concierge: 'Concierge' };
+
+  /* ---------- View state (module-level, never read back from the DOM) ---------- */
+  var queue = 'valet';         // 'valet' | 'concierge'  (tab chips)
+  var tab = 'requests';        // 'requests' | 'completed' (bottom tab bar)
+  var view = 'list';           // 'list' | 'status'
+  var selectedId = null;
+
+  /* ---------- New-arrival tracking ---------- */
+  var seen = null, seededAt = null, newUntil = {};
+
+  /* ---------- Helpers ---------- */
+  function mine(r) { return r.assignee === ME; }
+  function key(r) { return r.id + '@' + r.createdAt; }
+  function deadline(r) { return r.createdAt + r.slaMin * MIN; }
+  function isToday(ts) { return new Date(ts).toDateString() === new Date().toDateString(); }
+  function slaClass(level) { return level === 'err' ? 'badge-err' : level === 'warn' ? 'badge-warn' : 'badge-ok'; }
+  function historyAt(r, re) {
+    for (var i = r.history.length - 1; i >= 0; i--) if (re.test(r.history[i].text)) return r.history[i].at;
+    return null;
+  }
+  function acceptedAt(r) { return historyAt(r, /^Accepted/) || r.updatedAt; }
+  function closedAt(r) { return r.updatedAt; }
+  function queueItems(s, q) { return s.requests.filter(function (r) { return r.dept === q; }); }
+  function awaiting(s, q) { return queueItems(s, q).filter(function (r) { return r.status === 'received'; }).length; }
+
+  function cardTitle(r) { return 'Room ' + esc(r.room) + ' — ' + (r.dept === 'valet' ? 'Car request' : esc(r.title)); }
+  function cardBody(r) {
+    if (r.dept === 'valet') {
+      if (r.vehicle) return '<div class="body">' + esc(r.vehicle.model) + ' — ' + esc(r.vehicle.plate) + '</div>';
+      return Kira.store.isOpen(r) ? '<div class="body missing">Vehicle not on file — confirm with guest at entrance</div>'
+                                  : '<div class="body">Vehicle not on file</div>';
+    }
+    return '<div class="body">' + esc(r.detail || r.title) + '</div>';
+  }
+  function slaBadge(r, now) {
+    var sla = Kira.store.sla(r, now);
+    return sla ? '<span class="badge ' + slaClass(sla.level) + '">' + esc(sla.label) + '</span>' : '';
+  }
+  function dueBadge(r, now) {
+    if (r.status === 'done') return '<span class="badge badge-ok">Done</span>';
+    if (r.status === 'cancelled') return '<span class="badge badge-err">Cancelled</span>';
+    var sla = Kira.store.sla(r, now);
+    return '<span class="badge ' + slaClass(sla && sla.level) + '">Due ' + Kira.fmt.clock(deadline(r)) + '</span>';
+  }
+  function newCls(r, now) { return newUntil[r.id] && newUntil[r.id] > now ? ' is-new' : ''; }
+
+  function detectNew(list) {
+    var s = Kira.store.get();
+    if (!seen || seededAt !== s.seededAt) {
+      seen = new Set(list.map(key));
+      seededAt = s.seededAt;
+      return [];
+    }
+    var fresh = [];
+    list.forEach(function (r) {
+      var k = key(r);
+      if (seen.has(k)) return;
+      seen.add(k);
+      if (Kira.store.isOpen(r)) fresh.push(r);
+    });
+    return fresh;
+  }
+
+  /* Repaint a region only when its markup changed; keep focus + scroll. */
+  function paint(el, html) {
+    if (el.__html === html) return;
+    var active = document.activeElement;
+    var fkey = active && el.contains(active) ? active.getAttribute('data-fkey') : null;
+    var scroll = el.scrollTop;
+    el.innerHTML = html;
+    el.__html = html;
+    el.scrollTop = scroll;
+    if (fkey) {
+      var n = el.querySelector('[data-fkey="' + fkey.replace(/"/g, '') + '"]');
+      if (n) n.focus({ preventScroll: true });
+    }
+  }
+
+  /* ---------- Chime (only after the first user interaction; fails silently) ---------- */
+  var audioCtx = null;
+  function armAudio() {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    } catch (e) { audioCtx = null; }
+  }
+  window.addEventListener('pointerdown', armAudio, true);
+  window.addEventListener('keydown', armAudio, true);
+  function chime() {
+    if (!audioCtx || audioCtx.state !== 'running') return;
+    try {
+      var t = audioCtx.currentTime;
+      [987.8, 1318.5].forEach(function (f, i) {
+        var o = audioCtx.createOscillator(), g = audioCtx.createGain(), at = t + i * 0.13;
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, at);
+        g.gain.exponentialRampToValueAtTime(0.12, at + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, at + 0.45);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(at); o.stop(at + 0.5);
+      });
+    } catch (e) {}
+  }
+
+  /* ---------- Cards ---------- */
+  function receivedCard(r, now) {
+    var meta = r.dept === 'valet'
+      ? '<span>' + esc(r.ref) + (r.vehicle ? ' · ' + esc(r.vehicle.bay) : '') + ' · ' + esc(r.when || 'wanted now') + '</span>' +
+        (function () { var s = Kira.store.sla(r, now); return s && s.level !== 'ok' ? slaBadge(r, now) : ''; })()
+      : '<span>' + esc(r.ref) + ' ·</span>' + slaBadge(r, now);
+    return '<div class="notif-card-tool ready' + newCls(r, now) + '">' +
+      '<div class="top">' + cardTitle(r) + '<span class="time">' + Kira.fmt.ago(r.createdAt) + '</span></div>' +
+      cardBody(r) +
+      '<div class="meta">' + meta + '</div>' +
+      '<div class="phone-btn-row"><button type="button" class="btn-tool btn-tool-primary" data-action="accept" data-id="' + esc(r.id) + '" data-fkey="accept-' + esc(r.id) + '">Accept</button></div>' +
+    '</div>';
+  }
+
+  function mineCard(r, now) {
+    var label = 'Room ' + r.room + ' — ' + (r.dept === 'valet' ? 'Car request' : r.title) + ', due ' + Kira.fmt.clock(deadline(r)) + ', open status';
+    return '<div class="notif-card-tool mine" role="button" tabindex="0" data-action="open" data-id="' + esc(r.id) + '" data-fkey="mine-' + esc(r.id) + '" aria-label="' + esc(label) + '">' +
+      '<div class="top">' + cardTitle(r) + '<span class="time">Accepted ' + Kira.fmt.clock(acceptedAt(r)) + '</span></div>' +
+      cardBody(r) +
+      '<div class="meta">' + dueBadge(r, now) + '<span>' + esc(r.ref) + ' · ' + esc(Kira.store.statusLabel(r)) + ' · You</span><span class="open" aria-hidden="true">Open ›</span></div>' +
+    '</div>';
+  }
+
+  function overdueCard(r, now) {
+    var sla = Kira.store.sla(r, now);
+    return '<div class="notif-card-tool overdue">' +
+      '<div class="top">' + cardTitle(r) + '<span class="time">' + esc(sla ? sla.label : 'Overdue') + '</span></div>' +
+      cardBody(r) +
+      '<div class="meta"><span class="badge badge-err">Overdue</span><span>' + esc(r.ref) + ' · ' + esc(Kira.store.statusLabel(r)) + ' · ' + esc(r.assignee || 'Unassigned') +
+        (r.escalated ? ' · ' + esc(r.escalated) : '') + '</span></div>' +
+    '</div>';
+  }
+
+  function closedCard(r, detailed) {
+    var done = r.status === 'done';
+    var what = !done ? 'cancelled by guest' : r.dept === 'valet' ? 'handed over at entrance' : 'confirmed with guest';
+    var who = done && r.assignee ? ' · ' + (mine(r) ? 'You' : esc(r.assignee)) : '';
+    return '<div class="notif-card-tool readonly">' +
+      '<div class="top">' + cardTitle(r) + '<span class="time">' + Kira.fmt.clock(closedAt(r)) + '</span></div>' +
+      cardBody(r) +
+      '<div class="meta"><span class="badge ' + (done ? 'badge-ok' : 'badge-err') + '">' + (done ? 'Done' : 'Cancelled') + '</span><span>' + esc(r.ref) + ' · ' + what + who + '</span></div>' +
+      (detailed ? '<div class="meta"><span>Requested ' + Kira.fmt.clock(r.createdAt) + ' · ' + (done ? (closedAt(r) <= deadline(r) ? 'within SLA' : 'late') : 'closed ' + Kira.fmt.clock(closedAt(r))) + '</span></div>' : '') +
+    '</div>';
+  }
+
+  /* ---------- Screens ---------- */
+  function chipsHtml(s) {
+    return '<div class="tabs-row" role="group" aria-label="Queue">' + Object.keys(QUEUES).map(function (q) {
+      var on = q === queue;
+      return '<button type="button" class="tab-chip' + (on ? ' active' : '') + '" aria-pressed="' + on + '" data-action="queue" data-queue="' + q + '" data-fkey="chip-' + q + '">' +
+        QUEUES[q] + ' (' + awaiting(s, q) + ')</button>';
+    }).join('') + '</div>';
+  }
+
+  function requestsHtml(s, now) {
+    var items = queueItems(s, queue);
+    var byDeadline = function (a, b) { return deadline(a) - deadline(b); };
+    var received = items.filter(function (r) { return r.status === 'received'; }).sort(byDeadline);
+    var my = items.filter(function (r) { return r.status === 'progress' && mine(r); }).sort(byDeadline);
+    var attention = items.filter(function (r) {
+      if (r.status !== 'progress' || mine(r)) return false;
+      var sla = Kira.store.sla(r, now);
+      return sla && sla.level === 'err';
+    }).sort(byDeadline);
+    var earlier = items.filter(function (r) { return r.status === 'done' && isToday(closedAt(r)); })
+                       .sort(function (a, b) { return closedAt(b) - closedAt(a); });
+
+    var out = '';
+    var others = my.length + attention.length + earlier.length;
+    out += received.length ? received.map(function (r) { return receivedCard(r, now); }).join('')
+      : '<p class="phone-empty' + (others ? ' compact' : '') + '">' + (queue === 'valet' ? 'No car requests waiting.' : 'No concierge requests waiting.') + '<br>New ones appear here the moment a guest asks.</p>';
+    if (my.length) out += '<p class="section-label">My requests</p>' + my.map(function (r) { return mineCard(r, now); }).join('');
+    if (attention.length) out += '<p class="section-label">In progress — needs attention</p>' + attention.map(function (r) { return overdueCard(r, now); }).join('');
+    if (earlier.length) {
+      out += '<p class="section-label">Earlier today</p>' + earlier.slice(0, 3).map(function (r) { return closedCard(r, false); }).join('');
+      if (earlier.length > 3) out += '<button type="button" class="link-btn" data-action="tab" data-tab="completed" data-fkey="see-all">See all ' + earlier.length + ' in Completed today ›</button>';
+    }
+    return out;
+  }
+
+  function completedHtml(s) {
+    var rows = queueItems(s, queue).filter(function (r) { return (r.status === 'done' || r.status === 'cancelled') && isToday(closedAt(r)); })
+                                  .sort(function (a, b) { return closedAt(b) - closedAt(a); });
+    if (!rows.length) return '<p class="phone-empty">Nothing completed yet today in ' + QUEUES[queue] + '.</p>';
+    var done = rows.filter(function (r) { return r.status === 'done'; });
+    var byMe = done.filter(mine).length;
+    return '<p class="section-label">Completed today — ' + QUEUES[queue] + ' (' + rows.length + ')' + (byMe ? ' · ' + byMe + ' by you' : '') + '</p>' +
+      rows.map(function (r) { return closedCard(r, true); }).join('');
+  }
+
+  function stepperHtml(r) {
+    var steps = ['Accepted', 'In progress', 'Done'];
+    var cur = r.status === 'received' ? 0 : r.status === 'progress' ? 1 : r.status === 'done' ? 3 : 1;
+    var out = '';
+    steps.forEach(function (label, i) {
+      if (i) out += '<div class="t-line' + (i <= cur ? ' done' : '') + '"></div>';
+      var dot = i < cur ? ' done' : i === cur ? ' active' : '';
+      out += '<div class="t-step"><div class="t-dot' + dot + '"></div><div class="t-label' + (i === cur || (cur === 3 && i === 2) ? ' active' : '') + '">' + label + '</div></div>';
+    });
+    return '<div class="t-stepper" aria-label="Status: ' + esc(Kira.store.statusLabel(r)) + '">' + out + '</div>';
+  }
+
+  function statusHeader(r, now) {
+    return '<span>' + QUEUES[r.dept] + ' ' + esc(r.ref) + ' — Room ' + esc(r.room) + '</span>' + dueBadge(r, now);
+  }
+
+  function statusHtml(s, r) {
+    var kv = function (k, v, cls) { return '<div class="kv"><span class="k">' + k + '</span><span class="v' + (cls ? ' ' + cls : '') + '">' + v + '</span></div>'; };
+    var rows = '';
+    if (r.dept === 'valet') {
+      if (r.vehicle) {
+        rows += kv('Vehicle', esc(r.vehicle.model) + ' — ' + esc(r.vehicle.plate));
+        rows += kv('Parked at', esc(r.vehicle.bay));
+        rows += kv('Key tag', esc(r.vehicle.keyTag));
+      } else {
+        rows += kv('Vehicle', 'Not on file', 'missing');
+        rows += '<p class="kv-note">Vehicle not on file — confirm with guest at entrance.</p>';
+      }
+    } else {
+      var room = s.rooms[r.room];
+      rows += kv('Request', esc(r.title));
+      if (r.detail) rows += kv('Details', esc(r.detail));
+      rows += kv('Room guest', room ? esc(room.guest) : '—');
+    }
+    if (r.status !== 'received') {
+      rows += kv('Accepted', r.assignee ? (mine(r) ? 'By you' : 'By ' + esc(r.assignee)) + ' at ' + Kira.fmt.clock(acceptedAt(r)) : '—');
+    }
+    if (r.status === 'done') rows += kv(r.dept === 'valet' ? 'Ready at entrance' : 'Confirmed', Kira.fmt.clock(closedAt(r)));
+
+    var back = '<button type="button" class="btn-tool btn-tool-secondary" data-action="back" data-fkey="back">Back</button>';
+    var buttons, note = '';
+    if (r.status === 'received') {
+      buttons = back + '<button type="button" class="btn-tool btn-tool-primary" data-action="accept" data-id="' + esc(r.id) + '" data-fkey="primary">Accept</button>';
+    } else if (r.status === 'progress' && mine(r)) {
+      buttons = back + '<button type="button" class="btn-tool btn-tool-primary" data-action="complete" data-id="' + esc(r.id) + '" data-fkey="primary">' +
+        (r.dept === 'valet' ? 'Car ready at entrance' : 'Confirmed with guest') + '</button>';
+    } else {
+      buttons = back.replace('btn-tool-secondary"', 'btn-tool-secondary solo"');
+      note = r.status === 'done' ? 'Guest notified at ' + Kira.fmt.clock(closedAt(r)) + '.'
+           : r.status === 'cancelled' ? 'The guest cancelled this request.'
+           : 'Being handled by ' + esc(r.assignee || 'a colleague') + '.';
+    }
+    return stepperHtml(r) +
+      '<div class="notif-card-tool">' + rows + '</div>' +
+      (note ? '<p class="status-note">' + note + '</p>' : '') +
+      '<div class="phone-spacer"></div>' +
+      '<div class="phone-btn-row">' + buttons + '</div>';
+  }
+
+  function tabbarHtml() {
+    return [['requests', 'Requests'], ['completed', 'Completed today']].map(function (t) {
+      var on = tab === t[0];
+      return '<button type="button" class="' + (on ? 'active' : '') + '"' + (on ? ' aria-current="page"' : '') + ' data-action="tab" data-tab="' + t[0] + '" data-fkey="tab-' + t[0] + '">' + t[1] + '</button>';
+    }).join('');
+  }
+
+  /* ---------- Render ---------- */
+  var el = { header: document.getElementById('header'), content: document.getElementById('content'), tabbar: document.getElementById('tabbar') };
+
+  function render() {
+    var s = Kira.store.get();
+    var now = Date.now();
+    var list = s.requests.filter(function (r) { return r.dept === 'valet' || r.dept === 'concierge'; });
+
+    var fresh = detectNew(list);
+    fresh.forEach(function (r) {
+      newUntil[r.id] = now + 2500;
+      Kira.ui.toast('New ' + QUEUES[r.dept].toLowerCase() + ' request — Room ' + r.room, 'ok');
+    });
+    if (fresh.length) { chime(); setTimeout(render, 2600); }
+
+    var r = view === 'status' ? Kira.store.find(selectedId) : null;
+    if (view === 'status' && !r) { view = 'list'; selectedId = null; }
+
+    paint(el.header, r ? statusHeader(r, now) : chipsHtml(s));
+    paint(el.content, r ? statusHtml(s, r) : tab === 'completed' ? completedHtml(s) : requestsHtml(s, now));
+    paint(el.tabbar, tabbarHtml());
+    var c = document.querySelector('[data-clock]');
+    if (c) c.textContent = Kira.fmt.clock();
+  }
+
+  function go(next) {
+    if (next.view) view = next.view;
+    if (next.tab) tab = next.tab;
+    if (next.queue) queue = next.queue;
+    selectedId = next.id || (view === 'status' ? selectedId : null);
+    render();
+    el.content.scrollTop = 0;
+    if (view === 'status') {
+      var f = el.content.querySelector('[data-fkey="primary"]') || el.content.querySelector('[data-fkey="back"]');
+      if (f) f.focus({ preventScroll: true });
+    }
+  }
+
+  /* ---------- Actions ---------- */
+  function accept(id) {
+    var r = Kira.store.find(id);
+    if (!r) return Kira.ui.toast('That request no longer exists', 'warn');
+    if (r.status !== 'received') {
+      return Kira.ui.toast(r.status === 'cancelled' ? 'The guest cancelled this request' : 'Already accepted by ' + (mine(r) ? 'you' : (r.assignee || 'a colleague')), 'warn');
+    }
+    if (!Kira.store.setStatusIf(id, 'received', 'progress', { text: 'Accepted by ' + ME, patch: { assignee: ME } })) {
+      var now = Kira.store.find(id);
+      return Kira.ui.toast('Already accepted by ' + ((now && now.assignee) || 'a colleague'), 'warn');
+    }
+    Kira.ui.toast('Accepted — Room ' + r.room + ' sees "' + Kira.store.statusLabel(Kira.store.find(id)) + '"', 'ok');
+    go({ view: 'status', id: id });
+  }
+
+  function complete(id) {
+    var r = Kira.store.find(id);
+    if (!r) return Kira.ui.toast('That request no longer exists', 'warn');
+    if (r.status !== 'progress') return Kira.ui.toast(r.status === 'done' ? 'Already completed' : 'This request is no longer in progress', 'warn');
+    if (!mine(r)) return Kira.ui.toast('Assigned to ' + (r.assignee || 'a colleague'), 'warn');
+    Kira.store.setStatus(id, 'done', { text: (r.dept === 'valet' ? 'Car ready at entrance' : 'Confirmed with guest') + ' — ' + ME });
+    Kira.ui.toast('Guest notified', 'ok');
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-action]');
+    if (!t) return;
+    var a = t.getAttribute('data-action'), id = t.getAttribute('data-id');
+    if (a === 'queue') go({ view: 'list', queue: t.getAttribute('data-queue') });
+    else if (a === 'tab') go({ view: 'list', tab: t.getAttribute('data-tab') });
+    else if (a === 'open') go({ view: 'status', id: id });
+    else if (a === 'back') go({ view: 'list' });
+    else if (a === 'accept') accept(id);
+    else if (a === 'complete') complete(id);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && view === 'status') { go({ view: 'list' }); return; }
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var t = e.target.closest && e.target.closest('[role="button"][data-action]');
+    if (!t) return;
+    e.preventDefault();
+    t.click();
+  });
+
+  /* Live clock between full renders */
+  setInterval(function () {
+    var c = document.querySelector('[data-clock]');
+    var v = Kira.fmt.clock();
+    if (c && c.textContent !== v) c.textContent = v;
+  }, 1000);
+
+  Kira.ui.launcherPill('../index.html');
+  Kira.store.subscribe(render);
+  Kira.ui.every(render);
+})();
+</script>
+</body>
+</html>

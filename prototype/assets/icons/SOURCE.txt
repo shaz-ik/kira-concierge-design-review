@@ -1,0 +1,18 @@
+Guest tablet icons: Microsoft Fluent Emoji (3D style)
+https://github.com/microsoft/fluentui-emoji — MIT License, see LICENSE-fluent-emoji.txt
+
+dining.png        Fork and knife with plate
+housekeeping.png  Bed
+checkout.png      Alarm clock
+valet.png         Automobile
+
+status-check.png    Check mark button
+status-waiting.png  Hourglass not done
+status-warning.png  Warning
+
+wx-sunny.png        Sun
+wx-clear.png        Crescent moon (clear night)
+wx-partly.png       Sun behind cloud
+wx-cloudy.png       Cloud
+wx-rain.png         Cloud with rain
+wx-storm.png        Cloud with lightning and rain

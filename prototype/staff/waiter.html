@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Waiter app — Kira Concierge</title>
+<link rel="stylesheet" href="../shared/tokens.css?v=3">
+<link rel="stylesheet" href="../shared/proto.css?v=3">
+<style>
+  /* Phone proportions + bottom tab bar — verbatim from mockups/html/staff-waiter.html */
+  .tool-phone-frame { min-height: 540px; display: flex; flex-direction: column; }
+  .tool-phone-content { flex: 1; }
+  .tool-phone-header { display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-body); }
+  .tool-phone-header .sub { font-weight: 400; font-size: 12px; color: var(--muted-on-sand); }
+  .phone-tabbar { display: flex; border-top: 1px solid rgba(19,19,19,.1); background: var(--paper); }
+  .phone-tabbar span { flex: 1; text-align: center; padding: var(--sp-3) 0; font-size: 12px; font-weight: 600; color: var(--muted-on-sand); }
+  .phone-tabbar span.active { color: var(--brass-deep); box-shadow: inset 0 2px 0 var(--brass); }
+
+  /* Cards + touch targets (44px min on handheld) */
+  .notif-card-tool { box-shadow: 0 1px 2px rgba(19,19,19,.05); transition: box-shadow .15s, border-color .15s; }
+  .notif-card-tool.ready { border-left: 3px solid var(--brass); }
+  .notif-card-tool.ready:hover { box-shadow: 0 4px 14px -6px rgba(19,19,19,.2); border-color: rgba(140,78,246,.4); }
+  .notif-card-tool.readonly { background: rgba(19,19,19,.025); }
+  .notif-card-tool .meta { display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-2); font-size: 12px; color: var(--muted-on-sand); }
+  .tool-phone-frame .phone-btn-row .btn-tool { flex: 1; min-height: 44px; }
+  .tool-phone-frame .phone-btn-row .btn-tool-secondary { flex: 0 0 auto; padding-left: 20px; padding-right: 20px; }
+  .kv { display: flex; justify-content: space-between; gap: var(--sp-3); padding: 6px 0; font-size: var(--fs-small); border-bottom: 1px solid rgba(19,19,19,.06); }
+  .kv:last-child { border-bottom: none; }
+  .kv .k { color: var(--muted-on-sand); }
+  .kv .v { font-weight: 600; text-align: right; }
+  .phone-spacer { flex: 1; }
+
+  /* ---- Prototype additions ---- */
+  .t-stepper { align-items: flex-start; } /* keep dots aligned when a label wraps */
+  .t-stepper .t-line { margin: 6px 0 0; }
+  .kv .k { flex-shrink: 0; white-space: nowrap; }
+  .tool-phone-header > span:first-child { min-width: 0; }
+  .tool-phone-header .sub { flex-shrink: 0; margin-left: var(--sp-2); }
+  .tool-phone-frame.app .tab-chip { min-height: 32px; }
+  .tool-phone-frame.app .phone-tabbar button { min-height: 44px; }
+  .notif-card-tool .meta { flex-wrap: wrap; }
+  .notif-card-tool .meta .badge { flex-shrink: 0; }
+  .notif-card-tool .top { gap: var(--sp-2); }
+  .notif-card-tool .top .time { white-space: nowrap; }
+  .notif-card-tool .tags { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-top: var(--sp-2); }
+  .notif-card-tool.done { background: rgba(19,19,19,.025); }
+  .section-label { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted-on-sand); margin-top: var(--sp-1); }
+  .kv .v .badge { margin-left: 4px; }
+  .kv .v .muted-val { color: var(--muted-on-sand); font-weight: 400; }
+  .tool-phone-content.claimed .phone-btn-row { margin-top: 0; }
+</style>
+</head>
+<body class="phone-app">
+  <div class="tool-phone-frame app">
+    <div class="tool-phone-status"><span id="who">Waiter app</span><span id="clock"></span></div>
+    <div class="tool-phone-header" id="header"></div>
+    <div class="tool-phone-content" id="content"></div>
+    <nav class="phone-tabbar" id="tabbar" aria-label="Sections"></nav>
+  </div>
+
+<script src="../shared/kira.js?v=4"></script>
+<script>
+(function () {
+  'use strict';
+  var S = Kira.store, F = Kira.fmt, esc = F.esc;
+  var ME = 'Yusuf T.';
+
+  /* ---------- View state (never kept in the DOM) ---------- */
+  var tab = 'deliveries';     // bottom tab: 'deliveries' | 'completed'
+  var chip = 'ready';         // 'ready' | 'mine'
+  var screen = 'list';        // 'list' | 'claimed'
+  var selectedId = null;
+  var seen = null;            // ids already seen at ready-or-later
+  var freshIds = {};
+
+  var $ = function (id) { return document.getElementById(id); };
+  function setHTML(el, html) {
+    if (!el || el._html === html) return;
+    var a = document.activeElement, sel = null;
+    if (a && a !== document.body && el.contains(a) && a.hasAttribute('data-act')) {
+      sel = '[data-act="' + a.getAttribute('data-act') + '"]' + (a.hasAttribute('data-id') ? '[data-id="' + CSS.escape(a.getAttribute('data-id')) + '"]' : '');
+    }
+    el.innerHTML = html; el._html = html;
+    if (sel) { var n = el.querySelector(sel); if (n) n.focus({ preventScroll: true }); }
+  }
+
+  /* ---------- Helpers ---------- */
+  function histAt(r, prefix) {
+    for (var i = r.history.length - 1; i >= 0; i--) if (r.history[i].text.indexOf(prefix) === 0) return r.history[i].at;
+    return null;
+  }
+  function readyAt(r) { return r.readyAt || histAt(r, 'Marked ready') || r.updatedAt; }
+  function claimedAt(r) { return r.claimedAt || histAt(r, 'Claimed') || r.updatedAt; }
+  function deliveredAt(r) { return r.deliveredAt || histAt(r, 'Delivered') || r.updatedAt; }
+  function isToday(ts) { return new Date(ts).toDateString() === new Date().toDateString(); }
+  function itemLine(i) { return i.qty + '× ' + i.name + (i.note ? ' (' + i.note.toLowerCase() + ')' : ''); }
+  function floorOf(r) { var room = S.get().rooms[r.room]; return room ? room.floor : String(r.room).charAt(0); }
+
+  function lists() {
+    var d = S.get().requests.filter(function (r) { return r.dept === 'dining'; });
+    return {
+      all: d,
+      ready: d.filter(function (r) { return r.status === 'ready' && !r.claimedBy; }).sort(function (a, b) { return readyAt(a) - readyAt(b); }),
+      others: d.filter(function (r) { return r.status === 'out' && r.claimedBy !== ME; }).sort(function (a, b) { return claimedAt(b) - claimedAt(a); }),
+      mine: d.filter(function (r) { return r.status === 'out' && r.claimedBy === ME; }).sort(function (a, b) { return claimedAt(a) - claimedAt(b); }),
+      done: d.filter(function (r) { return r.status === 'delivered' && r.claimedBy === ME && isToday(deliveredAt(r)); }).sort(function (a, b) { return deliveredAt(b) - deliveredAt(a); })
+    };
+  }
+
+  /* ---------- Sound: short chime when food is ready (after first interaction) ---------- */
+  var audioCtx = null;
+  function armAudio() {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    } catch (e) { audioCtx = null; }
+  }
+  document.addEventListener('pointerdown', armAudio);
+  document.addEventListener('keydown', armAudio);
+  function chime() {
+    if (!audioCtx || audioCtx.state !== 'running') return;
+    try {
+      var t = audioCtx.currentTime;
+      [1046.5, 1568].forEach(function (f, i) {
+        var o = audioCtx.createOscillator(), g = audioCtx.createGain(), s = t + i * 0.13;
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, s);
+        g.gain.exponentialRampToValueAtTime(0.15, s + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, s + 0.45);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(s); o.stop(s + 0.5);
+      });
+    } catch (e) {}
+  }
+
+  /* ---------- Detect tickets that just became ready ---------- */
+  var LATER = { ready: 1, out: 1, delivered: 1 };
+  function detectChanges(all) {
+    freshIds = {};
+    if (!seen) {
+      seen = new Set();
+      all.forEach(function (r) { if (LATER[r.status]) seen.add(r.id); });
+      return;
+    }
+    var ring = false, live = {};
+    all.forEach(function (r) {
+      live[r.id] = 1;
+      if (!LATER[r.status]) { seen.delete(r.id); return; }
+      if (seen.has(r.id)) return;
+      seen.add(r.id);
+      if (r.status === 'ready' && !r.claimedBy) {
+        freshIds[r.id] = true;
+        Kira.ui.toast('Ready for pickup — Room ' + r.room, 'ok');
+        ring = true;
+      }
+    });
+    seen.forEach(function (id) { if (!live[id]) seen.delete(id); });
+    if (ring) { chime(); try { if (navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) navigator.vibrate(120); } catch (e) {} }
+  }
+
+  /* ---------- Render ---------- */
+  function render() {
+    var L = lists();
+    detectChanges(L.all);
+    $('clock').textContent = F.clock();
+    $('who').textContent = 'Waiter app · ' + ME;
+
+    if (screen === 'claimed') {
+      var r = S.find(selectedId);
+      if (!r || r.status !== 'out' || r.claimedBy !== ME) {
+        if (r && r.status === 'delivered') Kira.ui.toast('Order ' + r.ref + ' is already closed');
+        else if (r && r.claimedBy && r.claimedBy !== ME) Kira.ui.toast('Order ' + r.ref + ' was reassigned to ' + r.claimedBy, 'warn');
+        screen = 'list'; selectedId = null;
+      } else {
+        renderClaimed(r);
+        renderTabbar();
+        return;
+      }
+    }
+    if (tab === 'completed') renderCompleted(L);
+    else renderList(L);
+    renderTabbar();
+  }
+
+  function renderTabbar() {
+    setHTML($('tabbar'),
+      '<button type="button" data-act="tab" data-tab="deliveries" class="' + (tab === 'deliveries' ? 'active' : '') + '"' + (tab === 'deliveries' ? ' aria-current="page"' : '') + '>Deliveries</button>' +
+      '<button type="button" data-act="tab" data-tab="completed" class="' + (tab === 'completed' ? 'active' : '') + '"' + (tab === 'completed' ? ' aria-current="page"' : '') + '>Completed today</button>');
+  }
+
+  function allergyTags(r) {
+    var g = r.guestAllergies || [];
+    return g.length ? '<div class="tags">' + g.map(function (a) { return '<span class="badge badge-err">Allergy: ' + esc(a) + '</span>'; }).join('') + '</div>' : '';
+  }
+
+  function readyCard(r) {
+    return '<div class="notif-card-tool ready' + (freshIds[r.id] ? ' is-new' : '') + '">' +
+      '<div class="top">Room ' + esc(r.room) + ' — ' + esc(r.ref) + '<span class="time">' + F.ago(readyAt(r)) + '</span></div>' +
+      '<div class="body">' + esc(S.summary(r)) + '</div>' +
+      '<div class="meta">Pickup at kitchen pass · ready ' + F.clock(readyAt(r)) + (r.deliveryNote ? ' · guest note' : '') + '</div>' +
+      allergyTags(r) +
+      '<div class="phone-btn-row"><button type="button" class="btn-tool btn-tool-primary" data-act="claim" data-id="' + esc(r.id) + '">Claim delivery</button></div>' +
+    '</div>';
+  }
+  function othersCard(r) {
+    return '<div class="notif-card-tool readonly">' +
+      '<div class="top">Room ' + esc(r.room) + ' — ' + esc(r.ref) + '<span class="time">' + F.ago(claimedAt(r)) + '</span></div>' +
+      '<div class="body">' + esc(S.summary(r)) + '</div>' +
+      '<div class="meta"><span class="badge badge-ok">Claimed</span>' + esc(r.claimedBy) + ' · out for delivery</div>' +
+    '</div>';
+  }
+  function mineCard(r) {
+    return '<div class="notif-card-tool ready">' +
+      '<div class="top">Room ' + esc(r.room) + ' — ' + esc(r.ref) + '<span class="time">claimed ' + F.ago(claimedAt(r)) + '</span></div>' +
+      '<div class="body">' + esc(S.summary(r)) + '</div>' +
+      '<div class="meta"><span class="badge badge-warn">Out for delivery</span>Floor ' + esc(floorOf(r)) + (r.deliveryNote ? ' · guest note' : '') + '</div>' +
+      allergyTags(r) +
+      '<div class="phone-btn-row">' +
+        '<button type="button" class="btn-tool btn-tool-secondary" data-act="view" data-id="' + esc(r.id) + '">Details</button>' +
+        '<button type="button" class="btn-tool btn-tool-primary" data-act="deliver" data-id="' + esc(r.id) + '">Mark delivered</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderList(L) {
+    setHTML($('header'), '<span>Ready to deliver (' + L.ready.length + ')</span><span class="sub">In-room dining</span>');
+    $('content').className = 'tool-phone-content';
+    var chips = '<div class="tabs-row" aria-label="Delivery lists">' +
+      '<button type="button" aria-pressed="' + (chip === 'ready') + '" class="tab-chip' + (chip === 'ready' ? ' active' : '') + '" data-act="chip" data-chip="ready">Ready (' + L.ready.length + ')</button>' +
+      '<button type="button" aria-pressed="' + (chip === 'mine') + '" class="tab-chip' + (chip === 'mine' ? ' active' : '') + '" data-act="chip" data-chip="mine">My deliveries (' + L.mine.length + ')</button>' +
+    '</div>';
+    var body;
+    if (chip === 'ready') {
+      body = L.ready.length ? L.ready.map(readyCard).join('')
+        : '<div class="phone-empty">Nothing waiting at the pass. You\'ll get a chime the moment the kitchen marks an order ready.</div>';
+      if (L.others.length) body += '<div class="section-label">Claimed by colleagues</div>' + L.others.map(othersCard).join('');
+    } else {
+      body = L.mine.length ? L.mine.map(mineCard).join('')
+        : '<div class="phone-empty">No deliveries in progress. Claim one from the Ready list.</div>';
+    }
+    setHTML($('content'), chips + body);
+  }
+
+  function renderClaimed(r) {
+    setHTML($('header'), '<span>Order ' + esc(r.ref) + ' — Room ' + esc(r.room) + '</span><span class="sub">Floor ' + esc(floorOf(r)) + '</span>');
+    $('content').className = 'tool-phone-content claimed';
+    var guest = r.guestAllergies || [];
+    var note = r.deliveryNote ? '"' + esc(r.deliveryNote) + '"' : 'None';
+    setHTML($('content'),
+      '<div class="t-stepper" aria-label="Delivery progress">' +
+        '<div class="t-step"><div class="t-dot done"></div><div class="t-label">Ready</div></div>' +
+        '<div class="t-line done"></div>' +
+        '<div class="t-step"><div class="t-dot active"></div><div class="t-label active">Out for delivery</div></div>' +
+        '<div class="t-line"></div>' +
+        '<div class="t-step"><div class="t-dot"></div><div class="t-label">Delivered</div></div>' +
+      '</div>' +
+      '<div class="notif-card-tool">' +
+        '<div class="kv"><span class="k">Items</span><span class="v">' + r.items.map(function (i) { return esc(itemLine(i)); }).join('<br>') + '</span></div>' +
+        '<div class="kv"><span class="k">Claimed</span><span class="v">By you at ' + F.clock(claimedAt(r)) + '</span></div>' +
+        '<div class="kv"><span class="k">Payment</span><span class="v">Charged to room</span></div>' +
+        '<div class="kv"><span class="k">Guest note</span><span class="v">' + note + '</span></div>' +
+        (guest.length ? '<div class="kv"><span class="k">Allergies</span><span class="v">' + guest.map(function (a) { return '<span class="badge badge-err">' + esc(a) + '</span>'; }).join('') + '</span></div>' : '') +
+      '</div>' +
+      '<div class="phone-spacer"></div>' +
+      '<div class="phone-btn-row">' +
+        '<button type="button" class="btn-tool btn-tool-secondary" data-act="back">Back</button>' +
+        '<button type="button" class="btn-tool btn-tool-primary" data-act="deliver" data-id="' + esc(r.id) + '">Mark delivered</button>' +
+      '</div>');
+  }
+
+  function renderCompleted(L) {
+    setHTML($('header'), '<span>Completed today (' + L.done.length + ')</span><span class="sub">In-room dining</span>');
+    $('content').className = 'tool-phone-content';
+    setHTML($('content'), L.done.length
+      ? L.done.map(function (r) {
+          return '<div class="notif-card-tool done">' +
+            '<div class="top">Room ' + esc(r.room) + ' — ' + esc(r.ref) + '<span class="time">' + F.clock(deliveredAt(r)) + '</span></div>' +
+            '<div class="body">' + esc(S.summary(r)) + '</div>' +
+            '<div class="meta"><span class="badge badge-ok">Delivered</span>' + F.money(r.total) + ' · charged to room</div>' +
+          '</div>';
+        }).join('')
+      : '<div class="phone-empty">No deliveries yet today. Orders you mark delivered show up here.</div>');
+  }
+
+  /* ---------- Actions ---------- */
+  function claim(id) {
+    var r = S.find(id);   // re-check: another waiter may have just taken it
+    if (!r) { Kira.ui.toast('That order no longer exists', 'err'); render(); return; }
+    if (r.claimedBy && r.claimedBy !== ME) { Kira.ui.toast('Already claimed by ' + r.claimedBy, 'warn'); render(); return; }
+    if (r.status !== 'ready') { Kira.ui.toast('Order ' + r.ref + ' is ' + S.statusLabel(r).toLowerCase() + ' — nothing to claim', 'warn'); render(); return; }
+    if (!S.setStatusIf(id, 'ready', 'out', { text: 'Claimed by ' + ME, patch: { claimedBy: ME, claimedAt: Date.now() } })) {
+      var now = S.find(id); Kira.ui.toast('Already claimed by ' + ((now && now.claimedBy) || 'a colleague'), 'warn'); render(); return;
+    }
+    screen = 'claimed'; selectedId = id; chip = 'mine';   // "Back" lands where the order now lives
+    render();
+    Kira.ui.toast('Claimed — pick up Room ' + r.room + ' at the kitchen pass', 'ok');
+  }
+  function deliver(id) {
+    var r = S.find(id);
+    if (!r || r.status !== 'out' || r.claimedBy !== ME) { Kira.ui.toast('This delivery is no longer yours to close', 'warn'); screen = 'list'; render(); return; }
+    screen = 'list'; selectedId = null;   // set before the write: the store re-renders synchronously
+    S.setStatus(id, 'delivered', { text: 'Delivered by ' + ME, patch: { deliveredAt: Date.now(), deliveredBy: ME } });
+    if (!lists().mine.length) chip = 'ready';
+    Kira.ui.toast('Delivered — Room ' + r.room, 'ok');
+    render();
+    $('content').scrollTop = 0;
+  }
+
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-act]');
+    if (!el || el.disabled) return;
+    var a = el.getAttribute('data-act'), id = el.getAttribute('data-id');
+    if (a === 'tab') { tab = el.getAttribute('data-tab'); screen = 'list'; selectedId = null; render(); $('content').scrollTop = 0; }
+    else if (a === 'chip') { chip = el.getAttribute('data-chip'); render(); }
+    else if (a === 'claim') claim(id);
+    else if (a === 'view') { screen = 'claimed'; selectedId = id; render(); $('content').scrollTop = 0; }
+    else if (a === 'deliver') deliver(id);
+    else if (a === 'back') { screen = 'list'; selectedId = null; render(); }
+  });
+
+  Kira.ui.launcherPill('../index.html');
+  S.subscribe(render);
+  Kira.ui.every(render, 10000);
+})();
+</script>
+</body>
+</html>

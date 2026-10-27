@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kira Concierge — Working Prototype</title>
+<link rel="stylesheet" href="shared/tokens.css?v=3">
+<link rel="stylesheet" href="shared/proto.css?v=3">
+<style>
+  body { background: var(--sand); min-height: 100vh; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 var(--sp-5); }
+  .hero { padding: var(--sp-7) 0 var(--sp-5); max-width: 720px; }
+  .hero .tag { font-size: var(--fs-small); color: var(--brass-deep); font-weight: 600; margin-bottom: var(--sp-2); }
+  .hero h1 { font-size: var(--fs-display); font-weight: 800; line-height: 1.15; margin-bottom: var(--sp-3); }
+  .hero p { color: var(--muted-on-sand); }
+
+  .feature { display: grid; grid-template-columns: 1.3fr 1fr; gap: var(--sp-4); margin-bottom: var(--sp-4); }
+  .card { position: relative; display: flex; flex-direction: column; gap: var(--sp-2); background: var(--paper); border: 1px solid rgba(19,19,19,.1); border-radius: var(--radius-tool); padding: var(--sp-5); text-decoration: none; color: var(--ink-on-sand); transition: border-color .15s, box-shadow .15s, transform .15s; }
+  .card:hover { border-color: var(--brass); box-shadow: 0 10px 30px -18px rgba(19,19,19,.45); transform: translateY(-1px); }
+  .card .tag { font-size: 12px; color: var(--brass-deep); font-weight: 600; letter-spacing: .02em; }
+  .card h2 { font-size: var(--fs-h2); font-weight: 700; }
+  .card p { color: var(--muted-on-sand); font-size: var(--fs-small); }
+  .card .live { margin-top: auto; padding-top: var(--sp-3); font-size: 12px; color: var(--lagoon); display: flex; align-items: center; gap: var(--sp-2); }
+  .card .live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgba(34,197,94,.18); }
+  .card .live.hot::before { background: var(--brass); box-shadow: 0 0 0 3px rgba(140,78,246,.25); }
+
+  .card.dark {
+    color: var(--ink-on-dark); border-color: rgba(196,166,255,.25);
+    background:
+      radial-gradient(ellipse 70% 60% at 20% 0%, rgba(140,78,246,.22), transparent 70%),
+      radial-gradient(ellipse at 50% 30%, var(--dusk-ink-2), var(--dusk-ink) 80%);
+  }
+  .card.dark .tag { color: var(--brass-soft); }
+  .card.dark p { color: var(--muted-on-dark); }
+  .card.dark .live { color: var(--brass-soft); }
+  .card .cta { align-self: flex-start; margin-top: var(--sp-3); text-decoration: none; }
+  .card .cta-row { display: flex; gap: var(--sp-3); flex-wrap: wrap; }
+  .card .cta-row .cta { margin-top: var(--sp-3); }
+  .card.dark:hover { transform: none; }
+  .btn-ghost-dark { background: rgba(255,255,255,.1); color: #fff; border: none; }
+  .btn-ghost-dark:hover { background: rgba(255,255,255,.18); }
+  .card .faces { display: flex; gap: var(--sp-2); margin-top: var(--sp-2); }
+  .card .faces img { width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(196,166,255,.45); }
+
+  .section-title { font-size: var(--fs-h2); font-weight: 700; margin: var(--sp-6) 0 var(--sp-3); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-4); }
+
+  .panel { background: var(--paper); border: 1px solid rgba(19,19,19,.1); border-radius: var(--radius-tool); padding: var(--sp-5); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
+  .control { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-4); padding: var(--sp-3) 0; border-bottom: 1px solid rgba(19,19,19,.07); }
+  .control:last-of-type { border-bottom: none; }
+  .control strong { display: block; font-size: var(--fs-small); }
+  .control span { font-size: 12px; color: var(--muted-on-sand); }
+  .switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; border-radius: 999px; background: rgba(19,19,19,.18); border: none; cursor: pointer; transition: background .15s; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .15s; }
+  .switch[aria-checked="true"] { background: var(--brass-deep); }
+  .switch[aria-checked="true"]::after { transform: translateX(18px); }
+  .steps { margin: 0; padding-left: 1.2em; font-size: var(--fs-small); display: flex; flex-direction: column; gap: var(--sp-2); }
+  .steps li::marker { color: var(--brass-deep); font-weight: 700; }
+  .note { font-size: 12px; color: var(--muted-on-sand); padding: var(--sp-6) 0 var(--sp-7); }
+
+  @media (max-width: 860px) {
+    .feature, .two { grid-template-columns: 1fr; }
+    .grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) {
+    .wrap { padding: 0 var(--sp-4); }
+    .hero { padding-top: var(--sp-6); }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="../index.html">Kira Concierge</a>
+    <nav>
+      <a href="../index.html">Home</a>
+      <a href="../wireframes/index.html">Wireframes</a>
+      <a href="../mockups/html/index.html">Hi-Fi Mockups</a>
+      <a href="index.html" class="current">Prototype</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <div class="hero">
+      <div class="tag">Stage 3 — working prototype</div>
+      <h1>Every screen, live and connected</h1>
+      <p>The hi-fi design as a working product. An order placed on the guest tablet lands on the kitchen screen instantly. Staff actions move the guest’s tracker in real time. Open the apps side by side, or each in its own tab — they all share one hotel.</p>
+    </div>
+
+    <div class="feature">
+      <div class="card dark">
+        <div class="tag">Start here</div>
+        <h2>Live demo</h2>
+        <p>Two full-size sides of one live hotel, switched with the tab at the top. Order on the guest tablet, then work it through the kitchen, waiter, housekeeping, valet or front desk on the staff side.</p>
+        <div class="faces"><img src="assets/kira-idle.jpg" alt=""><img src="assets/kira-listening.jpg" alt=""><img src="assets/kira-speaking.jpg" alt=""><img src="assets/kira-wake.jpg" alt=""></div>
+        <div class="cta-row">
+          <a class="btn btn-hero cta" href="demo.html#guest">Guest demo</a>
+          <a class="btn btn-ghost-dark cta" href="demo.html#staff">Staff demo</a>
+        </div>
+      </div>
+      <a class="card" href="guest/index.html">
+        <div class="tag">Guest · in-room tablet</div>
+        <h2>Guest tablet</h2>
+        <p>Idle home, in-room dining, housekeeping, late checkout and valet — plus voice (tap Kira), Help / Emergency, text size and mute.</p>
+        <div class="live" data-live="guest"></div>
+      </a>
+    </div>
+
+    <h2 class="section-title">Staff apps</h2>
+    <div class="grid">
+      <a class="card" href="staff/kitchen.html"><div class="tag">Staff · kitchen display</div><h2>Kitchen</h2><p>Order queue — Incoming, Preparing, Ready. Start, mark ready, reject.</p><div class="live" data-live="kitchen"></div></a>
+      <a class="card" href="staff/waiter.html"><div class="tag">Staff · handheld</div><h2>Waiter</h2><p>Ready-for-delivery alerts. Claim a tray, mark it delivered.</p><div class="live" data-live="waiter"></div></a>
+      <a class="card" href="staff/housekeeping.html"><div class="tag">Staff · desktop</div><h2>Housekeeping</h2><p>Request queue — Received, In progress, Done.</p><div class="live" data-live="housekeeping"></div></a>
+      <a class="card" href="staff/valet.html"><div class="tag">Staff · handheld</div><h2>Concierge &amp; Valet</h2><p>Car requests and concierge bookings. Accept, bring the car round, confirm.</p><div class="live" data-live="valet"></div></a>
+      <a class="card" href="staff/front-desk.html"><div class="tag">Staff · desktop</div><h2>Front desk</h2><p>Late-checkout approvals with reasons, help alerts, and the SLA oversight board.</p><div class="live" data-live="frontdesk"></div></a>
+      <a class="card" href="admin/index.html"><div class="tag">Hotel admin · web</div><h2>Admin dashboard</h2><p>Setup, live menu (changes reach the tablet instantly), knowledge base, staff, rooms, request board, analytics.</p><div class="live" data-live="admin"></div></a>
+    </div>
+
+    <h2 class="section-title">Demo controls</h2>
+    <div class="two">
+      <div class="panel">
+        <div class="control">
+          <div><strong>Autopilot staff</strong><span>For solo walkthroughs of the guest tablet: the room’s requests move forward every few seconds as if staff were working them.</span></div>
+          <button class="switch" role="switch" id="autopilot" aria-checked="false" aria-label="Autopilot staff"></button>
+        </div>
+        <div class="control">
+          <div><strong>Simulate failures</strong><span>The menu fails to load once, and the first order send fails, so you can see the retry screens. Retrying never creates a duplicate order.</span></div>
+          <button class="switch" role="switch" id="failures" aria-checked="false" aria-label="Simulate failures"></button>
+        </div>
+        <div class="control">
+          <div><strong>Reset the hotel</strong><span>Restores the starting orders, requests, menu and rooms on every open app.</span></div>
+          <button class="btn-tool btn-tool-secondary" id="reset">Reset</button>
+        </div>
+      </div>
+      <div class="panel">
+        <strong style="display:block;font-size:var(--fs-small);margin-bottom:var(--sp-3)">Try this (about 2 minutes)</strong>
+        <ol class="steps">
+          <li>Open the <em>Guest demo</em>. On the tablet, tap <em>In-room dining</em>, add two burgers and a Coke, then <em>Confirm &amp; send</em>.</li>
+          <li>Switch to <em>Staff apps</em> at the top. In <em>Kitchen</em>, open order #4821 → <em>Start preparing</em> → <em>Mark ready</em>.</li>
+          <li>In <em>Waiter</em>, <em>Claim delivery</em> → <em>Mark delivered</em>. The tablet’s tracker follows every step.</li>
+          <li>Ask for a 5 PM late checkout. In <em>Front desk</em>, approve it (the guest confirms the AED 90 fee) or deny it with a reason.</li>
+          <li>In <em>Admin → Menu</em>, pause the burger. It disappears from the tablet menu at once.</li>
+        </ol>
+      </div>
+    </div>
+
+    <p class="note">This prototype runs entirely in your browser. There’s no backend. The shared hotel lives in this browser’s local storage, so apps open in other tabs of the same browser stay in sync, but other people’s browsers don’t. Voice is simulated: tap a phrase or type, or use the microphone where the browser supports it.</p>
+  </main>
+
+<script src="shared/kira.js?v=4"></script>
+<script>
+(function () {
+  var S = Kira.store;
+  function count(f) { return S.get().requests.filter(f).length; }
+  function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many || one + 's'); }
+  function live() {
+    var s = S.get(), room = s.guestRoom;
+    var g = count(function (r) { return r.room === room && S.isOpen(r) && r.dept !== 'help'; });
+    var lines = {
+      guest: ['Room ' + room + ' · ' + (g ? plural(g, 'open request') : 'nothing open'), g > 0],
+      kitchen: [count(function (r) { return r.dept === 'dining' && r.status === 'incoming'; }) + ' new · ' + count(function (r) { return r.dept === 'dining' && r.status === 'preparing'; }) + ' preparing', count(function (r) { return r.dept === 'dining' && r.status === 'incoming'; }) > 0],
+      waiter: [plural(count(function (r) { return r.dept === 'dining' && r.status === 'ready'; }), 'tray') + ' ready for pickup', count(function (r) { return r.dept === 'dining' && r.status === 'ready'; }) > 0],
+      housekeeping: [count(function (r) { return r.dept === 'housekeeping' && r.status === 'received'; }) + ' new · ' + count(function (r) { return r.dept === 'housekeeping' && r.status === 'progress'; }) + ' in progress', count(function (r) { return r.dept === 'housekeeping' && r.status === 'received'; }) > 0],
+      valet: [count(function (r) { return (r.dept === 'valet' || r.dept === 'concierge') && r.status === 'received'; }) + ' waiting to be accepted', count(function (r) { return (r.dept === 'valet' || r.dept === 'concierge') && r.status === 'received'; }) > 0],
+      frontdesk: [plural(count(function (r) { return r.dept === 'checkout' && r.status === 'pending'; }), 'approval') + ' pending' + (count(function (r) { return r.dept === 'help' && r.status === 'open'; }) ? ' · help alert open' : ''), count(function (r) { return (r.dept === 'checkout' && r.status === 'pending') || (r.dept === 'help' && r.status === 'open'); }) > 0],
+      admin: [plural(count(S.isOpen), 'open request') + ' hotel-wide', false]
+    };
+    document.querySelectorAll('[data-live]').forEach(function (el) {
+      var l = lines[el.dataset.live];
+      el.textContent = 'Live · ' + l[0];
+      el.classList.toggle('hot', !!l[1]);
+    });
+    document.getElementById('autopilot').setAttribute('aria-checked', String(!!s.settings.autopilot));
+    document.getElementById('failures').setAttribute('aria-checked', String(!!s.settings.failures));
+  }
+  document.getElementById('autopilot').addEventListener('click', function () {
+    var on = !S.get().settings.autopilot;
+    S.setAutopilot(on);
+    Kira.ui.toast(on ? 'Autopilot on — keep the guest tablet open in a tab' : 'Autopilot off', on ? 'ok' : undefined);
+  });
+  document.getElementById('failures').addEventListener('click', function () {
+    var on = !S.get().settings.failures;
+    S.update(function (s) { s.settings.failures = on; });
+    Kira.ui.toast(on ? 'Failures on — the next menu load and order send each fail once' : 'Failures off');
+  });
+  document.getElementById('reset').addEventListener('click', function () {
+    if (!confirm('Reset the demo hotel? Every open app goes back to the starting data.')) return;
+    S.reset();
+    Kira.ui.toast('Demo reset', 'ok');
+  });
+  S.subscribe(live);
+})();
+</script>
+</body>
+</html>

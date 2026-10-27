@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kira Concierge — Housekeeping</title>
+<link rel="stylesheet" href="../shared/tokens.css?v=3">
+<link rel="stylesheet" href="../shared/proto.css?v=3">
+<style>
+  /* Page-scoped refinements layered on tokens.css (tool mode). Mirrors staff-kitchen.html. */
+  .tool-topbar .who { display: flex; align-items: center; gap: var(--sp-2); }
+  .tool-topbar .title { font-weight: 600; color: var(--ink-on-sand); }
+  .tool-sidebar .shift { margin-top: var(--sp-6); padding-top: var(--sp-4); border-top: 1px solid rgba(255,255,255,.12); font-size: 12px; color: var(--muted-on-dark); line-height: 1.5; }
+  .tool-sidebar .shift strong { display: block; color: var(--ink-on-dark); font-weight: 600; }
+  .ticket-top > span:first-child { display: flex; flex-direction: column; line-height: 1.3; min-width: 0; }
+  .ticket-top .badge { white-space: nowrap; flex-shrink: 0; }
+  .ticket-top .room { font-weight: 700; }
+  .ticket-top .rid { font-weight: 500; font-size: 12px; color: var(--muted-on-sand); }
+  .ticket-card.muted { opacity: .8; }
+  .kanban .ticket-card:not(.muted) { cursor: pointer; transition: box-shadow .15s, border-color .15s, transform .15s; }
+  .kanban .ticket-card:not(.muted):hover { box-shadow: 0 6px 16px -8px rgba(19,19,19,.3); border-color: rgba(140,78,246,.4); transform: translateY(-1px); }
+  .detail-head { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-5); }
+  .detail-head .panel-title { margin-bottom: 0; font-size: var(--fs-h2); }
+  .detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: var(--sp-5); align-items: start; }
+  .detail-stepper { margin-bottom: var(--sp-5); max-width: 420px; }
+  .detail-rows .tool-form-row { align-items: flex-start; padding-bottom: var(--sp-3); border-bottom: 1px solid rgba(19,19,19,.06); }
+  .detail-rows .tool-form-row:last-child { border-bottom: none; }
+  .detail-rows .tool-form-row label { width: 120px; }
+  .history-title { font-size: var(--fs-small); font-weight: 700; color: var(--muted-on-sand); margin-bottom: var(--sp-3); }
+  .history { list-style: none; margin: 0; padding: 0; font-size: 12px; }
+  .history li { display: flex; gap: var(--sp-3); padding: 6px 0; border-bottom: 1px solid rgba(19,19,19,.06); }
+  .history li:last-child { border-bottom: none; }
+  .history time { color: var(--muted-on-sand); width: 34px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+  /* ---- Prototype additions ---- */
+  /* Done cards stay dimmed but can still be opened (read-only detail). */
+  .kanban .ticket-card.muted { cursor: pointer; transition: opacity .15s; }
+  .kanban .ticket-card.muted:hover { opacity: 1; }
+  .tool-topbar .clock { font-variant-numeric: tabular-nums; }
+  .detail-rows .tool-form-row > span { min-width: 0; overflow-wrap: anywhere; }
+  .readonly-note { font-size: 12px; color: var(--muted-on-sand); margin-right: auto; align-self: center; }
+
+  /* Completed today table (same table pattern as the front desk) */
+  .table-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3); margin-bottom: var(--sp-3); flex-wrap: wrap; }
+  .table-head .panel-title { margin-bottom: 0; }
+  .table-head .hint { font-size: 12px; color: var(--muted-on-sand); }
+  .data-table td { vertical-align: middle; }
+  .data-table .room { font-weight: 700; }
+  .data-table .badge, .data-table .nw { white-space: nowrap; }
+  .data-table .sub { display: block; font-size: 12px; color: var(--muted-on-sand); }
+  .data-table .actions { text-align: right; white-space: nowrap; }
+
+  @media (max-width: 860px) {
+    .detail-head { flex-wrap: wrap; }
+    .detail-grid { grid-template-columns: minmax(0, 1fr); }
+    .detail-rows .tool-form-row label { width: 104px; }
+    .panel-actions { flex-wrap: wrap; }
+    .panel-actions .btn-tool { min-height: 44px; }
+    .readonly-note { flex-basis: 100%; }
+    .tool-frame.app .tool-content { padding-bottom: 72px; }   /* clear the launcher pill */
+  }
+  .data-table .m-only { display: none; }
+  @media (max-width: 600px) {
+    /* Sidebar becomes a top bar: keep the brand dot, drop its label so both views fit */
+    .tool-frame.app .tool-sidebar .brand { font-size: 0; gap: 0; margin-right: var(--sp-1); }
+    .tool-frame.app .tool-link { padding: var(--sp-2); }
+    /* Completed table: fold the secondary columns into the request cell */
+    .data-table th, .data-table td { padding: var(--sp-2); }
+    .data-table .c-time, .data-table .c-by { display: none; }
+    .data-table .m-only { display: block; }
+  }
+  .ticket-tags { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-top: var(--sp-2); }
+</style>
+</head>
+<body class="tool-app">
+  <div class="tool-frame app">
+    <nav class="tool-sidebar" id="sidebar" aria-label="Housekeeping"></nav>
+    <div class="tool-main">
+      <div class="tool-topbar" id="topbar"></div>
+      <main class="tool-content" id="content"></main>
+    </div>
+  </div>
+
+<script src="../shared/kira.js?v=4"></script>
+<script>
+(function () {
+  'use strict';
+
+  var ME = 'Noor A.';
+  var MIN = 60000;
+  var esc = Kira.fmt.esc;
+  var me = Kira.data.STAFF.filter(function (s) { return s.name === ME; })[0] || { shift: '' };
+
+  /* ---------- View state (module-level, never read back from the DOM) ---------- */
+  var view = 'queue';          // 'queue' | 'completed' | 'detail'
+  var listView = 'queue';      // the list a detail was opened from
+  var selectedId = null;
+
+  /* ---------- New-arrival tracking ---------- */
+  var seen = null;             // Set of id@createdAt already rendered
+  var seededAt = null;         // detects Kira.store.reset()
+  var newUntil = {};           // id -> timestamp the .is-new highlight ends
+
+  /* ---------- Helpers ---------- */
+  function hkRequests(s) { return s.requests.filter(function (r) { return r.dept === 'housekeeping'; }); }
+  function key(r) { return r.id + '@' + r.createdAt; }
+  function deadline(r) { return r.createdAt + r.slaMin * MIN; }
+  function isToday(ts) { var a = new Date(ts), b = new Date(); return a.toDateString() === b.toDateString(); }
+  function channelLabel(r) { return r.channel === 'voice' ? 'voice' : 'in-room tablet'; }
+  function historyAt(r, re) {
+    for (var i = r.history.length - 1; i >= 0; i--) if (re.test(r.history[i].text)) return r.history[i].at;
+    return null;
+  }
+  function startedAt(r) { return historyAt(r, /^Accepted/) || r.updatedAt; }
+  function doneAt(r) { return r.status === 'done' ? (historyAt(r, /done/i) || r.updatedAt) : r.updatedAt; }
+  function withinSla(r) { return doneAt(r) <= deadline(r); }
+  function slaClass(level) { return level === 'err' ? 'badge-err' : level === 'warn' ? 'badge-warn' : 'badge-ok'; }
+
+  function detectNew(list) {
+    var s = Kira.store.get();
+    if (!seen || seededAt !== s.seededAt) {
+      seen = new Set(list.map(key));
+      seededAt = s.seededAt;
+      return [];
+    }
+    var fresh = [];
+    list.forEach(function (r) {
+      var k = key(r);
+      if (seen.has(k)) return;
+      seen.add(k);
+      if (Kira.store.isOpen(r)) fresh.push(r);
+    });
+    return fresh;
+  }
+
+  /* Repaint a region only when its markup changed; keep focus + scroll. */
+  function paint(el, html) {
+    if (el.__html === html) return;
+    var active = document.activeElement;
+    var fkey = active && el.contains(active) ? active.getAttribute('data-fkey') : null;
+    var scroll = el.scrollTop;
+    el.innerHTML = html;
+    el.__html = html;
+    el.scrollTop = scroll;
+    if (fkey) {
+      var n = el.querySelector('[data-fkey="' + fkey.replace(/"/g, '') + '"]');
+      if (n) n.focus({ preventScroll: true });
+    }
+  }
+
+  /* ---------- Chime (only after the first user interaction; fails silently) ---------- */
+  var audioCtx = null;
+  function armAudio() {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    } catch (e) { audioCtx = null; }
+  }
+  window.addEventListener('pointerdown', armAudio, true);
+  window.addEventListener('keydown', armAudio, true);
+  function chime() {
+    if (!audioCtx || audioCtx.state !== 'running') return;
+    try {
+      var t = audioCtx.currentTime;
+      [880, 1318.5].forEach(function (f, i) {
+        var o = audioCtx.createOscillator(), g = audioCtx.createGain(), at = t + i * 0.14;
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, at);
+        g.gain.exponentialRampToValueAtTime(0.12, at + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, at + 0.5);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(at); o.stop(at + 0.55);
+      });
+    } catch (e) {}
+  }
+
+  /* ---------- Markup ---------- */
+  function sidebarHtml() {
+    var link = function (v, label) {
+      var on = listView === v;
+      return '<button type="button" class="tool-link' + (on ? ' active' : '') + '"' + (on ? ' aria-current="page"' : '') +
+        ' data-action="view" data-view="' + v + '" data-fkey="nav-' + v + '">' + label + '</button>';
+    };
+    return '<div class="brand">Housekeeping</div>' +
+      link('queue', 'Request queue') +
+      link('completed', 'Completed today') +
+      '<div class="shift"><strong>' + esc(ME) + '</strong>Floors 1–6<br>' + esc(me.shift) + '</div>';
+  }
+
+  function topbarHtml(list) {
+    var n = list.filter(function (r) { return r.status === 'received'; }).length;
+    var title = listView === 'completed' ? 'Completed today — Housekeeping' : 'Request queue — Housekeeping';
+    return '<span class="title">' + title + '</span>' +
+      '<span class="who"><span class="clock" data-clock>' + Kira.fmt.time() + '</span> · ' +
+      '<span class="badge ' + (n ? 'badge-warn' : 'badge-ok') + '">' + n + ' new</span></span>';
+  }
+
+  function cardHtml(r, now) {
+    var sla = Kira.store.sla(r, now);
+    var done = r.status === 'done';
+    var cls = 'ticket-card';
+    if (sla && (sla.level === 'warn' || sla.level === 'err')) cls += ' urgent';
+    if (done) cls += ' muted';
+    if (newUntil[r.id] && newUntil[r.id] > now) cls += ' is-new';
+    var badge = done ? '<span class="badge badge-ok">Completed</span>'
+                     : '<span class="badge ' + slaClass(sla && sla.level) + '">' + esc(sla ? sla.label : '') + '</span>';
+    var meta;
+    if (r.status === 'received') meta = 'Requested ' + Kira.fmt.clock(r.createdAt) + ' · via ' + channelLabel(r);
+    else if (r.status === 'progress') meta = 'Started ' + Kira.fmt.clock(startedAt(r)) + ' · ' + esc(r.assignee || 'Unassigned');
+    else meta = 'Done ' + Kira.fmt.clock(doneAt(r)) + ' · ' + (withinSla(r) ? 'within SLA' : 'late');
+    var label = 'Room ' + r.room + ', ' + r.ref + ', ' + r.title + ', ' + (done ? 'completed' : (sla ? sla.label : ''));
+    return '<div class="' + cls + '" role="button" tabindex="0" data-action="open" data-id="' + esc(r.id) + '" data-fkey="card-' + esc(r.id) + '" aria-label="' + esc(label) + '">' +
+      '<div class="ticket-top"><span><span class="room">Room ' + esc(r.room) + '</span> <span class="rid">' + esc(r.ref) + '</span></span>' + badge + '</div>' +
+      '<div class="ticket-items">' + esc(r.title) + '</div>' +
+      (!done && Kira.store.dndOf(r.room) ? '<div class="ticket-tags"><span class="badge badge-warn">Do not disturb</span></div>' : '') +
+      (r.note ? '<div class="ticket-note">“' + esc(r.note) + '”</div>' : '') +
+      '<div class="ticket-meta">' + meta + '</div>' +
+    '</div>';
+  }
+
+  function queueHtml(list, now) {
+    var byUrgency = function (a, b) { return deadline(a) - deadline(b); };
+    var cols = [
+      { title: 'Received',    items: list.filter(function (r) { return r.status === 'received'; }).sort(byUrgency), empty: 'No new requests' },
+      { title: 'In progress', items: list.filter(function (r) { return r.status === 'progress'; }).sort(byUrgency), empty: 'Nothing in progress' },
+      { title: 'Done',        items: list.filter(function (r) { return r.status === 'done' && isToday(doneAt(r)); })
+                                         .sort(function (a, b) { return doneAt(b) - doneAt(a); }), empty: 'Nothing completed yet today' }
+    ];
+    return '<div class="kanban">' + cols.map(function (c) {
+      return '<section class="kanban-col" aria-label="' + c.title + '">' +
+        '<h4>' + c.title + ' <span class="count">(' + c.items.length + ')</span></h4>' +
+        (c.items.length ? c.items.map(function (r) { return cardHtml(r, now); }).join('') : '<div class="kanban-empty">' + c.empty + '</div>') +
+      '</section>';
+    }).join('') + '</div>';
+  }
+
+  function stepperHtml(r) {
+    var steps = ['Received', 'In progress', 'Done'];
+    var cur = r.status === 'received' ? 0 : r.status === 'progress' ? 1 : r.status === 'done' ? 3 : 0;
+    var out = '';
+    steps.forEach(function (label, i) {
+      if (i) out += '<div class="t-line' + (i <= cur ? ' done' : '') + '"></div>';
+      var dot = i < cur ? ' done' : i === cur ? ' active' : '';
+      out += '<div class="t-step"><div class="t-dot' + dot + '"></div><div class="t-label' + (i === cur || (cur === 3 && i === 2) ? ' active' : '') + '">' + label + '</div></div>';
+    });
+    return '<div class="t-stepper detail-stepper" aria-label="Status: ' + esc(Kira.store.statusLabel(r)) + '">' + out + '</div>';
+  }
+
+  function detailHtml(r, now) {
+    var sla = Kira.store.sla(r, now);
+    var badge;
+    if (r.status === 'done') badge = '<span class="badge badge-ok">Completed' + (withinSla(r) ? '' : ' late') + '</span>';
+    else if (r.status === 'cancelled') badge = '<span class="badge badge-err">Cancelled</span>';
+    else badge = '<span class="badge ' + slaClass(sla.level) + '">' + esc(sla.minsLeft < 0 ? sla.label : sla.label.replace(' left', ' remaining')) + '</span>';
+
+    var rows =
+      '<div class="tool-form-row"><label>Request</label><span>' + esc(r.title) + '</span></div>' +
+      '<div class="tool-form-row"><label>Guest promise</label><span>Within ' + esc(r.slaMin) + ' min of request <span class="ticket-meta">(shown to guest as plain text)</span></span></div>' +
+      '<div class="tool-form-row"><label>Assigned to</label><span>' + (r.assignee ? esc(r.assignee) : '<span class="ticket-meta">Unassigned</span>') + '</span></div>' +
+      '<div class="tool-form-row"><label>Guest note</label><span' + (r.note ? '' : ' class="ticket-meta"') + '>' + (r.note ? esc(r.note) : 'None') + '</span></div>';
+    if (r.status === 'done') rows += '<div class="tool-form-row"><label>Completed</label><span>' + Kira.fmt.time(doneAt(r)) + ' · ' + (withinSla(r) ? 'within SLA' : 'after the guest promise') + '</span></div>';
+    if (r.status === 'cancelled') rows += '<div class="tool-form-row"><label>Status</label><span>Cancelled ' + Kira.fmt.time(r.updatedAt) + '</span></div>';
+
+    var history = r.history.map(function (h) {
+      return '<li><time>' + Kira.fmt.clock(h.at) + '</time><span>' + esc(h.text) + '</span></li>';
+    }).join('');
+
+    var backLabel = listView === 'completed' ? 'Back to completed' : 'Back to queue';
+    var actions = '<button type="button" class="btn-tool btn-tool-secondary" data-action="back" data-fkey="back">' + backLabel + '</button>';
+    if (r.status === 'received') actions += '<button type="button" class="btn-tool btn-tool-primary" data-action="accept" data-id="' + esc(r.id) + '" data-fkey="primary">Accept</button>';
+    else if (r.status === 'progress') actions += '<button type="button" class="btn-tool btn-tool-primary" data-action="done" data-id="' + esc(r.id) + '" data-fkey="primary">Mark done</button>';
+    else actions = '<span class="readonly-note">' + (r.status === 'done' ? 'Completed — the guest has been notified.' : 'Cancelled by the guest — nothing to do.') + '</span>' + actions;
+
+    return '<div class="detail-head"><p class="panel-title">Request ' + esc(r.ref) + ' — Room ' + esc(r.room) + '</p>' + badge + '</div>' +
+      stepperHtml(r) +
+      '<div class="detail-grid">' +
+        '<div class="detail-rows">' + rows + '</div>' +
+        '<div class="ticket-card"><p class="history-title">Request history</p><ul class="history">' + history + '</ul></div>' +
+      '</div>' +
+      '<div class="panel-actions">' + actions + '</div>';
+  }
+
+  function completedHtml(list) {
+    var rows = list.filter(function (r) { return (r.status === 'done' || r.status === 'cancelled') && isToday(r.updatedAt); })
+                   .sort(function (a, b) { return doneAt(b) - doneAt(a); });
+    var done = rows.filter(function (r) { return r.status === 'done'; });
+    var onTime = done.filter(withinSla).length;
+    var head = '<div class="table-head"><p class="panel-title">Completed today (' + rows.length + ')</p>' +
+      '<span class="hint">' + (done.length ? onTime + ' of ' + done.length + ' within SLA' : 'Requests you finish appear here') + '</span></div>';
+    if (!rows.length) return head + '<div class="kanban-empty">Nothing completed yet today.</div>';
+    return head + '<div class="table-scroll"><table class="data-table">' +
+      '<thead><tr><th>Room</th><th>Request</th><th class="c-time">Requested</th><th class="c-time">Completed</th><th>Outcome</th><th class="c-by">By</th><th aria-label="Actions"></th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        var outcome = r.status === 'cancelled' ? '<span class="badge badge-err">Cancelled</span>'
+          : withinSla(r) ? '<span class="badge badge-ok">Within SLA</span>' : '<span class="badge badge-warn">Late</span>';
+        return '<tr><td class="room">' + esc(r.room) + '</td>' +
+          '<td>' + esc(r.title) + '<span class="sub">' + esc(r.ref) + ' · via ' + channelLabel(r) + '</span>' +
+            '<span class="sub m-only">' + (r.status === 'cancelled' ? 'Cancelled ' : 'Done ') + Kira.fmt.time(doneAt(r)) + (r.assignee ? ' · ' + esc(r.assignee) : '') + '</span></td>' +
+          '<td class="nw c-time">' + Kira.fmt.time(r.createdAt) + '</td>' +
+          '<td class="nw c-time">' + Kira.fmt.time(doneAt(r)) + '</td>' +
+          '<td>' + outcome + '</td>' +
+          '<td class="nw c-by">' + esc(r.assignee || '—') + '</td>' +
+          '<td class="actions"><button type="button" class="btn-tool btn-tool-secondary" data-action="open" data-id="' + esc(r.id) + '" data-fkey="view-' + esc(r.id) + '">View</button></td></tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+
+  /* ---------- Render ---------- */
+  var el = { sidebar: document.getElementById('sidebar'), topbar: document.getElementById('topbar'), content: document.getElementById('content') };
+
+  function render() {
+    var s = Kira.store.get();
+    var list = hkRequests(s);
+    var now = Date.now();
+
+    var fresh = detectNew(list);
+    fresh.forEach(function (r) {
+      newUntil[r.id] = now + 2500;
+      Kira.ui.toast('New request — Room ' + r.room, 'ok');
+    });
+    if (fresh.length) { chime(); setTimeout(render, 2600); }
+
+    if (view === 'detail' && !Kira.store.find(selectedId)) { view = listView; selectedId = null; }
+
+    paint(el.sidebar, sidebarHtml());
+    paint(el.topbar, topbarHtml(list));
+    var html = view === 'detail' ? detailHtml(Kira.store.find(selectedId), now)
+             : view === 'completed' ? completedHtml(list)
+             : queueHtml(list, now);
+    paint(el.content, html);
+  }
+
+  function go(next, id) {
+    if (next === 'detail') { selectedId = id; view = 'detail'; }
+    else { listView = next; view = next; selectedId = null; }
+    render();
+    window.scrollTo(0, 0);
+    var focusTarget = next === 'detail' ? el.content.querySelector('[data-fkey="primary"], [data-fkey="back"]') : null;
+    if (focusTarget) focusTarget.focus({ preventScroll: true });
+  }
+
+  /* ---------- Actions ---------- */
+  function accept(id) {
+    var r = Kira.store.find(id);
+    if (!r) return Kira.ui.toast('That request no longer exists', 'warn');
+    if (r.status !== 'received') return Kira.ui.toast('Already accepted by ' + (r.assignee || 'a colleague'), 'warn');
+    if (!Kira.store.setStatusIf(id, 'received', 'progress', { text: 'Accepted by ' + ME, patch: { assignee: ME } })) {
+      var now = Kira.store.find(id);
+      return Kira.ui.toast('Already accepted by ' + ((now && now.assignee) || 'a colleague'), 'warn');
+    }
+    Kira.ui.toast('Accepted — Room ' + r.room + ' now sees "In progress"', 'ok');
+  }
+  function markDone(id) {
+    var r = Kira.store.find(id);
+    if (!r) return Kira.ui.toast('That request no longer exists', 'warn');
+    if (r.status !== 'progress') return Kira.ui.toast(r.status === 'done' ? 'Already marked done' : 'This request is no longer in progress', 'warn');
+    Kira.store.setStatus(id, 'done', { text: 'Marked done by ' + ME });
+    Kira.ui.toast('Marked done — guest notified', 'ok');
+    go(listView);
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-action]');
+    if (!t) return;
+    var a = t.getAttribute('data-action'), id = t.getAttribute('data-id');
+    if (a === 'view') go(t.getAttribute('data-view'));
+    else if (a === 'open') go('detail', id);
+    else if (a === 'back') go(listView);
+    else if (a === 'accept') accept(id);
+    else if (a === 'done') markDone(id);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && view === 'detail') { go(listView); return; }
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var t = e.target.closest && e.target.closest('[role="button"][data-action]');
+    if (!t) return;
+    e.preventDefault();
+    t.click();
+  });
+
+  /* Live clock between full renders */
+  setInterval(function () {
+    var c = document.querySelector('[data-clock]');
+    var v = Kira.fmt.time();
+    if (c && c.textContent !== v) c.textContent = v;
+  }, 1000);
+
+  Kira.ui.launcherPill('../index.html');
+  Kira.store.subscribe(render);
+  Kira.ui.every(render);
+})();
+</script>
+</body>
+</html>

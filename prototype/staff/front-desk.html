@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Front Desk — Kira Concierge</title>
+<link rel="stylesheet" href="../shared/tokens.css?v=3">
+<link rel="stylesheet" href="../shared/proto.css?v=3">
+<style>
+  /* Page-scoped refinements layered on tokens.css (tool mode). */
+  .tool-topbar .who { display: flex; align-items: center; gap: var(--sp-2); }
+  .tool-topbar .title { font-weight: 600; color: var(--ink-on-sand); }
+  .tool-sidebar .shift { margin-top: var(--sp-6); padding-top: var(--sp-4); border-top: 1px solid rgba(255,255,255,.12); font-size: 12px; color: var(--muted-on-dark); line-height: 1.5; }
+  .tool-sidebar .shift strong { display: block; color: var(--ink-on-dark); font-weight: 600; }
+  .tool-link .n { float: right; font-weight: 600; color: var(--brass-soft); }
+
+  .table-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--sp-3); }
+  .table-head .panel-title { margin-bottom: 0; }
+  .table-head .hint { font-size: 12px; color: var(--muted-on-sand); }
+  .data-table td { vertical-align: middle; }
+  .data-table .room { font-weight: 700; }
+  .data-table .badge, .data-table .nw { white-space: nowrap; }
+  .data-table .sub { display: block; font-size: 12px; color: var(--muted-on-sand); }
+  .data-table .actions { text-align: right; white-space: nowrap; }
+  .data-table .actions .btn-tool + .btn-tool { margin-left: var(--sp-2); }
+  .data-table tr.flagged td { background: rgba(239,68,68,.04); }
+  .data-table tr.flagged td:first-child { box-shadow: inset 3px 0 0 var(--err); }
+  .table-gap { height: var(--sp-6); }
+
+  .deny-grid { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: var(--sp-5); align-items: start; }
+  .kv { display: flex; justify-content: space-between; gap: var(--sp-3); padding: 6px 0; font-size: var(--fs-small); border-bottom: 1px solid rgba(19,19,19,.06); }
+  .kv:last-child { border-bottom: none; }
+  .kv .k { color: var(--muted-on-sand); }
+  .kv .v { font-weight: 600; text-align: right; }
+  .summary-title { font-size: var(--fs-small); font-weight: 700; color: var(--muted-on-sand); margin-bottom: var(--sp-2); }
+  .tool-form-row.top { align-items: flex-start; }
+  textarea.tool-input { max-width: none; min-height: 84px; resize: vertical; line-height: 1.5; }
+  .field-help { font-size: 12px; color: var(--muted-on-sand); margin: calc(-1 * var(--sp-1)) 0 0 152px; }
+  .stat-tile .value.err { color: var(--err); }
+  .stat-tile .value.warn { color: var(--warn); }
+
+  /* ---------- Prototype additions ---------- */
+  .tool-frame.app .tool-main { min-width: 0; }
+  .tool-frame.app .tool-content { padding-bottom: calc(var(--sp-5) + 40px); }
+  .table-head { flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); }
+  .data-table .sub.sla-warn { color: var(--warn); font-weight: 600; }
+  .data-table .sub.sla-err { color: var(--err); font-weight: 600; }
+  .badge-muted { background: rgba(19,19,19,.07); color: var(--muted-on-sand); }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .link-btn { background: none; border: none; padding: 0; margin-left: var(--sp-2); font: inherit; font-weight: 600; color: var(--brass-deep); cursor: pointer; }
+  .link-btn:hover { text-decoration: underline; }
+  .empty-state { font-size: var(--fs-small); color: var(--muted-on-sand); text-align: center; padding: var(--sp-6) var(--sp-4); border: 1px dashed rgba(19,19,19,.15); border-radius: var(--radius-tool); background: rgba(19,19,19,.015); }
+  .empty-state strong { display: block; color: var(--ink-on-sand); font-weight: 600; margin-bottom: 2px; }
+
+  /* Rows that just arrived / just changed */
+  @keyframes row-arrive { 0% { background: rgba(140,78,246,.22); } 100% { background: transparent; } }
+  .data-table tr.is-new td { animation: row-arrive 2.4s ease-out; }
+  .data-table tr.is-new { animation: none; }
+
+  /* Deny form states */
+  textarea.tool-input[aria-invalid="true"] { border-color: var(--err); }
+  .field-help.err { color: var(--err); }
+
+  /* Help / emergency alert strip — sits above every view */
+  .alert-stack { display: flex; flex-direction: column; gap: var(--sp-2); padding: var(--sp-3) var(--sp-5) 0; }
+  .alert-stack:empty { display: none; }
+  .help-alert { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border: 1px solid; border-left-width: 4px; border-radius: var(--radius-tool); font-size: var(--fs-small); }
+  .help-alert.err { background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.3); border-left-color: var(--err); }
+  .help-alert.warn { background: rgba(245,158,11,.08); border-color: rgba(245,158,11,.3); border-left-color: var(--warn); }
+  .help-alert .pulse { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .help-alert.err .pulse { background: var(--err); animation: pulse-err 1.4s ease-out infinite; }
+  .help-alert.warn .pulse { background: var(--warn); animation: pulse-warn 1.4s ease-out infinite; }
+  .help-alert .msg { flex: 1; min-width: 0; }
+  .help-alert .msg strong { display: block; font-weight: 700; }
+  .help-alert.err .msg strong { color: var(--err); }
+  .help-alert.warn .msg strong { color: var(--ink-on-sand); }
+  .help-alert .meta { font-size: 12px; color: var(--muted-on-sand); }
+  .help-alert .btn-tool { flex-shrink: 0; background: var(--paper); }
+  .help-alert.is-new { animation: alert-arrive 1.2s ease-out 2; }
+  .dnd-strip { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-tool); background: rgba(91,43,184,.07); font-size: var(--fs-small); }
+  .dnd-label { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--brass-deep); margin-right: var(--sp-1); }
+  .dnd-label svg { width: 16px; height: 16px; }
+  .dnd-chip { padding: 3px 10px; border-radius: 999px; background: var(--paper); box-shadow: 0 1px 2px rgba(19,19,19,.08); color: var(--ink-on-sand); }
+  .dnd-chip strong { font-weight: 700; }
+  .dnd-chip.is-new { animation: alert-arrive 1.2s ease-out 2; }
+  @keyframes pulse-err { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,.55); } 100% { box-shadow: 0 0 0 9px rgba(239,68,68,0); } }
+  @keyframes pulse-warn { 0% { box-shadow: 0 0 0 0 rgba(245,158,11,.55); } 100% { box-shadow: 0 0 0 9px rgba(245,158,11,0); } }
+  @keyframes alert-arrive { 0% { box-shadow: 0 0 0 4px rgba(239,68,68,.35); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .help-alert .pulse, .help-alert.is-new, .data-table tr.is-new td { animation: none !important; }
+  }
+
+  @media (max-width: 860px) {
+    .tool-link .n { float: none; margin-left: 6px; }
+    .alert-stack { padding: var(--sp-3) var(--sp-4) 0; }
+    .deny-grid { grid-template-columns: minmax(0, 1fr); }
+    .tool-form-row.top { flex-direction: column; align-items: stretch; gap: var(--sp-2); }
+    .tool-form-row.top label { width: auto; }
+    .field-help { margin-left: 0; }
+  }
+
+  /* Pending approvals become stacked cards on phones, so Approve / Deny never sit off-screen */
+  @media (max-width: 600px) {
+    .data-table.stack thead { display: none; }
+    .data-table.stack, .data-table.stack tbody, .data-table.stack tr, .data-table.stack td { display: block; width: 100%; }
+    .data-table.stack tr { background: var(--paper); border: 1px solid rgba(19,19,19,.1); border-radius: var(--radius-tool); padding: var(--sp-2) var(--sp-3); margin-bottom: var(--sp-3); }
+    .data-table.stack td { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3); padding: 6px 0; border-bottom: 1px solid rgba(19,19,19,.06); white-space: normal; }
+    .data-table.stack td::before { content: attr(data-label); color: var(--muted-on-sand); font-weight: 600; flex-shrink: 0; }
+    .data-table.stack td .cv { text-align: right; }
+    .data-table.stack td.room { font-size: var(--fs-body); }
+    .data-table.stack td.actions { border-bottom: none; padding-top: var(--sp-3); gap: var(--sp-2); }
+    .data-table.stack td.actions::before { content: none; }
+    .data-table.stack td.actions .btn-tool { flex: 1; padding-top: 10px; padding-bottom: 10px; }
+    .data-table.stack td.actions .btn-tool + .btn-tool { margin-left: 0; }
+    .data-table.stack tr:hover td { background: none; }
+    .data-table:not(.stack) td, .data-table:not(.stack) th { white-space: nowrap; }
+    .help-alert { flex-wrap: wrap; }
+    .help-alert .btn-tool { width: 100%; }
+  }
+</style>
+</head>
+<body class="tool-app">
+  <div class="tool-frame app">
+    <nav class="tool-sidebar" aria-label="Front desk">
+      <div class="brand">Front Desk</div>
+      <button type="button" class="tool-link" data-action="view" data-view="approvals" id="nav-approvals">Approvals <span class="n" id="nav-count"></span></button>
+      <button type="button" class="tool-link" data-action="view" data-view="oversight" id="nav-oversight">All departments</button>
+      <div class="shift"><strong>Fatima S.</strong>Front office<br><span id="shift-text">Shift until 3:00 PM</span></div>
+    </nav>
+    <main class="tool-main">
+      <div class="tool-topbar"><span class="title" id="topbar-title">Approvals</span><span class="who" id="topbar-who"></span></div>
+      <div class="alert-stack" id="alerts" aria-live="assertive"></div>
+      <div class="tool-content" id="content"></div>
+    </main>
+  </div>
+
+<script src="../shared/kira.js?v=4"></script>
+<script>
+(function () {
+  'use strict';
+
+  const S = Kira.store, F = Kira.fmt, esc = F.esc, toast = Kira.ui.toast;
+  const ME = 'Fatima S.';
+  const NEW_MS = 2400;          // how long a fresh row keeps its highlight
+  const URGENT_LIMIT = 8;       // oversight rows shown before "Show all"
+  const LANGS = { EN: 'English', AR: 'Arabic' };
+
+  const els = {
+    navApprovals: document.getElementById('nav-approvals'),
+    navOversight: document.getElementById('nav-oversight'),
+    navCount: document.getElementById('nav-count'),
+    shift: document.getElementById('shift-text'),
+    title: document.getElementById('topbar-title'),
+    who: document.getElementById('topbar-who'),
+    alerts: document.getElementById('alerts'),
+    content: document.getElementById('content')
+  };
+
+  // ---- UI state (module-level so live re-renders never lose it)
+  let view = location.hash === '#oversight' ? 'oversight' : 'approvals';   // 'approvals' | 'deny' | 'oversight'
+  let denyId = null;
+  let denyBuilt = false;
+  let showAllUrgent = false;
+
+  // ---- Change tracking
+  let seen = null;                 // Set of request keys already shown
+  let prevStatus = {};             // key -> last status we rendered
+  let seededAt = null;             // detects Kira.store.reset()
+  const newUntil = {};             // key -> timestamp until which the row is highlighted
+  const mine = new Set();          // ids whose next status change was made from this screen
+
+  const me = Kira.data.STAFF.filter(s => s.name === ME)[0];
+  if (me) els.shift.textContent = me.shift;
+
+  /* ---------------- Helpers ---------------- */
+
+  const keyOf = r => r.id + '@' + r.createdAt;
+  const isFresh = k => newUntil[k] && Date.now() < newUntil[k];
+  const feeOf = r => Number(r.fee) || 0;
+  const roomOf = (state, r) => (state.rooms && state.rooms[r.room]) || null;
+  const fromOf = (state, r) => r.from || (roomOf(state, r) && roomOf(state, r).checkout) || '11:00 AM';
+  const plural = (n, word) => n + ' ' + word + (n === 1 ? '' : 's');
+
+  function pendingOf(state) {
+    return state.requests
+      .filter(r => r.dept === 'checkout' && r.status === 'pending')
+      .sort((a, b) => b.createdAt - a.createdAt);           // newest first, as in the mockup
+  }
+
+  /** Next-arrival context for a checkout request: conflict when the incoming guest lands before the requested time. */
+  function arrivalOf(state, r) {
+    const room = roomOf(state, r);
+    const na = room && room.nextArrival;
+    if (!na) return { cls: 'badge-ok', label: 'None today', short: 'None today', time: null, conflict: false };
+    const conflict = F.hourOf(na) <= F.hourOf(r.to);
+    return conflict
+      ? { cls: 'badge-warn', label: na + ' · conflict', short: na, time: na, conflict: true }
+      : { cls: 'badge-ok', label: na + ' · clear', short: na, time: na, conflict: false };
+  }
+
+  /** When the decision on a checkout request was made (guest-side outcomes use their own timestamp). */
+  function decisionTime(r) {
+    if (r.status === 'declined' || r.status === 'cancelled') return r.updatedAt;
+    return r.decidedAt || r.updatedAt;
+  }
+
+  function decisionBadge(r) {
+    const fee = feeOf(r);
+    switch (r.status) {
+      case 'confirmed': return fee ? `<span class="badge badge-ok">Approved · ${esc(F.money(fee))}</span>` : '<span class="badge badge-ok">Approved</span>';
+      case 'approved':  return '<span class="badge badge-warn">Awaiting guest</span>';
+      case 'denied':    return '<span class="badge badge-err">Denied</span>';
+      case 'declined':  return '<span class="badge badge-muted">Guest declined</span>';
+      case 'cancelled': return '<span class="badge badge-muted">Cancelled</span>';
+      default:          return `<span class="badge badge-muted">${esc(S.statusLabel(r))}</span>`;
+    }
+  }
+
+  function decidedByOf(r) {
+    if (r.status === 'declined' || r.status === 'cancelled') return 'Guest';
+    return r.decidedBy || '—';
+  }
+
+  /** "2 · both completed on time" — the guest's other requests today. */
+  function priorRequests(state, r) {
+    const others = state.requests.filter(x => x.room === r.room && x.id !== r.id && x.dept !== 'help');
+    const n = others.length;
+    if (!n) return 'None';
+    const open = others.filter(S.isOpen).length;
+    const completed = others.filter(x => !S.isOpen(x) && ['delivered', 'done', 'confirmed'].indexOf(x.status) !== -1);
+    const late = completed.filter(x => x.updatedAt > x.createdAt + x.slaMin * 60000).length;
+    if (!open && completed.length === n && !late) {
+      return n === 1 ? '1 · completed on time' : n === 2 ? '2 · both completed on time' : n + ' · all completed on time';
+    }
+    const parts = [];
+    if (open) parts.push(open + ' open');
+    if (completed.length) parts.push(completed.length + ' completed' + (late ? ' (' + late + ' late)' : ''));
+    if (n - open - completed.length > 0) parts.push((n - open - completed.length) + ' closed');
+    return n + ' · ' + parts.join(', ');
+  }
+
+  /** Average minutes from request to first acceptance, read from each ticket's history. */
+  const ACCEPT = /^(Accepted|Started|Approved|Denied|Resolved|Assigned)\b/i;
+  function avgAcceptMin(state) {
+    let total = 0, n = 0;
+    state.requests.forEach(r => {
+      const h = (r.history || []).filter(e => ACCEPT.test(e.text))[0];
+      if (h && h.at >= r.createdAt) { total += h.at - r.createdAt; n++; }
+    });
+    return n ? total / n / 60000 : null;
+  }
+
+  function assignedOf(r) {
+    if (r.dept === 'dining' && r.status === 'out') return r.claimedBy || r.assignee || '—';
+    return r.assignee || r.decidedBy || r.claimedBy || '—';
+  }
+
+  /* ---------------- Sound: a soft chime on new arrivals ---------------- */
+
+  let audio = null;
+  function unlockAudio() {
+    if (audio) return;
+    try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audio = null; }
+  }
+  document.addEventListener('pointerdown', unlockAudio, { once: true });
+  document.addEventListener('keydown', unlockAudio, { once: true });
+  function chime(urgent) {
+    if (!audio) return;
+    try {
+      if (audio.state === 'suspended') audio.resume();
+      const notes = urgent ? [988, 740, 988, 740] : [660, 880];
+      notes.forEach((f, i) => {
+        const o = audio.createOscillator(), g = audio.createGain();
+        const t = audio.currentTime + i * (urgent ? 0.14 : 0.16);
+        o.type = urgent ? 'triangle' : 'sine';
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(urgent ? 0.2 : 0.14, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+        o.connect(g); g.connect(audio.destination);
+        o.start(t); o.stop(t + 0.34);
+      });
+    } catch (e) { /* sound is a nicety — never block the UI */ }
+  }
+
+  /* ---------------- Arrivals & guest-side changes ---------------- */
+
+  let prevDnd = null;
+  function dndRooms(state) { return Object.keys(state.rooms).filter(n => state.rooms[n].dnd && state.rooms[n].dnd.on); }
+  function detectDnd(state) {
+    const now = dndRooms(state);
+    if (prevDnd !== null) {
+      now.filter(n => !prevDnd.includes(n)).forEach(n => { toast(`Room ${n} turned on Do not disturb`, 'warn'); newUntil['dnd:' + n] = Date.now() + NEW_MS; chime(false); });
+      prevDnd.filter(n => !now.includes(n)).forEach(n => toast(`Room ${n} turned off Do not disturb`));
+    }
+    prevDnd = now;
+  }
+
+  function detectChanges(state) {
+    const reqs = state.requests;
+    if (seen === null || state.seededAt !== seededAt) {      // first render, or the demo was reset
+      prevDnd = dndRooms(state);
+      seen = new Set(reqs.map(keyOf));
+      prevStatus = {};
+      reqs.forEach(r => { prevStatus[keyOf(r)] = r.status; });
+      seededAt = state.seededAt;
+      return;
+    }
+    detectDnd(state);
+    let sound = null;
+    reqs.forEach(r => {
+      const k = keyOf(r);
+      if (!seen.has(k)) {
+        seen.add(k);
+        newUntil[k] = Date.now() + NEW_MS;
+        if (r.dept === 'help' && r.status === 'open') {
+          toast(r.kind === 'emergency' ? `Room ${r.room} — Emergency, guest pressed Help` : `Room ${r.room} — guest asked for a call-back`, 'err');
+          sound = 'urgent';
+        } else if (r.dept === 'checkout' && r.status === 'pending') {
+          toast(`New request — Room ${r.room}, late checkout → ${r.to}`, 'warn');
+          if (!sound) sound = 'soft';
+        } else if (view === 'oversight' && S.isOpen(r)) {
+          toast(`New ${S.deptLabel(r).toLowerCase()} request — Room ${r.room}`);
+        }
+      } else if (prevStatus[k] !== r.status) {
+        const was = prevStatus[k];
+        if (r.dept === 'checkout') newUntil['d:' + k] = Date.now() + NEW_MS;
+        if (mine.has(r.id)) {
+          mine.delete(r.id);
+        } else if (r.dept === 'checkout') {
+          if (r.status === 'confirmed' && was === 'approved') toast(`Room ${r.room} confirmed the ${F.money(feeOf(r))} fee — checkout now ${r.to}`, 'ok');
+          else if (r.status === 'declined') toast(`Room ${r.room} declined the fee — checkout stays at ${fromOf(state, r)}`);
+          else if (r.status === 'cancelled') toast(`Room ${r.room} withdrew the late checkout request`, 'warn');
+        } else if (r.dept === 'help' && r.status === 'resolved') {
+          toast(`Room ${r.room} help alert resolved`, 'ok');
+        }
+      }
+      prevStatus[k] = r.status;
+    });
+    if (sound) chime(sound === 'urgent');
+  }
+
+  /* ---------------- Regions ---------------- */
+
+  function renderChrome(state, pendingCount) {
+    const onApprovals = view !== 'oversight';
+    els.navApprovals.classList.toggle('active', onApprovals);
+    els.navOversight.classList.toggle('active', !onApprovals);
+    if (onApprovals) { els.navApprovals.setAttribute('aria-current', 'page'); els.navOversight.removeAttribute('aria-current'); }
+    else { els.navOversight.setAttribute('aria-current', 'page'); els.navApprovals.removeAttribute('aria-current'); }
+    els.navCount.textContent = pendingCount ? String(pendingCount) : '';
+
+    els.title.textContent = onApprovals ? 'Approvals' : 'All departments';
+    els.who.innerHTML = onApprovals
+      ? `${esc(F.time())} · ${pendingCount ? `<span class="badge badge-warn">${pendingCount} new</span>` : '<span class="badge badge-ok">All clear</span>'}`
+      : `${esc(F.time())} · read-only`;
+    document.title = (pendingCount ? '(' + pendingCount + ') ' : '') + 'Front Desk — Kira Concierge';
+  }
+
+  function dndHTML(state) {
+    const rooms = dndRooms(state).sort((a, b) => state.rooms[b].dnd.since - state.rooms[a].dnd.since);
+    if (!rooms.length) return '';
+    const chips = rooms.map(n => {
+      const r = state.rooms[n];
+      return `<span class="dnd-chip${isFresh('dnd:' + n) ? ' is-new' : ''}"><strong>Room ${esc(n)}</strong> · since ${esc(F.time(r.dnd.since))}${r.guest ? ' · ' + esc(r.guest) : ''}</span>`;
+    }).join('');
+    return `<div class="dnd-strip" role="status"><span class="dnd-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M7.5 12h9"/></svg>Do not disturb</span>${chips}</div>`;
+  }
+
+  function alertsHTML(state) {
+    const open = state.requests
+      .filter(r => r.dept === 'help' && r.status === 'open')
+      .sort((a, b) => (a.kind === 'emergency' ? 0 : 1) - (b.kind === 'emergency' ? 0 : 1) || b.createdAt - a.createdAt);
+    return open.map(r => {
+      const room = roomOf(state, r);
+      const emergency = r.kind === 'emergency';
+      const headline = emergency ? `Room ${r.room} — Emergency, guest pressed Help` : `Room ${r.room} — Call-back requested from the guest tablet`;
+      const meta = [room && room.guest, room && room.type, F.ago(r.createdAt) + ' · ' + F.time(r.createdAt)].filter(Boolean).join(' · ');
+      return `<div class="help-alert ${emergency ? 'err' : 'warn'}${isFresh(keyOf(r)) ? ' is-new' : ''}" role="alert">
+          <span class="pulse" aria-hidden="true"></span>
+          <div class="msg"><strong>${esc(headline)}</strong><span class="meta">${esc(meta)}</span></div>
+          <button type="button" class="btn-tool btn-tool-secondary" data-action="resolve" data-id="${esc(r.id)}">Mark resolved</button>
+        </div>`;
+    }).join('') + dndHTML(state);
+  }
+
+  function approvalsHTML(state, pending) {
+    const rows = pending.map(r => {
+      const a = arrivalOf(state, r);
+      const s = S.sla(r);
+      const fee = feeOf(r);
+      const room = esc(r.room);
+      return `<tr class="${isFresh(keyOf(r)) ? 'is-new' : ''}">
+          <td class="room" data-label="Room">${room}</td>
+          <td class="nw" data-label="Request"><span class="cv">Late checkout → ${esc(r.to)}<span class="sub">From ${esc(fromOf(state, r))}</span></span></td>
+          <td class="nw" data-label="Requested"><span class="cv">${esc(F.ago(r.createdAt))}${s && s.level !== 'ok' ? `<span class="sub sla-${s.level}">${esc(s.label)}</span>` : ''}</span></td>
+          <td data-label="Fee"><span class="cv">${fee ? esc(F.money(fee)) : 'No fee<span class="sub">Within policy</span>'}</span></td>
+          <td data-label="Next arrival"><span class="badge ${a.cls}">${esc(a.label)}</span></td>
+          <td class="actions"><button type="button" class="btn-tool btn-tool-secondary" data-action="deny" data-id="${esc(r.id)}" aria-label="Deny late checkout for room ${room}">Deny</button><button type="button" class="btn-tool btn-tool-primary" data-action="approve" data-id="${esc(r.id)}" aria-label="Approve late checkout for room ${room}">Approve</button></td>
+        </tr>`;
+    }).join('');
+
+    const pendingBlock = pending.length
+      ? `<div class="table-scroll"><table class="data-table stack">
+          <thead><tr><th>Room</th><th>Request</th><th>Requested</th><th>Fee</th><th>Next arrival</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>`
+      : `<div class="empty-state"><strong>No pending approvals</strong>New late-checkout requests from guest tablets appear here the moment they're sent.</div>`;
+
+    const decided = state.requests
+      .filter(r => r.dept === 'checkout' && r.status !== 'pending')
+      .sort((a, b) => decisionTime(b) - decisionTime(a));
+    const decidedRows = decided.map(r => `<tr class="${isFresh('d:' + keyOf(r)) ? 'is-new' : ''}"${r.reason ? ` title="Reason: ${esc(r.reason)}"` : ''}>
+          <td class="room">${esc(r.room)}</td><td>Late checkout → ${esc(r.to)}</td><td>${decisionBadge(r)}</td><td>${esc(decidedByOf(r))}</td><td class="nw">${esc(F.time(decisionTime(r)))}</td>
+        </tr>`).join('');
+    const decidedBlock = decided.length
+      ? `<div class="table-scroll"><table class="data-table">
+          <thead><tr><th>Room</th><th>Request</th><th>Decision</th><th>By</th><th>Time</th></tr></thead>
+          <tbody>${decidedRows}</tbody>
+        </table></div>`
+      : `<div class="empty-state"><strong>No decisions yet today</strong>Approved and denied requests are listed here, newest first.</div>`;
+
+    return `<div class="table-head"><p class="panel-title">Pending (${pending.length})</p><span class="hint">Standard checkout 11:00 AM · fee applies after 2:00 PM</span></div>
+      ${pendingBlock}
+      <div class="table-gap"></div>
+      <div class="table-head"><p class="panel-title">Decided today</p><span class="hint">${decided.length ? esc(plural(decided.length, 'decision')) + ' · newest first' : 'None yet'}</span></div>
+      ${decidedBlock}`;
+  }
+
+  function denyHTML(state, r) {
+    const room = roomOf(state, r) || {};
+    const a = arrivalOf(state, r);
+    const fee = feeOf(r);
+    const suggestion = a.conflict
+      ? `Room needed for incoming guest at ${a.time}`
+      : `We can't offer a later checkout today — we're happy to store your luggage until you leave.`;
+    const lang = LANGS[room.lang] ? ` (${LANGS[room.lang]})` : '';
+    const staying = room.nights ? `${plural(room.nights, 'night')} · checked in ${room.checkedIn}` : '—';
+    return `<p class="panel-title">Deny — Room ${esc(r.room)}, checkout extension</p>
+      <div class="deny-grid">
+        <div>
+          <div class="tool-form-row top"><label for="deny-reason">Reason for guest</label><textarea id="deny-reason" class="tool-input" maxlength="280" required aria-describedby="deny-help">${esc(suggestion)}</textarea></div>
+          <p class="field-help" id="deny-help" data-default="Required. Shown to the guest exactly as written, in their language${esc(lang)}.">Required. Shown to the guest exactly as written, in their language${esc(lang)}.</p>
+          <div class="panel-actions">
+            <button type="button" class="btn-tool btn-tool-secondary" data-action="deny-cancel">Cancel</button>
+            <button type="button" class="btn-tool btn-tool-primary" data-action="deny-confirm" id="deny-confirm">Confirm deny</button>
+          </div>
+        </div>
+        <div class="ticket-card">
+          <p class="summary-title">Request</p>
+          <div class="kv"><span class="k">Room</span><span class="v">${esc(r.room)}</span></div>
+          <div class="kv"><span class="k">Current checkout</span><span class="v">${esc(fromOf(state, r))}</span></div>
+          <div class="kv"><span class="k">Requested</span><span class="v">${esc(r.to)}</span></div>
+          <div class="kv"><span class="k">Fee</span><span class="v">${fee ? esc(F.money(fee)) : 'No fee'}</span></div>
+          <div class="kv"><span class="k">Next arrival</span><span class="v"><span class="badge ${a.cls}">${esc(a.short)}</span></span></div>
+        </div>
+        <div class="ticket-card">
+          <p class="summary-title">Guest</p>
+          <div class="kv"><span class="k">Name</span><span class="v">${esc(room.guest || '—')}</span></div>
+          <div class="kv"><span class="k">Room type</span><span class="v">${esc(room.type || '—')}</span></div>
+          <div class="kv"><span class="k">Loyalty tier</span><span class="v">${esc(room.tier || '—')}</span></div>
+          <div class="kv"><span class="k">Staying</span><span class="v">${esc(staying)}</span></div>
+          <div class="kv"><span class="k">Prior requests today</span><span class="v">${esc(priorRequests(state, r))}</span></div>
+        </div>
+      </div>`;
+  }
+
+  function oversightHTML(state) {
+    const now = Date.now();
+    const open = state.requests.filter(S.isOpen).map(r => {
+      const withGuest = r.dept === 'checkout' && r.status === 'approved';   // front desk's part is done
+      return { r, s: S.sla(r, now), withGuest };
+    });
+    const atRisk = open.filter(o => !o.withGuest && o.s && o.s.level === 'warn').length;
+    const overdue = open.filter(o => !o.withGuest && o.s && o.s.level === 'err').length;
+    const avg = avgAcceptMin(state);
+    const avgLabel = avg == null ? '—' : avg < 1 ? Math.round(avg * 60) + ' s' : avg.toFixed(1) + ' min';
+
+    open.sort((a, b) => {
+      const ka = a.withGuest || !a.s ? Infinity : a.s.minsLeft;
+      const kb = b.withGuest || !b.s ? Infinity : b.s.minsLeft;
+      return ka - kb || a.r.createdAt - b.r.createdAt;
+    });
+    const shown = showAllUrgent ? open : open.slice(0, URGENT_LIMIT);
+
+    const rows = shown.map(o => {
+      const r = o.r;
+      const flagged = !o.withGuest && o.s && o.s.level === 'err';
+      const cls = [flagged ? 'flagged' : '', isFresh(keyOf(r)) ? 'is-new' : ''].filter(Boolean).join(' ');
+      const slaBadge = o.withGuest
+        ? '<span class="badge badge-muted">With guest</span>'
+        : `<span class="badge badge-${o.s.level}">${esc(o.s.label)}</span>`;
+      return `<tr${cls ? ` class="${cls}"` : ''} title="${esc(S.summary(r))}">
+          <td class="room">${esc(r.room)}</td><td>${esc(S.deptLabel(r))}</td><td class="nw">${esc(r.ref || '#' + r.id)}</td><td>${slaBadge}</td><td class="nw">${esc(S.statusLabel(r))}</td><td class="nw">${esc(assignedOf(r))}</td>
+        </tr>`;
+    }).join('');
+
+    let hint = !open.length ? 'Nothing open'
+      : shown.length === open.length ? `Showing all ${open.length} open`
+      : `Showing ${shown.length} of ${open.length} open`;
+    if (open.length > URGENT_LIMIT) {
+      hint += `<button type="button" class="link-btn" data-action="toggle-urgent">${showAllUrgent ? 'Show fewer' : 'Show all'}</button>`;
+    }
+
+    const table = open.length
+      ? `<div class="table-scroll"><table class="data-table">
+          <thead><tr><th>Room</th><th>Department</th><th>Request</th><th>SLA</th><th>Status</th><th>Assigned</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table></div>`
+      : `<div class="empty-state"><strong>All caught up</strong>No open requests in any department right now.</div>`;
+
+    return `<div class="stat-grid">
+        <div class="stat-tile"><div class="value">${open.length}</div><div class="label">Open requests</div></div>
+        <div class="stat-tile"><div class="value${atRisk ? ' warn' : ''}">${atRisk}</div><div class="label">At risk (under 5 min)</div></div>
+        <div class="stat-tile"><div class="value${overdue ? ' err' : ''}">${overdue}</div><div class="label">Overdue</div></div>
+        <div class="stat-tile"><div class="value">${esc(avgLabel)}</div><div class="label">Avg. time to accept</div></div>
+      </div>
+      <div class="table-head"><p class="panel-title">Most urgent first</p><span class="hint">${hint}</span></div>
+      ${table}`;
+  }
+
+  /** Swap a region's markup but keep keyboard focus on the same control if it still exists. */
+  function swap(el, html) {
+    const a = document.activeElement;
+    let sel = null;
+    if (a && a !== document.body && el.contains(a) && a.dataset && a.dataset.action) {
+      sel = '[data-action="' + CSS.escape(a.dataset.action) + '"]' + (a.dataset.id ? '[data-id="' + CSS.escape(a.dataset.id) + '"]' : '');
+    }
+    el.innerHTML = html;
+    if (sel) { const n = el.querySelector(sel); if (n) n.focus({ preventScroll: true }); }
+  }
+
+  /* ---------------- Render ---------------- */
+
+  function render() {
+    const state = S.get();
+    detectChanges(state);
+    const pending = pendingOf(state);
+
+    // The request being denied disappeared or was decided elsewhere → leave the form.
+    if (view === 'deny') {
+      const r = S.find(denyId);
+      if (!r || r.status !== 'pending') {
+        if (!r || r.status !== 'cancelled') toast('That request was already handled elsewhere', 'warn');
+        view = 'approvals'; denyId = null; denyBuilt = false;
+      }
+    }
+
+    renderChrome(state, pending.length);
+    swap(els.alerts, alertsHTML(state));
+
+    if (view === 'deny') {
+      if (!denyBuilt) {                      // build once; never rebuild while she's typing
+        els.content.innerHTML = denyHTML(state, S.find(denyId));
+        denyBuilt = true;
+        const ta = document.getElementById('deny-reason');
+        ta.focus();
+        ta.setSelectionRange(ta.value.length, ta.value.length);
+        validateDeny();
+      }
+      return;
+    }
+    swap(els.content, view === 'oversight' ? oversightHTML(state) : approvalsHTML(state, pending));
+  }
+
+  /* ---------------- Actions ---------------- */
+
+  function setView(v) {
+    view = v; denyId = null; denyBuilt = false;
+    try { history.replaceState(null, '', v === 'oversight' ? '#oversight' : location.pathname + location.search); } catch (e) {}
+    render();
+    window.scrollTo(0, 0);
+  }
+
+  function approve(id) {
+    const r = S.find(id);
+    if (!r || r.status !== 'pending') { toast('That request was already handled', 'warn'); return; }
+    const fee = feeOf(r);
+    const now = Date.now();
+    mine.add(id);
+    if (fee) {
+      S.setStatus(id, 'approved', { text: `Approved by ${ME} — ${F.money(fee)}`, patch: { decidedBy: ME, decidedAt: now } });
+      toast(`Approved — guest asked to confirm the ${F.money(fee)} fee`, 'ok');
+    } else {
+      S.setStatus(id, 'confirmed', { text: `Approved by ${ME} — no fee`, patch: { decidedBy: ME, decidedAt: now } });
+      S.update(s => { if (s.rooms[r.room]) s.rooms[r.room].checkout = r.to; });
+      toast(`Approved — Room ${r.room} checkout now ${r.to}, no fee`, 'ok');
+    }
+  }
+
+  function openDeny(id) {
+    const r = S.find(id);
+    if (!r || r.status !== 'pending') { toast('That request was already handled', 'warn'); return; }
+    view = 'deny'; denyId = id; denyBuilt = false;
+    render();
+    window.scrollTo(0, 0);
+  }
+
+  function validateDeny() {
+    const ta = document.getElementById('deny-reason');
+    const btn = document.getElementById('deny-confirm');
+    const help = document.getElementById('deny-help');
+    if (!ta || !btn) return false;
+    const ok = ta.value.trim().length > 0;
+    btn.disabled = !ok;
+    ta.setAttribute('aria-invalid', ok ? 'false' : 'true');
+    help.classList.toggle('err', !ok);
+    help.textContent = ok ? help.dataset.default : 'A reason is required before you can deny — the guest sees it exactly as written.';
+    return ok;
+  }
+
+  function confirmDeny() {
+    if (!validateDeny()) { document.getElementById('deny-reason').focus(); return; }
+    const id = denyId;
+    const r = S.find(id);
+    const reason = document.getElementById('deny-reason').value.trim();
+    view = 'approvals'; denyId = null; denyBuilt = false;    // leave the form before the store re-renders
+    if (!r || r.status !== 'pending') { toast('That request was already handled elsewhere', 'warn'); render(); return; }
+    mine.add(id);
+    S.setStatus(id, 'denied', { text: `Denied by ${ME}`, patch: { reason, decidedBy: ME, decidedAt: Date.now() } });
+    toast(`Denied — Room ${r.room} sees your reason on their tablet`);
+    window.scrollTo(0, 0);
+  }
+
+  function cancelDeny() { setView('approvals'); }
+
+  function resolveHelp(id) {
+    const r = S.find(id);
+    if (!r || r.status !== 'open') { toast('Already resolved', 'warn'); return; }
+    mine.add(id);
+    S.setStatus(id, 'resolved', { text: `Resolved by ${ME}`, patch: { resolvedBy: ME, resolvedAt: Date.now() } });
+    toast(`Room ${r.room} alert resolved`, 'ok');
+  }
+
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-action]');
+    if (!b || b.disabled) return;
+    const id = b.dataset.id;
+    switch (b.dataset.action) {
+      case 'view':          setView(b.dataset.view); break;
+      case 'approve':       approve(id); break;
+      case 'deny':          openDeny(id); break;
+      case 'deny-cancel':   cancelDeny(); break;
+      case 'deny-confirm':  confirmDeny(); break;
+      case 'resolve':       resolveHelp(id); break;
+      case 'toggle-urgent': showAllUrgent = !showAllUrgent; render(); break;
+    }
+  });
+
+  document.addEventListener('input', e => { if (e.target.id === 'deny-reason') validateDeny(); });
+
+  document.addEventListener('keydown', e => {
+    if (view !== 'deny') return;
+    if (e.key === 'Escape') { e.preventDefault(); cancelDeny(); }
+    else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && e.target.id === 'deny-reason') { e.preventDefault(); confirmDeny(); }
+  });
+
+  window.addEventListener('hashchange', () => {
+    const v = location.hash === '#oversight' ? 'oversight' : 'approvals';
+    if (v !== (view === 'deny' ? 'approvals' : view)) setView(v);
+  });
+
+  /* ---------------- Boot ---------------- */
+
+  Kira.ui.launcherPill('../index.html');
+  S.subscribe(render);
+  Kira.ui.every(render);
+})();
+</script>
+</body>
+</html>

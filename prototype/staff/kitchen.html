@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kitchen display — Kira Concierge</title>
+<link rel="stylesheet" href="../shared/tokens.css?v=3">
+<link rel="stylesheet" href="../shared/proto.css?v=3">
+<style>
+  /* Page-scoped refinements layered on tokens.css (tool mode). — verbatim from mockups/html/staff-kitchen.html */
+  .tool-topbar .who { display: flex; align-items: center; gap: var(--sp-2); }
+  .tool-topbar .title { font-weight: 600; color: var(--ink-on-sand); }
+  .tool-sidebar .shift { margin-top: var(--sp-6); padding-top: var(--sp-4); border-top: 1px solid rgba(255,255,255,.12); font-size: 12px; color: var(--muted-on-dark); line-height: 1.5; }
+  .tool-sidebar .shift strong { display: block; color: var(--ink-on-dark); font-weight: 600; }
+  .ticket-top > span:first-child { display: flex; flex-direction: column; line-height: 1.3; min-width: 0; }
+  .ticket-top .badge { white-space: nowrap; flex-shrink: 0; }
+  .ticket-top .room { font-weight: 700; }
+  .ticket-top .rid { font-weight: 500; font-size: 12px; color: var(--muted-on-sand); }
+  .ticket-tags { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-top: var(--sp-2); }
+  .ticket-card.muted { opacity: .8; }
+  .kanban .ticket-card { cursor: pointer; transition: box-shadow .15s, border-color .15s, transform .15s; }
+  .kanban .ticket-card:hover { box-shadow: 0 6px 16px -8px rgba(19,19,19,.3); border-color: rgba(140,78,246,.4); transform: translateY(-1px); }
+  .detail-head { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-5); }
+  .detail-head .panel-title { margin-bottom: 0; font-size: var(--fs-h2); }
+  .detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: var(--sp-5); align-items: start; }
+  .detail-stepper { margin-bottom: var(--sp-5); max-width: 520px; }
+  .detail-rows .tool-form-row { align-items: flex-start; padding-bottom: var(--sp-3); border-bottom: 1px solid rgba(19,19,19,.06); }
+  .detail-rows .tool-form-row:last-child { border-bottom: none; }
+  .detail-rows .tool-form-row label { width: 120px; }
+  .history-title { font-size: var(--fs-small); font-weight: 700; color: var(--muted-on-sand); margin-bottom: var(--sp-3); }
+  .history { list-style: none; margin: 0; padding: 0; font-size: 12px; }
+  .history li { display: flex; gap: var(--sp-3); padding: 6px 0; border-bottom: 1px solid rgba(19,19,19,.06); }
+  .history li:last-child { border-bottom: none; }
+  .history time { color: var(--muted-on-sand); width: 34px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+  /* ---- Prototype additions ---- */
+  .detail-stepper { align-items: flex-start; } /* keep dots aligned when a label wraps */
+  .detail-stepper .t-line { margin: 6px 0 0; }
+  #nav { display: contents; } /* links behave as direct sidebar children (proto.css turns the sidebar into a row on narrow screens) */
+  .kanban .ticket-card:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+  .ticket-card.muted .ticket-top .badge { background: rgba(19,19,19,.07); color: var(--muted-on-sand); }
+  .detail-head .badge { white-space: nowrap; }
+  .detail-rows .tool-form-row > span { min-width: 0; }
+  .detail-rows .tag-line { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+  .detail-rows .muted-val { color: var(--muted-on-sand); }
+  .panel-actions { flex-wrap: wrap; align-items: center; }
+  .btn-tool-danger { background: transparent; border: 1px solid rgba(239,68,68,.35); color: var(--err); }
+  .btn-tool-danger:hover:not(:disabled) { background: rgba(239,68,68,.07); border-color: rgba(239,68,68,.55); }
+  .reject-form { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); width: 100%; justify-content: flex-end; }
+  .reject-form label { font-size: var(--fs-small); font-weight: 600; color: var(--err); }
+  .reject-form .tool-input { min-width: 220px; }
+  .reject-reasons { display: flex; flex-wrap: wrap; gap: var(--sp-1); width: 100%; justify-content: flex-end; order: 5; }
+  .reject-reasons .tab-chip { cursor: pointer; font-size: 12px; padding: 3px 12px; }
+  .reject-reasons .tab-chip:hover { border-color: rgba(19,19,19,.35); color: var(--ink-on-sand); }
+  .completed-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-4); }
+  .completed-head .panel-title { margin-bottom: 0; font-size: var(--fs-h2); }
+  .data-table tr[data-open] { cursor: pointer; }
+  .data-table td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .data-table td.items { min-width: 220px; }
+
+  @media (max-width: 860px) {
+    .detail-grid { grid-template-columns: minmax(0, 1fr); }
+    .detail-head { flex-wrap: wrap; }
+    .detail-rows .tool-form-row { flex-direction: column; gap: var(--sp-1); }
+    .detail-rows .tool-form-row label { width: auto; }
+    .panel-actions .btn-tool { flex: 1 1 auto; min-height: 44px; }
+    .reject-form .tool-input { min-width: 0; max-width: none; flex: 1 1 100%; }
+    .reject-form { justify-content: flex-start; }
+    .reject-form label { width: 100%; }
+    .reject-reasons { justify-content: flex-start; order: 0; }
+    .tool-frame.app .tool-content { padding-bottom: 64px; } /* room for the launcher pill */
+  }
+</style>
+</head>
+<body class="tool-app">
+  <div class="tool-frame app">
+    <nav class="tool-sidebar" aria-label="Kitchen">
+      <div class="brand">Kitchen</div>
+      <div id="nav"></div>
+      <div class="shift" id="shift"></div>
+    </nav>
+    <main class="tool-main">
+      <div class="tool-topbar" id="topbar"></div>
+      <div class="tool-content" id="content"></div>
+    </main>
+  </div>
+
+<script src="../shared/kira.js?v=4"></script>
+<script>
+(function () {
+  'use strict';
+  var S = Kira.store, F = Kira.fmt, esc = F.esc;
+  var ME = 'Ahmed R.';
+  var me = Kira.data.STAFF.filter(function (s) { return s.name === ME; })[0] || { name: ME, shift: '' };
+
+  /* ---------- View state (never kept in the DOM) ---------- */
+  var view = 'queue';          // 'queue' | 'detail' | 'completed'
+  var returnView = 'queue';    // where "Back" goes from the detail view
+  var selectedId = null;
+  var rejecting = false;       // inline reject form open
+  var rejectDraft = '';
+  var seen = null;             // Set of dining ids already rendered once
+  var prevStatus = {};         // id -> status at last render
+  var freshIds = {};           // ids to flag .is-new on this render
+  var localChange = false;     // true while this screen is the one writing
+
+  var $ = function (id) { return document.getElementById(id); };
+  /** Only touch the DOM when the markup actually changed — keeps focus, hover and typing intact. */
+  function setHTML(el, html) {
+    if (!el || el._html === html) return;
+    var a = document.activeElement, sel = null;
+    if (a && a !== document.body && el.contains(a) && a.hasAttribute('data-act')) {
+      sel = '[data-act="' + a.getAttribute('data-act') + '"]' + (a.hasAttribute('data-id') ? '[data-id="' + CSS.escape(a.getAttribute('data-id')) + '"]' : '');
+    }
+    el.innerHTML = html; el._html = html;
+    if (sel) { var n = el.querySelector(sel); if (n) n.focus({ preventScroll: true }); }
+  }
+
+  /* ---------- Helpers ---------- */
+  function dining(state) { return state.requests.filter(function (r) { return r.dept === 'dining'; }); }
+  function histAt(r, prefix) {
+    for (var i = r.history.length - 1; i >= 0; i--) if (r.history[i].text.indexOf(prefix) === 0) return r.history[i].at;
+    return null;
+  }
+  function startedAt(r) { return r.startedAt || histAt(r, 'Started') || r.updatedAt; }
+  function readyAt(r) { return r.readyAt || histAt(r, 'Marked ready') || r.updatedAt; }
+  function claimedAt(r) { return r.claimedAt || histAt(r, 'Claimed') || r.updatedAt; }
+  function isToday(ts) { return new Date(ts).toDateString() === new Date().toDateString(); }
+  function itemLine(i) { return i.qty + '× ' + i.name + (i.note ? ' (' + i.note.toLowerCase() + ')' : ''); }
+  function urgency(r) { var s = S.sla(r); return s ? s.minsLeft : Infinity; }
+  function byUrgency(a, b) { return urgency(a) - urgency(b); }
+  function dishAllergens(r) {
+    var out = [];
+    r.items.forEach(function (i) {
+      String(i.allergens || '').split(',').forEach(function (a) {
+        a = a.trim().toLowerCase();
+        if (a && out.indexOf(a) < 0) out.push(a);
+      });
+    });
+    return out;
+  }
+  function allergyTags(r) {
+    return (r.guestAllergies || []).map(function (a) { return '<span class="badge badge-err">Allergy: ' + esc(a) + '</span>'; }).join('');
+  }
+  function label(r) { return r.status === 'cancelled' && r.rejectedBy ? 'Rejected' : S.statusLabel(r); }
+  function act(fn) { localChange = true; try { return fn(); } finally { localChange = false; } }
+
+  /* ---------- Sound: short chime on new orders (after first interaction) ---------- */
+  var audioCtx = null;
+  function armAudio() {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    } catch (e) { audioCtx = null; }
+  }
+  document.addEventListener('pointerdown', armAudio);
+  document.addEventListener('keydown', armAudio);
+  function chime() {
+    if (!audioCtx || audioCtx.state !== 'running') return;
+    try {
+      var t = audioCtx.currentTime;
+      [880, 1318.5].forEach(function (f, i) {
+        var o = audioCtx.createOscillator(), g = audioCtx.createGain(), s = t + i * 0.15;
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, s);
+        g.gain.exponentialRampToValueAtTime(0.16, s + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, s + 0.5);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(s); o.stop(s + 0.55);
+      });
+    } catch (e) {}
+  }
+
+  /* ---------- Live-change detection (toasts, highlight) ---------- */
+  function detectChanges(list) {
+    freshIds = {};
+    if (!seen) {
+      seen = new Set();
+      list.forEach(function (r) { seen.add(r.id); prevStatus[r.id] = r.status; });
+      return;
+    }
+    var ring = false;
+    list.forEach(function (r) {
+      var before = prevStatus[r.id];
+      if (!seen.has(r.id)) {
+        seen.add(r.id);
+        if (r.status === 'incoming') {
+          freshIds[r.id] = true;
+          Kira.ui.toast('New order — Room ' + r.room, 'ok');
+          ring = true;
+        }
+      } else if (!localChange && before && before !== r.status) {
+        if (before === 'ready' && r.status === 'out') Kira.ui.toast('Room ' + r.room + ' picked up by ' + (r.claimedBy || 'waiter'));
+        else if (r.status === 'cancelled') Kira.ui.toast('Order ' + r.ref + ' — Room ' + r.room + ' was cancelled', 'warn');
+      }
+      prevStatus[r.id] = r.status;
+    });
+    // Forget ids that vanished (e.g. after a demo reset) so a re-used id still counts as new.
+    var live = {};
+    list.forEach(function (r) { live[r.id] = 1; });
+    seen.forEach(function (id) { if (!live[id]) { seen.delete(id); delete prevStatus[id]; } });
+    if (ring) chime();
+  }
+
+  /* ---------- Render ---------- */
+  function render() {
+    var state = S.get();
+    var list = dining(state);
+    detectChanges(list);
+
+    if (view === 'detail' && !S.find(selectedId)) { view = returnView; selectedId = null; rejecting = false; }
+
+    renderNav();
+    renderTopbar(list);
+    if (view === 'queue') renderQueue(list);
+    else if (view === 'detail') renderDetail(S.find(selectedId));
+    else renderCompleted(list);
+  }
+
+  function renderNav() {
+    var navActive = view === 'detail' ? returnView : view;
+    setHTML($('nav'),
+      '<button type="button" class="tool-link' + (navActive === 'queue' ? ' active' : '') + '" data-act="nav" data-view="queue"' + (navActive === 'queue' ? ' aria-current="page"' : '') + '>Order queue</button>' +
+      '<button type="button" class="tool-link' + (navActive === 'completed' ? ' active' : '') + '" data-act="nav" data-view="completed"' + (navActive === 'completed' ? ' aria-current="page"' : '') + '>Completed today</button>');
+    setHTML($('shift'), '<strong>' + esc(me.name) + '</strong>In-room dining<br>' + esc(me.shift));
+  }
+
+  function renderTopbar(list) {
+    var n = list.filter(function (r) { return r.status === 'incoming'; }).length;
+    var title = (view === 'completed' || (view === 'detail' && returnView === 'completed')) ? 'Completed today — In-room dining' : 'Order queue — In-room dining';
+    setHTML($('topbar'),
+      '<span class="title">' + title + '</span>' +
+      '<span class="who">' + F.time() + ' · <span class="badge ' + (n ? 'badge-warn' : 'badge-ok') + '">' + n + ' new</span></span>');
+  }
+
+  function card(r) {
+    var s = S.sla(r);
+    var muted = r.status === 'out';
+    var level = s ? s.level : 'ok';
+    var badge, meta;
+    if (r.status === 'ready') { badge = '<span class="badge badge-' + level + '">Awaiting pickup</span>'; meta = 'Ready ' + F.clock(readyAt(r)) + ' · waiter notified'; }
+    else if (muted) { badge = '<span class="badge">Out for delivery</span>'; meta = 'Picked up by ' + esc(r.claimedBy || 'waiter') + ' · ' + F.clock(claimedAt(r)); }
+    else {
+      badge = '<span class="badge badge-' + level + '">' + esc(s ? s.label : S.statusLabel(r)) + '</span>';
+      meta = r.status === 'incoming'
+        ? (r.channel === 'voice' ? 'Ordered via voice' : 'Ordered via in-room tablet')
+        : 'Started ' + F.clock(startedAt(r)) + ' · ' + esc(r.assignee || ME);
+      if (r.deliveryNote) meta += ' · delivery note attached';
+    }
+    var urgent = !muted && (level === 'warn' || level === 'err');
+    var tags = allergyTags(r);
+    return '<div class="ticket-card' + (urgent ? ' urgent' : '') + (muted ? ' muted' : '') + (freshIds[r.id] ? ' is-new' : '') + '"' +
+      ' role="button" tabindex="0" data-act="open" data-id="' + esc(r.id) + '" aria-label="Open order ' + esc(r.ref) + ', room ' + esc(r.room) + '">' +
+        '<div class="ticket-top"><span><span class="room">Room ' + esc(r.room) + '</span> <span class="rid">' + esc(r.ref) + '</span></span>' + badge + '</div>' +
+        '<div class="ticket-items">' + esc(S.summary(r)) + '</div>' +
+        '<div class="ticket-meta">' + meta + '</div>' +
+        (r.translatedFrom && !muted ? '<div class="ticket-note">Guest ordered in ' + esc(r.translatedFrom) + ' — translated automatically</div>' : '') +
+        (tags ? '<div class="ticket-tags">' + tags + '</div>' : '') +
+      '</div>';
+  }
+
+  function column(title, cards, count, emptyText) {
+    return '<h4>' + title + ' <span class="count">(' + count + ')</span></h4>' +
+      (cards.length ? cards.map(card).join('') : '<div class="kanban-empty">' + emptyText + '</div>');
+  }
+
+  function renderQueue(list) {
+    var content = $('content');
+    setHTML(content, '<div class="kanban"><div class="kanban-col" id="col-in"></div><div class="kanban-col" id="col-prep"></div><div class="kanban-col" id="col-ready"></div></div>');
+    var of = function (st) { return list.filter(function (r) { return r.status === st; }); };
+    var incoming = of('incoming').sort(byUrgency);
+    var preparing = of('preparing').sort(byUrgency);
+    var ready = of('ready').sort(byUrgency);
+    var out = of('out').sort(function (a, b) { return claimedAt(a) - claimedAt(b); });
+    setHTML($('col-in'), column('Incoming', incoming, incoming.length, 'No new orders'));
+    setHTML($('col-prep'), column('Preparing', preparing, preparing.length, 'Nothing on the pass'));
+    setHTML($('col-ready'), column('Ready', ready.concat(out), ready.length, 'Nothing awaiting pickup'));
+  }
+
+  var STEPS = ['Accepted', 'Preparing', 'Ready', 'Delivered'];
+  var STEP_AT = { incoming: 0, preparing: 1, ready: 2, out: 3, delivered: 4 };
+  function stepper(r) {
+    var at = r.status in STEP_AT ? STEP_AT[r.status] : -1;
+    return STEPS.map(function (label, i) {
+      var cls = at < 0 ? '' : i < at ? ' done' : i === at ? ' active' : '';
+      return (i ? '<div class="t-line' + (at >= 0 && i <= at ? ' done' : '') + '"></div>' : '') +
+        '<div class="t-step"><div class="t-dot' + cls + '"></div><div class="t-label' + (cls === ' active' ? ' active' : '') + '">' +
+        (i === 3 && r.status === 'out' ? 'Out for delivery' : label) + '</div></div>';
+    }).join('');
+  }
+
+  function renderDetail(r) {
+    var content = $('content');
+    setHTML(content,
+      '<div class="detail-head" id="d-head"></div>' +
+      '<div class="t-stepper detail-stepper" id="d-step" aria-label="Order progress"></div>' +
+      '<div class="detail-grid"><div class="detail-rows" id="d-rows"></div><div class="ticket-card" id="d-hist"></div></div>' +
+      '<div class="panel-actions" id="d-actions"></div>');
+
+    var s = S.sla(r);
+    var headBadge = s
+      ? '<span class="badge badge-' + s.level + '">' + esc(s.minsLeft >= 0 ? s.label.replace(' left', ' remaining') : s.label) + '</span>'
+      : '<span class="badge ' + (r.status === 'cancelled' ? 'badge-err' : 'badge-ok') + '">' + esc(label(r)) + ' · ' + F.clock(r.updatedAt) + '</span>';
+    setHTML($('d-head'), '<p class="panel-title">Order ' + esc(r.ref) + ' — Room ' + esc(r.room) + '</p>' + headBadge);
+
+    setHTML($('d-step'), r.status === 'cancelled'
+      ? '<span class="badge badge-err">' + (r.rejectedBy ? 'Rejected by kitchen' : 'Order cancelled') + ' — no further steps</span>'
+      : stepper(r));
+
+    // Allergens: guest-declared vs. dish (menu standard)
+    var guest = r.guestAllergies || [];
+    var dish = dishAllergens(r);
+    var conflicts = [];
+    guest.forEach(function (g) {
+      var gl = String(g).toLowerCase();
+      r.items.forEach(function (i) {
+        if (String(i.allergens || '').toLowerCase().indexOf(gl) >= 0) conflicts.push('<span class="badge badge-err">Check: ' + esc(i.name) + ' lists ' + esc(gl) + '</span>');
+      });
+    });
+    var allergens =
+      '<span class="tag-line">' + (guest.length
+        ? guest.map(function (a) { return '<span class="badge badge-err">Guest allergy: ' + esc(a) + '</span>'; }).join('') + conflicts.join('')
+        : '<span class="badge badge-ok">No guest allergies declared</span>') + '</span>' +
+      '<span class="ticket-meta" style="display:block">' + (dish.length ? 'Dish contains ' + esc(dish.join(', ')) + ' (menu standard)' : 'No listed allergens in these dishes (menu standard)') + '</span>';
+
+    var note = r.deliveryNote
+      ? '"' + esc(r.deliveryNote) + '"' + (r.translatedFrom ? '<br><span class="ticket-meta">Translated from ' + esc(r.translatedFrom) + '</span>' : '')
+      : '<span class="muted-val">None</span>';
+
+    var rows =
+      '<div class="tool-form-row"><label>Items</label><span>' + r.items.map(function (i) { return esc(itemLine(i)); }).join('<br>') + '</span></div>' +
+      '<div class="tool-form-row"><label>Allergens</label><span>' + allergens + '</span></div>' +
+      '<div class="tool-form-row"><label>Delivery note</label><span>' + note + '</span></div>' +
+      '<div class="tool-form-row"><label>Order total</label><span>' + F.money(r.total) + ' · charged to room</span></div>';
+    if (r.status === 'cancelled' && r.reason) rows += '<div class="tool-form-row"><label>Rejected</label><span>' + esc(r.reason) + '</span></div>';
+    setHTML($('d-rows'), rows);
+
+    setHTML($('d-hist'), '<p class="history-title">Ticket history</p><ul class="history">' +
+      r.history.map(function (h) { return '<li><time>' + F.clock(h.at) + '</time><span>' + esc(h.text) + '</span></li>'; }).join('') + '</ul>');
+
+    if (rejecting && r.status !== 'incoming') rejecting = false;
+    var back = '<button type="button" class="btn-tool btn-tool-secondary" data-act="back">' + (returnView === 'completed' ? 'Back to completed' : 'Back to queue') + '</button>';
+    var actions;
+    if (rejecting) {
+      actions =
+        '<div class="reject-form">' +
+          '<label for="reject-reason">Reason for the guest</label>' +
+          '<input class="tool-input" id="reject-reason" type="text" maxlength="120" autocomplete="off" placeholder="e.g. Item unavailable tonight">' +
+          '<div class="reject-reasons" aria-label="Quick reasons">' +
+            ['Item unavailable', 'Kitchen closing', 'Allergy cannot be guaranteed'].map(function (q) {
+              return '<button type="button" class="tab-chip" data-act="reject-quick" data-reason="' + esc(q) + '">' + esc(q) + '</button>';
+            }).join('') +
+          '</div>' +
+          '<button type="button" class="btn-tool btn-tool-secondary" data-act="reject-cancel">Keep order</button>' +
+          '<button type="button" class="btn-tool btn-tool-danger" data-act="reject-confirm">Reject order</button>' +
+        '</div>';
+    } else if (r.status === 'incoming') {
+      actions = back +
+        '<button type="button" class="btn-tool btn-tool-danger" data-act="reject">Reject order</button>' +
+        '<button type="button" class="btn-tool btn-tool-primary" data-act="start">Start preparing</button>';
+    } else if (r.status === 'preparing') {
+      actions = back + '<button type="button" class="btn-tool btn-tool-primary" data-act="ready">Mark ready</button>';
+    } else if (r.status === 'ready') {
+      actions = back + '<button type="button" class="btn-tool btn-tool-primary" disabled>Waiting for waiter pickup</button>';
+    } else if (r.status === 'out') {
+      actions = back + '<button type="button" class="btn-tool btn-tool-primary" disabled>Out for delivery — ' + esc(r.claimedBy || 'waiter') + '</button>';
+    } else {
+      actions = back;   // closed ticket: read-only
+    }
+    var box = $('d-actions');
+    var wasBuilt = box._html === actions;
+    setHTML(box, actions);
+    if (rejecting && !wasBuilt) {
+      var input = $('reject-reason');
+      input.value = rejectDraft;
+      input.focus();
+    }
+  }
+
+  function renderCompleted(list) {
+    var done = list.filter(function (r) { return (r.status === 'delivered' || r.status === 'cancelled') && isToday(r.updatedAt); })
+      .sort(function (a, b) { return b.updatedAt - a.updatedAt; });
+    var delivered = done.filter(function (r) { return r.status === 'delivered'; });
+    var revenue = delivered.reduce(function (s, r) { return s + r.total; }, 0);
+    var head = '<div class="completed-head"><p class="panel-title">Completed today</p><span class="ticket-meta">' +
+      delivered.length + ' delivered · ' + (done.length - delivered.length) + ' rejected or cancelled · ' + F.money(revenue) + ' charged to rooms</span></div>';
+    if (!done.length) {
+      setHTML($('content'), head + '<div class="kanban-empty">No completed orders yet today. Delivered and rejected orders land here.</div>');
+      return;
+    }
+    setHTML($('content'), head + '<div class="table-scroll"><table class="data-table"><thead><tr>' +
+      '<th>Room</th><th>Order</th><th>Items</th><th>Total</th><th>Completed</th><th>Status</th></tr></thead><tbody>' +
+      done.map(function (r) {
+        return '<tr data-act="open" data-id="' + esc(r.id) + '" tabindex="0" aria-label="Open order ' + esc(r.ref) + ', room ' + esc(r.room) + '">' +
+          '<td><strong>' + esc(r.room) + '</strong></td>' +
+          '<td>' + esc(r.ref) + '</td>' +
+          '<td class="items">' + esc(S.summary(r)) + '</td>' +
+          '<td class="num">' + F.money(r.total) + '</td>' +
+          '<td class="num">' + F.time(r.updatedAt) + '</td>' +
+          '<td><span class="badge ' + (r.status === 'delivered' ? 'badge-ok' : 'badge-err') + '">' + esc(label(r)) + '</span></td></tr>';
+      }).join('') + '</tbody></table></div>');
+  }
+
+  /* ---------- Actions ---------- */
+  function guard(id, expected) {
+    var r = S.find(id);
+    if (!r) { Kira.ui.toast('That order no longer exists', 'err'); return null; }
+    if (r.status !== expected) { Kira.ui.toast('Already updated — now ' + S.statusLabel(r), 'warn'); render(); return null; }
+    return r;
+  }
+
+  function open(id) {
+    var r = S.find(id);
+    if (!r) return;
+    if (view !== 'detail') returnView = view;
+    view = 'detail'; selectedId = id; rejecting = false; rejectDraft = '';
+    render();
+    window.scrollTo(0, 0);
+  }
+  function back() { view = returnView; selectedId = null; rejecting = false; rejectDraft = ''; render(); }
+
+  function confirmReject() {
+    var reason = rejectDraft.trim();
+    if (!reason) { Kira.ui.toast('Add a short reason — the guest sees it', 'warn'); var i = $('reject-reason'); if (i) i.focus(); return; }
+    var r = guard(selectedId, 'incoming');
+    if (!r) { rejecting = false; render(); return; }
+    act(function () {
+      S.setStatus(r.id, 'cancelled', { text: 'Rejected by kitchen — ' + reason, patch: { reason: reason, rejectedBy: ME } });
+    });
+    Kira.ui.toast('Order ' + r.ref + ' rejected — guest notified', 'warn');
+    rejecting = false; rejectDraft = '';
+    view = 'queue'; returnView = 'queue'; selectedId = null;
+    render();
+  }
+
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-act]');
+    if (!el || el.disabled) return;
+    var a = el.getAttribute('data-act');
+    if (a === 'nav') { view = el.getAttribute('data-view'); returnView = view; selectedId = null; rejecting = false; render(); }
+    else if (a === 'open') open(el.getAttribute('data-id'));
+    else if (a === 'back') back();
+    else if (a === 'start') {
+      var r = guard(selectedId, 'incoming'); if (!r) return;
+      act(function () { S.setStatus(r.id, 'preparing', { text: 'Started by ' + ME, patch: { assignee: ME, startedAt: Date.now() } }); });
+      Kira.ui.toast('Preparing — Room ' + r.room, 'ok');
+    }
+    else if (a === 'ready') {
+      var r2 = guard(selectedId, 'preparing'); if (!r2) return;
+      act(function () { S.setStatus(r2.id, 'ready', { text: 'Marked ready by ' + ME, patch: { readyAt: Date.now() } }); });
+      Kira.ui.toast('Waiter notified — Room ' + r2.room + ' ready at the pass', 'ok');
+      back();
+    }
+    else if (a === 'reject') { rejecting = true; render(); }
+    else if (a === 'reject-cancel') { rejecting = false; rejectDraft = ''; render(); }
+    else if (a === 'reject-quick') {
+      rejectDraft = el.getAttribute('data-reason');
+      var inp = $('reject-reason'); if (inp) { inp.value = rejectDraft; inp.focus(); }
+    }
+    else if (a === 'reject-confirm') confirmReject();
+  });
+
+  document.addEventListener('input', function (e) { if (e.target.id === 'reject-reason') rejectDraft = e.target.value; });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.target.id === 'reject-reason') {
+      if (e.key === 'Enter') { e.preventDefault(); confirmReject(); }
+      else if (e.key === 'Escape') { rejecting = false; rejectDraft = ''; render(); }
+      return;
+    }
+    var el = e.target.closest && e.target.closest('[data-act][tabindex]');
+    if (el && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); el.click(); return; }
+    if (e.key === 'Escape' && view === 'detail') back();
+  });
+
+  Kira.ui.launcherPill('../index.html');
+  S.subscribe(render);
+  Kira.ui.every(render, 10000);
+})();
+</script>
+</body>
+</html>
