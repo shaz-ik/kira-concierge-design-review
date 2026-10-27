@@ -713,6 +713,21 @@
   .tablet-navbar.c2 .help-short, .tablet-navbar:has(.vol.open) .help-short { display: inline; }
   .tablet-navbar.c3 .wx-time { display: none; }
   .tablet-navbar.c4 .nav-room { display: none; }
+
+  /* Top bar scales at half the rate of the page (Default 1 → Larger 1.125) so every control fits */
+  :root { --ts-nav: calc(1 + (var(--ts, 1) - 1) * .5); }
+  .tablet-navbar .nav-btn { font-size: calc(14px * var(--ts-nav)); }
+  .tablet-navbar .nav-room, .tablet-navbar .nav-weather { font-size: calc(14px * var(--ts-nav)); }
+  .tablet-navbar .a-sm { font-size: calc(13px * var(--ts-nav)); }
+  .tablet-navbar .a-lg { font-size: calc(18px * var(--ts-nav)); }
+
+  /* Room to spare in the top bar at every size: tighter outer padding and gaps */
+  .tablet-navbar { padding-left: 16px; padding-right: 16px; }
+  .tablet-navbar .nav-group { gap: 8px; }
+  .tablet-navbar .nav-room { padding: 0 2px; }
+  /* Long screen titles wrap to a second line instead of being cut off */
+  .panel-title { white-space: normal; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.3; }
+  .kira-mini { max-width: 52%; }
 </style>
 </head>
 <body class="guest-app">
@@ -746,6 +761,6 @@
   </div>
   <p class="rotate-hint">Rotate your phone for a bigger tablet view</p>
 <script src="../shared/kira.js?v=4"></script>
-<script src="guest.js?v=17"></script>
+<script src="guest.js?v=18"></script>
 </body>
 </html>

@@ -1221,21 +1221,22 @@
   document.getElementById('help-btn').addEventListener('click', function () { ui.overlay = 'help'; render(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && ui.overlay) { ui.overlay = null; render(); } });
 
-  // Five text sizes. Every font on the tablet follows --ts (and rem sizes follow the root font-size).
-  var TEXT_STEPS = [0.9, 1, 1.12, 1.25, 1.4], TEXT_NAMES = ['Small', 'Default', 'Large', 'Larger', 'Largest'];
+  // Three text sizes. Every font on the tablet follows --ts (and rem sizes follow the root font-size);
+  // the top bar follows a gentler --ts-nav so all of its controls always fit.
+  var TEXT_STEPS = [1, 1.12, 1.25], TEXT_NAMES = ['Default', 'Large', 'Larger'];
   function setTextScale(n, quiet) {
-    ui.textScale = Math.max(-1, Math.min(TEXT_STEPS.length - 2, n));
-    var f = TEXT_STEPS[ui.textScale + 1];
+    ui.textScale = Math.max(0, Math.min(TEXT_STEPS.length - 1, n));
+    var f = TEXT_STEPS[ui.textScale];
     document.documentElement.style.setProperty('--ts', f);
     document.documentElement.style.fontSize = (16 * f) + 'px';
-    document.getElementById('text-down').disabled = ui.textScale <= -1;
-    document.getElementById('text-up').disabled = ui.textScale >= TEXT_STEPS.length - 2;
+    document.getElementById('text-down').disabled = ui.textScale <= 0;
+    document.getElementById('text-up').disabled = ui.textScale >= TEXT_STEPS.length - 1;
     try { localStorage.setItem('kira-guest-text', String(ui.textScale)); } catch (e) {}
     if (typeof fitNav === 'function' && navEl) fitNav();
     if (!quiet) {
       sound('tick');
       document.querySelectorAll('.proto-toast').forEach(function (t) { if (/^Text size:/.test(t.textContent)) t.remove(); }); // replace, don't stack
-      ui$.toast('Text size: ' + TEXT_NAMES[ui.textScale + 1]);
+      ui$.toast('Text size: ' + TEXT_NAMES[ui.textScale]);
     }
   }
 
