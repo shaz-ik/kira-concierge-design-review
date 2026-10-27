@@ -33,7 +33,12 @@
   .card.dark .tag { color: var(--brass-soft); }
   .card.dark p { color: var(--muted-on-dark); }
   .card.dark .live { color: var(--brass-soft); }
-  .card .cta { align-self: flex-start; margin-top: var(--sp-3); }
+  .card .cta { align-self: flex-start; margin-top: var(--sp-3); text-decoration: none; }
+  .card .cta-row { display: flex; gap: var(--sp-3); flex-wrap: wrap; }
+  .card .cta-row .cta { margin-top: var(--sp-3); }
+  .card.dark:hover { transform: none; }
+  .btn-ghost-dark { background: rgba(255,255,255,.1); color: #fff; border: none; }
+  .btn-ghost-dark:hover { background: rgba(255,255,255,.18); }
   .card .faces { display: flex; gap: var(--sp-2); margin-top: var(--sp-2); }
   .card .faces img { width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(196,166,255,.45); }
 
@@ -84,13 +89,16 @@
     </div>
 
     <div class="feature">
-      <a class="card dark" href="demo.html">
+      <div class="card dark">
         <div class="tag">Start here</div>
-        <h2>Side-by-side demo</h2>
-        <p>The guest tablet on the left, any staff app on the right. Order on the tablet, then work it through the kitchen, waiter, housekeeping, valet or front desk.</p>
+        <h2>Live demo</h2>
+        <p>Two full-size sides of one live hotel, switched with the tab at the top. Order on the guest tablet, then work it through the kitchen, waiter, housekeeping, valet or front desk on the staff side.</p>
         <div class="faces"><img src="assets/kira-idle.jpg" alt=""><img src="assets/kira-listening.jpg" alt=""><img src="assets/kira-speaking.jpg" alt=""><img src="assets/kira-wake.jpg" alt=""></div>
-        <span class="btn btn-hero cta">Open the demo</span>
-      </a>
+        <div class="cta-row">
+          <a class="btn btn-hero cta" href="demo.html#guest">Guest demo</a>
+          <a class="btn btn-ghost-dark cta" href="demo.html#staff">Staff demo</a>
+        </div>
+      </div>
       <a class="card" href="guest/index.html">
         <div class="tag">Guest · in-room tablet</div>
         <h2>Guest tablet</h2>
@@ -128,8 +136,8 @@
       <div class="panel">
         <strong style="display:block;font-size:var(--fs-small);margin-bottom:var(--sp-3)">Try this (about 2 minutes)</strong>
         <ol class="steps">
-          <li>On the tablet, tap <em>In-room dining</em>, add two burgers and a Coke, then <em>Confirm &amp; send</em>.</li>
-          <li>In <em>Kitchen</em>, open order #4821 → <em>Start preparing</em> → <em>Mark ready</em>.</li>
+          <li>Open the <em>Guest demo</em>. On the tablet, tap <em>In-room dining</em>, add two burgers and a Coke, then <em>Confirm &amp; send</em>.</li>
+          <li>Switch to <em>Staff apps</em> at the top. In <em>Kitchen</em>, open order #4821 → <em>Start preparing</em> → <em>Mark ready</em>.</li>
           <li>In <em>Waiter</em>, <em>Claim delivery</em> → <em>Mark delivered</em>. The tablet’s tracker follows every step.</li>
           <li>Ask for a 5 PM late checkout. In <em>Front desk</em>, approve it (the guest confirms the AED 90 fee) or deny it with a reason.</li>
           <li>In <em>Admin → Menu</em>, pause the burger. It disappears from the tablet menu at once.</li>

@@ -9,28 +9,40 @@
 <style>
   html, body { height: 100%; }
   body { display: flex; flex-direction: column; background: var(--dusk-ink); overflow: hidden; }
-  .bar { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-2) var(--sp-4); background: var(--lagoon-deep); color: var(--ink-on-dark); font-size: var(--fs-small); }
-  .bar .brand { font-weight: 700; color: var(--brass-soft); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+
+  /* Top bar: brand · Guest | Staff switch · demo controls */
+  .bar { flex-shrink: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; padding: 8px 16px; background: var(--lagoon-deep); color: var(--ink-on-dark); font-size: var(--fs-small); }
+  .bar .brand { justify-self: start; font-weight: 600; color: var(--brass-soft); text-decoration: none; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
   .bar .brand::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffffff, var(--brass-soft) 55%, var(--brass) 100%); box-shadow: 0 0 7px 1px rgba(196,166,255,.55); }
-  .bar .controls { display: flex; align-items: center; gap: var(--sp-4); flex-wrap: wrap; }
-  .toggle { display: inline-flex; align-items: center; gap: var(--sp-2); background: none; border: none; color: rgba(255,255,255,.8); font: inherit; cursor: pointer; padding: 4px 0; }
+  .sides { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.08); }
+  .sides button { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 18px; border: none; border-radius: 999px; background: none; color: rgba(255,255,255,.72); font: 500 13.5px/1 var(--font); cursor: pointer; white-space: nowrap; }
+  .sides button:hover { color: #fff; }
+  .sides button[aria-selected="true"] { background: #fff; color: #131313; }
+  .sides .n { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; font-size: 11px; line-height: 18px; text-align: center; background: var(--brass); color: #fff; }
+  .sides .n:empty { display: none; }
+  .sides button.ping .n { animation: ping 1.2s ease-out 3; }
+  .bar .controls { margin-left: auto; display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; justify-content: flex-end; }
+  .toggle { display: inline-flex; align-items: center; gap: var(--sp-2); background: none; border: none; color: rgba(255,255,255,.8); font: inherit; cursor: pointer; padding: 4px 0; white-space: nowrap; }
   .toggle .sw { position: relative; width: 30px; height: 17px; border-radius: 999px; background: rgba(255,255,255,.2); transition: background .15s; }
   .toggle .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: #fff; transition: transform .15s; }
   .toggle[aria-checked="true"] .sw { background: var(--brass); }
   .toggle[aria-checked="true"] .sw::after { transform: translateX(13px); }
-  .bar-btn { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2); color: var(--ink-on-dark); font: inherit; font-size: 12px; padding: 4px 12px; border-radius: 999px; cursor: pointer; text-decoration: none; }
+  .bar-btn { background: rgba(255,255,255,.08); border: none; color: var(--ink-on-dark); font: inherit; font-size: 12px; padding: 6px 12px; border-radius: 999px; cursor: pointer; text-decoration: none; white-space: nowrap; }
   .bar-btn:hover { background: rgba(255,255,255,.16); }
 
-  .split { flex: 1; min-height: 0; display: flex; }
-  .pane-guest { flex: 1.35; min-width: 0; position: relative; background: #0b0b0d; }
-  .pane-staff { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--paper); border-left: 1px solid rgba(196,166,255,.2); }
-  .pane-label { position: absolute; top: 8px; left: 12px; z-index: 2; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted-on-dark); pointer-events: none; }
+  /* Each side gets the whole window; the hidden one stays loaded so live state keeps flowing */
+  .stage { flex: 1; min-height: 0; position: relative; }
+  .side { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  .side[hidden], .side[hidden] iframe, .side[hidden] iframe.on { visibility: hidden; pointer-events: none; }
+  .side[hidden] { display: flex; }
+  .side-guest { background: #0b0b0d; }
+  .side-staff { background: var(--paper); }
   iframe { border: 0; width: 100%; height: 100%; display: block; }
-  .tabs { flex-shrink: 0; display: flex; gap: 2px; overflow-x: auto; padding: var(--sp-2) var(--sp-2) 0; background: var(--sand-2); border-bottom: 1px solid rgba(19,19,19,.12); scrollbar-width: none; }
-  .tabs button { position: relative; flex-shrink: 0; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--muted-on-sand); background: none; border: none; border-radius: var(--radius-tool) var(--radius-tool) 0 0; padding: 8px 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-  .tabs button:hover { color: var(--ink-on-sand); background: rgba(255,255,255,.4); }
+  .tabs { flex-shrink: 0; display: flex; gap: 2px; overflow-x: auto; padding: 8px 12px 0; background: var(--sand-2); border-bottom: 1px solid rgba(19,19,19,.1); scrollbar-width: none; }
+  .tabs button { position: relative; flex-shrink: 0; font: inherit; font-size: 13px; font-weight: 600; color: var(--muted-on-sand); background: none; border: none; border-radius: var(--radius-tool) var(--radius-tool) 0 0; padding: 9px 16px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .tabs button:hover { color: var(--ink-on-sand); background: rgba(255,255,255,.5); }
   .tabs button[aria-selected="true"] { background: var(--paper); color: var(--ink-on-sand); box-shadow: inset 0 2px 0 var(--brass); }
-  .tabs .n { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; font-size: 11px; line-height: 18px; text-align: center; background: var(--brass); color: #ffffff; }
+  .tabs .n { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; font-size: 11px; line-height: 18px; text-align: center; background: var(--brass); color: #fff; }
   .tabs .n:empty { display: none; }
   .tabs button.ping .n { animation: ping 1.2s ease-out 3; }
   @keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(140,78,246,.7); } 100% { box-shadow: 0 0 0 8px rgba(140,78,246,0); } }
@@ -38,60 +50,79 @@
   .frames iframe { position: absolute; inset: 0; visibility: hidden; }
   .frames iframe.on { visibility: visible; }
 
-  @media (max-width: 900px) {
-    body { overflow: auto; height: auto; }
-    .split { flex-direction: column; }
-    .pane-guest { flex: none; height: 62.5vw; min-height: 220px; }
-    .pane-label { display: none; }
-    .pane-staff { flex: none; height: 88vh; border-left: none; border-top: 1px solid rgba(196,166,255,.2); }
+  .toggle .short { display: none; }
+  @media (max-width: 560px) {
+    .bar { justify-content: center; gap: 8px; padding: 8px 10px; }
+    .bar .brand { display: none; }
+    .sides { width: 100%; }
+    .sides button { flex: 1; justify-content: center; }
+    .bar .controls { margin-left: 0; width: 100%; justify-content: space-between; gap: 8px; flex-wrap: nowrap; }
+    .toggle .long { display: none; }
+    .toggle .short { display: inline; }
   }
 </style>
 </head>
 <body>
   <div class="bar">
     <a class="brand" href="index.html" title="Back to the prototype launcher">Kira Concierge · Live demo</a>
+    <div class="sides" role="tablist" aria-label="Which side of the app">
+      <button role="tab" id="side-guest-tab" data-side="guest" aria-controls="side-guest">Guest tablet</button>
+      <button role="tab" id="side-staff-tab" data-side="staff" aria-controls="side-staff">Staff apps<span class="n"></span></button>
+    </div>
     <div class="controls">
-      <button class="toggle" role="switch" id="autopilot" aria-checked="false"><span class="sw"></span>Autopilot staff</button>
-      <button class="toggle" role="switch" id="failures" aria-checked="false"><span class="sw"></span>Simulate failures</button>
+      <button class="toggle" role="switch" id="autopilot" aria-checked="false"><span class="sw"></span><span>Autopilot<span class="long"> staff</span></span></button>
+      <button class="toggle" role="switch" id="failures" aria-checked="false"><span class="sw"></span><span><span class="long">Simulate f</span><span class="short">F</span>ailures</span></button>
       <button class="bar-btn" id="reset">Reset</button>
       <a class="bar-btn" href="index.html">All apps</a>
     </div>
   </div>
-  <div class="split">
-    <section class="pane-guest" aria-label="Guest tablet">
-      <span class="pane-label">Guest · Room 412</span>
-      <iframe src="guest/index.html" title="Guest tablet"></iframe>
+  <main class="stage">
+    <section class="side side-guest" id="side-guest" role="tabpanel" aria-labelledby="side-guest-tab">
+      <iframe src="guest/index.html" title="Guest tablet — Room 412"></iframe>
     </section>
-    <section class="pane-staff" aria-label="Staff apps">
-      <div class="tabs" role="tablist" id="tabs"></div>
+    <section class="side side-staff" id="side-staff" role="tabpanel" aria-labelledby="side-staff-tab" hidden>
+      <div class="tabs" role="tablist" id="tabs" aria-label="Staff apps"></div>
       <div class="frames" id="frames"></div>
     </section>
-  </div>
+  </main>
 <script src="shared/kira.js?v=3"></script>
 <script>
 (function () {
   var S = Kira.store;
   var APPS = [
-    { id: 'kitchen',      label: 'Kitchen',       src: 'staff/kitchen.html',      depts: ['dining'],              n: function (r) { return r.dept === 'dining' && r.status === 'incoming'; } },
-    { id: 'waiter',       label: 'Waiter',        src: 'staff/waiter.html',       depts: [],                      n: function (r) { return r.dept === 'dining' && r.status === 'ready'; } },
-    { id: 'housekeeping', label: 'Housekeeping',  src: 'staff/housekeeping.html', depts: ['housekeeping'],        n: function (r) { return r.dept === 'housekeeping' && r.status === 'received'; } },
-    { id: 'valet',        label: 'Valet',         src: 'staff/valet.html',        depts: ['valet', 'concierge'],  n: function (r) { return (r.dept === 'valet' || r.dept === 'concierge') && r.status === 'received'; } },
-    { id: 'frontdesk',    label: 'Front desk',    src: 'staff/front-desk.html',   depts: ['checkout', 'help'],    n: function (r) { return (r.dept === 'checkout' && r.status === 'pending') || (r.dept === 'help' && r.status === 'open'); } },
-    { id: 'admin',        label: 'Admin',         src: 'admin/index.html',        depts: [],                      n: function () { return false; } }
+    { id: 'kitchen',      label: 'Kitchen',      src: 'staff/kitchen.html',      depts: ['dining'],             n: function (r) { return r.dept === 'dining' && r.status === 'incoming'; } },
+    { id: 'waiter',       label: 'Waiter',       src: 'staff/waiter.html',       depts: [],                     n: function (r) { return r.dept === 'dining' && r.status === 'ready'; } },
+    { id: 'housekeeping', label: 'Housekeeping', src: 'staff/housekeeping.html', depts: ['housekeeping'],       n: function (r) { return r.dept === 'housekeeping' && r.status === 'received'; } },
+    { id: 'valet',        label: 'Valet',        src: 'staff/valet.html',        depts: ['valet', 'concierge'], n: function (r) { return (r.dept === 'valet' || r.dept === 'concierge') && r.status === 'received'; } },
+    { id: 'frontdesk',    label: 'Front desk',   src: 'staff/front-desk.html',   depts: ['checkout', 'help'],   n: function (r) { return (r.dept === 'checkout' && r.status === 'pending') || (r.dept === 'help' && r.status === 'open'); } },
+    { id: 'admin',        label: 'Admin',        src: 'admin/index.html',        depts: [],                     n: function () { return false; } }
   ];
-  var tabs = document.getElementById('tabs'), frames = document.getElementById('frames');
-  var current = null;
-  try { current = localStorage.getItem('kira-demo-tab'); } catch (e) {}
-  if (!APPS.some(function (a) { return a.id === current; })) current = 'kitchen';
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} }
 
+  /* ---- Guest | Staff switch (also reachable as demo.html#guest / demo.html#staff) ---- */
+  var side = null;
+  function showSide(s) {
+    side = s === 'staff' ? 'staff' : 'guest';
+    store('kira-demo-side', side);
+    document.getElementById('side-guest').hidden = side !== 'guest';
+    document.getElementById('side-staff').hidden = side !== 'staff';
+    document.querySelectorAll('.sides [data-side]').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.side === side)); });
+    if (side === 'staff') { document.getElementById('side-staff-tab').classList.remove('ping'); showApp(current); }
+    if (location.hash !== '#' + side) history.replaceState(null, '', '#' + side);
+  }
+  document.querySelector('.sides').addEventListener('click', function (e) { var b = e.target.closest('[data-side]'); if (b) showSide(b.dataset.side); });
+  window.addEventListener('hashchange', function () { showSide(location.hash.slice(1)); });
+
+  /* ---- Staff app tabs; frames load on first visit and stay alive ---- */
+  var tabs = document.getElementById('tabs'), frames = document.getElementById('frames');
+  var current = store('kira-demo-tab');
+  if (!APPS.some(function (a) { return a.id === current; })) current = 'kitchen';
   tabs.innerHTML = APPS.map(function (a) {
     return '<button role="tab" id="tab-' + a.id + '" data-app="' + a.id + '" aria-controls="frame-' + a.id + '">' + a.label + '<span class="n"></span></button>';
   }).join('');
-
-  // Frames load on first visit and stay alive, so each app keeps its own screen while you switch.
-  function show(id) {
+  function showApp(id) {
     current = id;
-    try { localStorage.setItem('kira-demo-tab', id); } catch (e) {}
+    store('kira-demo-tab', id);
     APPS.forEach(function (a) {
       var tab = document.getElementById('tab-' + a.id);
       tab.setAttribute('aria-selected', String(a.id === id));
@@ -105,20 +136,24 @@
       if (f) f.classList.toggle('on', a.id === id);
     });
   }
-  tabs.addEventListener('click', function (e) { var b = e.target.closest('[data-app]'); if (b) show(b.dataset.app); });
+  tabs.addEventListener('click', function (e) { var b = e.target.closest('[data-app]'); if (b) showApp(b.dataset.app); });
 
+  /* ---- Live counts + "something new arrived" pings ---- */
   var seen = null;
   function update(s) {
+    var total = 0;
     APPS.forEach(function (a) {
       var n = s.requests.filter(a.n).length;
+      total += n;
       document.querySelector('#tab-' + a.id + ' .n').textContent = n ? n : '';
     });
-    // Ping the tab that just received something new from the guest.
+    document.querySelector('#side-staff-tab .n').textContent = total ? total : '';
     var ids = {};
     s.requests.forEach(function (r) { ids[r.id] = r; });
     if (seen) {
       Object.keys(ids).forEach(function (id) {
         if (seen[id]) return;
+        if (side !== 'staff') document.getElementById('side-staff-tab').classList.add('ping');
         APPS.forEach(function (a) { if (a.depts.indexOf(ids[id].dept) >= 0 && a.id !== current) document.getElementById('tab-' + a.id).classList.add('ping'); });
       });
     }
@@ -133,7 +168,8 @@
     if (confirm('Reset the demo hotel? Every open app goes back to the starting data.')) { S.reset(); Kira.ui.toast('Demo reset', 'ok'); }
   });
 
-  show(current);
+  showApp(current);
+  showSide(location.hash.slice(1) || store('kira-demo-side') || 'guest');
   S.subscribe(update);
 })();
 </script>
