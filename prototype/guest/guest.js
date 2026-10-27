@@ -175,16 +175,35 @@
 
   var VIEWS = {};
 
+  // Every flow screen follows the home's 60 / 40 rule: the content on the left (60%), the
+  // actions on the right (40%) — buttons at the top, main one first, then any summary or hint.
+  // opts: { hint, below (html under the buttons), fill (left panel fills the height, top-aligned) }
+  function splitLayout(detail, actions, opts) {
+    opts = opts || {};
+    return '<div class="status-split' + (opts.fill ? ' fill' : '') + '"><section class="status-detail">' + detail + '</section>' +
+      '<aside class="status-actions" aria-label="Actions"><div class="status-btns">' + actions.join('') + '</div>' +
+      (opts.hint ? '<p class="status-hint">' + esc(opts.hint) + '</p>' : '') + (opts.below || '') + '</aside></div>';
+  }
+  function statusLayout(detail, actions, hint) { return splitLayout(detail, actions, { hint: hint }); }
+
+  // "2× Wagyu smash burger   AED 136.00" lines for the right-hand summaries
+  function summaryList(label, lines, empty) {
+    return '<div class="side-summary"><p class="status-actions-label">' + esc(label) + '</p>' +
+      (lines.length ? '<div class="side-lines">' + lines.map(function (l) {
+        return '<div class="side-line"><span>' + esc(l[0]) + '</span>' + (l[1] ? '<span class="side-amt">' + esc(l[1]) + '</span>' : '') + '</div>';
+      }).join('') + '</div>' : '<p class="status-hint">' + esc(empty) + '</p>') + '</div>';
+  }
+
   VIEWS['menu-loading'] = function () {
     return { context: 'In-room dining', kira: { mood: 'thinking', line: 'One moment — getting tonight’s menu…' },
-      html: head('', 'In-room dining') + '<p class="task-note">Loading the menu…</p>' };
+      html: splitLayout(head('', 'In-room dining') + '<p class="task-note">Loading the menu…</p>', [btn('Review order', 'review', { primary: true, disabled: true })]) };
   };
 
   VIEWS['menu-error'] = function () {
     return { context: 'In-room dining', kira: { mood: 'thinking', line: 'I couldn’t load the menu just now — let me try again.' },
-      html: head('', 'Menu unavailable') +
-        banner('warn', 'The menu couldn’t be loaded.', 'This is usually brief. You can also order from the room phone.') +
-        '<div class="btn-row">' + btn('Back to home', 'home') + btn('Try again', 'retry-menu', { primary: true }) + '</div>' };
+      html: splitLayout(
+        head('', 'Menu unavailable') + banner('warn', 'The menu couldn’t be loaded.', 'This is usually brief. You can also order from the room phone.'),
+        [btn('Try again', 'retry-menu', { primary: true }), btn('Back to home', 'home')]) };
   };
 
   VIEWS.menu = function () {
@@ -206,15 +225,18 @@
         (line && line.note ? '<div class="menu-item-note">' + esc(line.note) + '</div>' : '') + '</div>' +
         '<div class="menu-item-end"><span class="menu-item-price">' + F.moneyShort(m.price) + '</span>' + ctrl + '</div></div>';
     }).join('') || '<div class="menu-item"><div class="menu-item-tag">Nothing in this section right now.</div></div>';
-    var n = cartCount();
-    var bar = n
-      ? '<div class="cart-bar"><span>Your order · <strong>' + n + ' item' + (n > 1 ? 's' : '') + ' · ' + F.moneyShort(cartSubtotal()) + '</strong></span>' + '<button class="btn btn-brass" data-act="review">Review order</button></div>'
-      : '<div class="cart-bar empty"><span>Your order is empty — tap + or just tell Kira</span><button class="btn btn-brass" disabled>Review order</button></div>';
+    var lines = cartLines(), n = cartCount();
+    var summary = summaryList('Your order' + (n ? ' · ' + n + ' item' + (n > 1 ? 's' : '') : ''),
+      lines.map(function (l) { return [l.qty + '× ' + l.name, F.moneyShort(l.qty * l.price)]; }), 'Nothing yet — tap + or just tell Kira.') +
+      (n ? '<div class="side-total"><span>Subtotal</span><span>' + F.money(cartSubtotal()) + '</span></div>' : '');
     var kira = ui.reply
       ? { mood: 'speaking', small: true, line: ui.reply }
       : { mood: 'listening', small: true, caption: 'Listening…', line: ui.heard ? '“' + ui.heard + '”' : 'What would you like? Tap + or just tell me.' };
     return { context: 'In-room dining', kira: kira,
-      html: '<div class="menu-toolbar"><div class="quick-grid">' + cats + '</div></div><div class="guest-card menu-card" data-scroll="menu">' + rows + '</div>' + bar };
+      html: splitLayout(
+        '<div class="menu-toolbar"><div class="quick-grid">' + cats + '</div></div><div class="guest-card menu-card" data-scroll="menu">' + rows + '</div>',
+        [btn('Review order', 'review', { primary: true, disabled: !n })],
+        { fill: true, below: summary }) };
   };
 
   VIEWS.review = function () {
@@ -229,30 +251,24 @@
       : '<button class="link-btn" data-act="show-note">+ Add a delivery note</button>';
     return { context: 'In-room dining · Review your order',
       kira: ui.sending ? { mood: 'thinking', line: 'Sending it to the kitchen…' } : { mood: 'speaking', line: 'That’s ' + F.money(total) + ' in total — shall I send it to the kitchen?' },
-      html: '<p class="task-title">Your order</p><div class="scroll-col" data-scroll="review"><div class="guest-card">' + rows +
-        '<div class="sum-row first"><span>Subtotal</span><span>' + F.money(sub) + '</span></div>' +
-        '<div class="sum-row"><span>Service charge &amp; VAT</span><span>' + F.money(svc) + '</span></div>' +
-        '<div class="order-total-row"><span>Total · charged to Room ' + ROOM + '</span><span>' + F.money(total) + '</span></div></div>' + note + '</div>' +
-        '<div class="btn-row">' + btn('Edit order', 'menu', { disabled: ui.sending }) + btn(ui.sending ? 'Sending…' : 'Confirm & send', 'send', { hero: true, disabled: ui.sending }) + '</div>' };
+      html: splitLayout(
+        '<p class="task-title">Your order</p><div class="scroll-col" data-scroll="review"><div class="guest-card">' + rows +
+          '<div class="sum-row first"><span>Subtotal</span><span>' + F.money(sub) + '</span></div>' +
+          '<div class="sum-row"><span>Service charge &amp; VAT</span><span>' + F.money(svc) + '</span></div>' +
+          '<div class="order-total-row"><span>Total · charged to Room ' + ROOM + '</span><span>' + F.money(total) + '</span></div></div>' + note + '</div>',
+        [btn(ui.sending ? 'Sending…' : 'Confirm & send', 'send', { hero: true, disabled: ui.sending }), btn('Edit order', 'menu', { disabled: ui.sending })],
+        { fill: true, hint: 'Nothing is charged until you confirm. ' + F.money(total) + ' goes to Room ' + ROOM + '.' }) };
   };
 
   VIEWS['send-error'] = function () {
     var lines = cartLines(), sub = cartSubtotal(), total = Math.round(sub * (1 + Kira.data.SERVICE_RATE) * 100) / 100;
     return { context: 'In-room dining · Review your order',
       kira: ui.sending ? { mood: 'thinking', line: 'Trying again…' } : { mood: 'speaking', line: 'Sorry, that didn’t go through. Shall I try again?' },
-      html: '<p class="task-title">Your order</p>' + banner('warn', 'Couldn’t send your order', 'Nothing has been charged. Retrying sends it once — never twice.') +
-        '<div class="guest-card"><div class="menu-item"><div class="menu-item-name">' + esc(itemsText(lines)) + '</div></div><div class="order-total-row"><span>Total</span><span>' + F.money(total) + '</span></div></div>' +
-        '<div class="btn-row">' + btn('Edit order', 'menu', { disabled: ui.sending }) + btn(ui.sending ? 'Sending…' : 'Try again', 'send', { hero: true, disabled: ui.sending }) + '</div>' };
+      html: splitLayout(
+        '<p class="task-title">Your order</p>' + banner('warn', 'Couldn’t send your order', 'Nothing has been charged. Retrying sends it once — never twice.') +
+          '<div class="guest-card"><div class="menu-item"><div class="menu-item-name">' + esc(itemsText(lines)) + '</div></div><div class="order-total-row"><span>Total</span><span>' + F.money(total) + '</span></div></div>',
+        [btn(ui.sending ? 'Sending…' : 'Try again', 'send', { hero: true, disabled: ui.sending }), btn('Edit order', 'menu', { disabled: ui.sending })]) };
   };
-
-  // Status screens (waiting / progress / outcome) follow the home's 60 / 40 rule:
-  // what's happening on the left, what you can do about it on the right (main action first).
-  function statusLayout(detail, actions, hint) {
-    return '<div class="status-split"><section class="status-detail">' + detail + '</section>' +
-      '<aside class="status-actions" aria-label="Options"><p class="status-actions-label">Options</p>' +
-      '<div class="status-btns">' + actions.join('') + '</div>' +
-      (hint ? '<p class="status-hint">' + esc(hint) + '</p>' : '') + '</aside></div>';
-  }
 
   VIEWS['dining-sent'] = function () {
     var r = S.find(ui.trackId);
@@ -331,16 +347,19 @@
     }).join('') +
       '<div class="hk-row"><input class="text-field" id="hk-other" data-model="hk.other" maxlength="80" placeholder="Something else? Type it here" value="' + esc(ui.hk.other) + '" aria-label="Something else"></div>';
     var n = hkCount();
-    var bar = n
-      ? '<div class="cart-bar"><span>Your request · <strong>' + n + ' item' + (n > 1 ? 's' : '') + '</strong> · to Room ' + ROOM + '</span><button class="btn btn-hero" data-act="hk-send">Send request</button></div>'
-      : '<div class="cart-bar empty"><span>Choose as many as you like — or just tell Kira</span><button class="btn btn-brass" disabled>Send request</button></div>';
+    var picked = hkLines().map(function (l) { return [hkItem(l.id).max > 1 ? l.qty + '× ' + l.name : l.name]; });
+    if (ui.hk.other.trim()) picked.push([ui.hk.other.trim()]);
     // Kira speaks once when the screen opens (or once to acknowledge something said by voice) —
-    // she doesn't re-read the list on every tap; the summary bar shows it.
+    // she doesn't re-read the list on every tap; the summary on the right shows it.
     var kira = ui.hk.voiceAck
       ? { mood: 'speaking', line: ui.hk.voiceAck }
       : { mood: 'speaking', line: 'What can housekeeping bring you? Choose as many as you like.' };
     return { context: 'Housekeeping', kira: kira,
-      html: head('', 'What can we bring you?') + '<div class="guest-card hk-list" data-scroll="hk">' + rows + '</div>' + bar };
+      html: splitLayout(
+        head('', 'What can we bring you?') + '<div class="guest-card hk-list" data-scroll="hk">' + rows + '</div>',
+        [btn('Send request', 'hk-send', { hero: true, disabled: !n })],
+        { fill: true, below: summaryList('Your request' + (n ? ' · ' + n + ' item' + (n > 1 ? 's' : '') : ''), picked, 'Choose as many as you like — or just tell Kira.') +
+          '<p class="status-hint">Delivered to Room ' + ROOM + ', usually within 20 minutes.</p>' }) };
   };
 
   VIEWS['hk-track'] = function () {
@@ -385,11 +404,13 @@
     var valid = F.hourOf(to) > F.hourOf(cur);
     return { context: 'Extend checkout',
       kira: { mood: 'speaking', line: ui.co.voiceTo ? 'Shall I ask the front desk for a ' + ui.co.voiceTo + ' checkout?' : 'What time would you like to check out? Pick a time and I’ll ask the front desk.', quiet: ui.co.quiet },
-      html: '<p class="task-title">Extend checkout</p><div class="guest-card"><div class="g-field-row"><span class="label">Current checkout</span><span class="value">' + esc(cur) + '</span></div>' +
-        '<div class="g-field-row"><span class="label">Requested</span><button class="g-select-chip" data-act="co-all" aria-expanded="' + ui.co.showAll + '">' + (valid ? to : 'Choose') + ' ▾</button></div></div>' +
-        (ui.co.showAll ? all : '<div class="quick-grid">' + chips + '</div>') +
-        '<p class="task-note">A late checkout fee may apply — you’ll see it and confirm before anything is charged.</p>' +
-        '<div class="btn-row">' + btn('Request extension', 'co-send', { hero: true, disabled: !valid }) + '</div>' };
+      html: splitLayout(
+        '<p class="task-title">Extend checkout</p><div class="guest-card"><div class="g-field-row"><span class="label">Current checkout</span><span class="value">' + esc(cur) + '</span></div>' +
+          '<div class="g-field-row"><span class="label">Requested</span><button class="g-select-chip" data-act="co-all" aria-expanded="' + ui.co.showAll + '">' + (valid ? to : 'Choose') + ' ▾</button></div></div>' +
+          (ui.co.showAll ? all : '<div class="quick-grid">' + chips + '</div>'),
+        [btn('Request extension', 'co-send', { hero: true, disabled: !valid })],
+        { below: summaryList('Your request', valid ? [['Checkout at ' + to, ''], ['Currently ' + cur, '']] : [], 'Pick a time on the left.') +
+          '<p class="status-hint">A late checkout fee may apply — you’ll see it and confirm before anything is charged.</p>' }) };
   };
 
   VIEWS['checkout-track'] = function () {
@@ -450,9 +471,11 @@
       ? '<div class="g-field-row"><span class="label">Your vehicle</span><span class="value">' + esc(v.model) + '</span></div><div class="g-field-row"><span class="label">Plate</span><span class="value">' + esc(v.plate) + '</span></div>'
       : '';
     return { context: 'Valet', kira: { mood: 'speaking', line: 'Shall I call for your car now?' },
-      html: head('', 'Bring my car') + '<div class="guest-card">' + rows + '<div class="g-field-row"><span class="label">Pick-up</span><span class="value">Main entrance</span></div></div>' +
-        (v ? '' : '<p class="task-note">We don’t have your vehicle on file — the valet team will confirm the details with you at the entrance.</p>') +
-        '<div class="btn-row">' + btn('Bring my car', 'valet-send', { hero: true }) + '</div>' };
+      html: splitLayout(
+        head('', 'Bring my car') + '<div class="guest-card">' + rows + '<div class="g-field-row"><span class="label">Pick-up</span><span class="value">Main entrance</span></div></div>' +
+          (v ? '' : '<p class="task-note">We don’t have your vehicle on file — the valet team will confirm the details with you at the entrance.</p>'),
+        [btn('Bring my car', 'valet-send', { hero: true })],
+        { hint: 'The valet team usually has it at the main entrance within 10 minutes. We’ll tell you here when it’s ready.' }) };
   };
 
   VIEWS['valet-track'] = function () {

@@ -540,7 +540,8 @@
   .status-split { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; width: 100%; min-height: 320px; }
   .status-detail, .status-actions { border-radius: 24px; padding: 24px; display: flex; flex-direction: column; justify-content: center; gap: 12px; min-width: 0; }
   .status-detail { background: var(--glass); box-shadow: var(--glass-edge), 0 16px 40px -24px rgba(0,0,0,.8); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); }
-  .status-actions { background: rgba(255,255,255,.04); }
+  .status-detail, .status-actions { background: var(--glass); box-shadow: var(--glass-edge), 0 16px 40px -24px rgba(0,0,0,.8); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); }
+  .status-actions { justify-content: flex-start; gap: 14px; }
   .status-detail .guest-card { background: rgba(255,255,255,.06); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
   .status-detail .g-banner, .status-detail .guest-card { max-width: none; }
   .status-actions-label { font-size: 13px; color: var(--muted-on-dark); }
@@ -549,14 +550,27 @@
   .status-hint { font-size: 13px; line-height: 1.45; color: var(--muted-on-dark); }
   .status-rate { display: flex; gap: 8px; }
   .status-rate .quick-chip { flex: 1; }
-  .task-col.flow-body:has(.status-split) { max-width: 820px; }
+  .task-col.flow-body:has(.status-split) { max-width: 860px; }
   html.theme-light .status-detail { box-shadow: var(--glass-edge), 0 14px 36px -22px rgba(60,40,120,.3); }
-  html.theme-light .status-actions { background: rgba(255,255,255,.45); }
+  html.theme-light .status-actions { box-shadow: var(--glass-edge), 0 14px 36px -22px rgba(60,40,120,.3); }
   html.theme-light .status-detail .guest-card { background: rgba(255,255,255,.6); }
   .bento.swap .status-split > *, .enter .status-split > * { animation: rise-in .45s cubic-bezier(.22,.9,.24,1) both; }
   .bento.swap .status-split > * { animation-delay: .45s; }
   .bento.swap .status-split > :nth-child(2) { animation-delay: .55s; }
   .enter .status-split > :nth-child(2) { animation-delay: .12s; }
+
+  /* Input screens on the 60 / 40 split: the left panel fills the height and scrolls its list */
+  .task-col.flow-body > .status-split.fill { flex: 1; min-height: 0; margin: 0; }
+  .status-split.fill .status-detail { justify-content: flex-start; overflow: hidden; }
+  .status-detail .menu-card, .status-detail .hk-list { grid-template-columns: 1fr; flex: 0 1 auto; min-height: 0; overflow-y: auto; }
+  .status-detail .scroll-col { flex: 0 1 auto; }
+  .status-detail .menu-toolbar .quick-grid { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .side-summary { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; min-height: 0; }
+  .side-lines { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 190px; scrollbar-width: thin; }
+  .side-line { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; line-height: 1.4; }
+  .side-amt { color: var(--brass-soft); white-space: nowrap; }
+  .side-total { display: flex; justify-content: space-between; font-size: 14px; font-weight: 500; padding: 10px 12px; border-radius: 12px; background: rgba(140,78,246,.18); }
+  html.theme-light .side-total { background: #EFE7FD; }
 </style>
 </head>
 <body class="guest-app">
@@ -582,6 +596,6 @@
   </div>
   <p class="rotate-hint">Rotate your phone for a bigger tablet view</p>
 <script src="../shared/kira.js?v=3"></script>
-<script src="guest.js?v=9"></script>
+<script src="guest.js?v=10"></script>
 </body>
 </html>
