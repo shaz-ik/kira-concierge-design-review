@@ -4,27 +4,27 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Kira Concierge — Concierge &amp; Valet</title>
-<link rel="stylesheet" href="../shared/tokens.css?v=1">
-<link rel="stylesheet" href="../shared/proto.css?v=2">
+<link rel="stylesheet" href="../shared/tokens.css?v=2">
+<link rel="stylesheet" href="../shared/proto.css?v=3">
 <style>
   /* Page-scoped: phone refinements shared with staff-waiter.html. */
   .tool-phone-frame { min-height: 540px; display: flex; flex-direction: column; }
   .tool-phone-content { flex: 1; }
   .tool-phone-header { display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-body); }
   .tool-phone-header .sub { font-weight: 400; font-size: 12px; color: var(--muted-on-sand); }
-  .phone-tabbar { display: flex; border-top: 1px solid rgba(36,31,22,.1); background: var(--paper); }
+  .phone-tabbar { display: flex; border-top: 1px solid rgba(19,19,19,.1); background: var(--paper); }
   .phone-tabbar span { flex: 1; text-align: center; padding: var(--sp-3) 0; font-size: 12px; font-weight: 600; color: var(--muted-on-sand); }
   .phone-tabbar span.active { color: var(--brass-deep); box-shadow: inset 0 2px 0 var(--brass); }
 
-  .notif-card-tool { box-shadow: 0 1px 2px rgba(36,31,22,.05); transition: box-shadow .15s, border-color .15s; }
+  .notif-card-tool { box-shadow: 0 1px 2px rgba(19,19,19,.05); transition: box-shadow .15s, border-color .15s; }
   .notif-card-tool.ready { border-left: 3px solid var(--brass); }
-  .notif-card-tool.ready:hover { box-shadow: 0 4px 14px -6px rgba(36,31,22,.2); border-color: rgba(79,192,239,.4); }
-  .notif-card-tool.overdue { border-left: 3px solid var(--err); background: rgba(139,74,61,.04); }
-  .notif-card-tool.readonly { background: rgba(36,31,22,.025); }
+  .notif-card-tool.ready:hover { box-shadow: 0 4px 14px -6px rgba(19,19,19,.2); border-color: rgba(140,78,246,.4); }
+  .notif-card-tool.overdue { border-left: 3px solid var(--err); background: rgba(239,68,68,.04); }
+  .notif-card-tool.readonly { background: rgba(19,19,19,.025); }
   .notif-card-tool .meta { display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-2); font-size: 12px; color: var(--muted-on-sand); }
   .tool-phone-frame .phone-btn-row .btn-tool { flex: 1; min-height: 44px; }
   .tool-phone-frame .phone-btn-row .btn-tool-secondary { flex: 0 0 auto; padding-left: 20px; padding-right: 20px; }
-  .kv { display: flex; justify-content: space-between; gap: var(--sp-3); padding: 6px 0; font-size: var(--fs-small); border-bottom: 1px solid rgba(36,31,22,.06); }
+  .kv { display: flex; justify-content: space-between; gap: var(--sp-3); padding: 6px 0; font-size: var(--fs-small); border-bottom: 1px solid rgba(19,19,19,.06); }
   .kv:last-child { border-bottom: none; }
   .kv .k { color: var(--muted-on-sand); }
   .kv .v { font-weight: 600; text-align: right; }
@@ -45,7 +45,7 @@
   .notif-card-tool .body.missing { color: var(--warn); }
   /* My own in-progress requests: tappable to reopen the status screen */
   .notif-card-tool.mine { border-left: 3px solid var(--brass-deep); cursor: pointer; }
-  .notif-card-tool.mine:hover { box-shadow: 0 4px 14px -6px rgba(36,31,22,.2); border-color: rgba(79,192,239,.4); }
+  .notif-card-tool.mine:hover { box-shadow: 0 4px 14px -6px rgba(19,19,19,.2); border-color: rgba(140,78,246,.4); }
   .notif-card-tool.mine .open { margin-left: auto; font-weight: 600; color: var(--brass-deep); }
   .kv .v { min-width: 0; overflow-wrap: anywhere; }
   .kv .v.missing { color: var(--warn); }
@@ -67,7 +67,7 @@
     <nav class="phone-tabbar" id="tabbar" aria-label="Sections"></nav>
   </div>
 
-<script src="../shared/kira.js?v=2"></script>
+<script src="../shared/kira.js?v=3"></script>
 <script>
 (function () {
   'use strict';

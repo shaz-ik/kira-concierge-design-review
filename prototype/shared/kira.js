@@ -191,7 +191,8 @@
     var raw = null;
     try { raw = localStorage.getItem(KEY); } catch (e) {}
     if (raw) {
-      try { var parsed = JSON.parse(raw); if (parsed && parsed.version === 1) return parsed; } catch (e) {}
+      // Demo data older than 6 h would show every seeded ticket hours overdue — start a fresh shift instead.
+      try { var parsed = JSON.parse(raw); if (parsed && parsed.version === 1 && Date.now() - parsed.seededAt < 6 * 3600000) return parsed; } catch (e) {}
     }
     var fresh = seed();
     persist(fresh);

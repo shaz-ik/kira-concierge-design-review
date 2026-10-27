@@ -104,7 +104,7 @@
   }
   function btn(label, act, opts) {
     opts = opts || {};
-    return '<button class="btn ' + (opts.primary ? 'btn-brass' : 'btn-ghost-dark') + '" data-act="' + act + '"' +
+    return '<button class="btn ' + (opts.hero ? 'btn-hero' : opts.primary ? 'btn-brass' : 'btn-ghost-dark') + '" data-act="' + act + '"' +
       (opts.arg != null ? ' data-arg="' + esc(opts.arg) + '"' : '') + (opts.disabled ? ' disabled' : '') + '>' + esc(label) + '</button>';
   }
   function head(eyebrow, title) {
@@ -222,7 +222,7 @@
         '<div class="sum-row first"><span>Subtotal</span><span>' + F.money(sub) + '</span></div>' +
         '<div class="sum-row"><span>Service charge &amp; VAT</span><span>' + F.money(svc) + '</span></div>' +
         '<div class="order-total-row"><span>Total · charged to Room ' + ROOM + '</span><span>' + F.money(total) + '</span></div></div>' + note + '</div>' +
-        '<div class="btn-row">' + btn('Edit order', 'menu', { disabled: ui.sending }) + btn(ui.sending ? 'Sending…' : 'Confirm & send', 'send', { primary: true, disabled: ui.sending }) + '</div>' };
+        '<div class="btn-row">' + btn('Edit order', 'menu', { disabled: ui.sending }) + btn(ui.sending ? 'Sending…' : 'Confirm & send', 'send', { hero: true, disabled: ui.sending }) + '</div>' };
   };
 
   VIEWS['send-error'] = function () {
@@ -231,7 +231,7 @@
       kira: ui.sending ? { mood: 'thinking', line: 'Trying again…' } : { mood: 'speaking', line: 'Sorry, that didn’t go through. Shall I try again?' },
       html: '<p class="task-title">Your order</p>' + banner('warn', 'Couldn’t send your order', 'Nothing has been charged. Retrying sends it once — never twice.') +
         '<div class="guest-card"><div class="menu-item"><div class="menu-item-name">' + esc(itemsText(lines)) + '</div></div><div class="order-total-row"><span>Total</span><span>' + F.money(total) + '</span></div></div>' +
-        '<div class="btn-row">' + btn('Edit order', 'menu', { disabled: ui.sending }) + btn(ui.sending ? 'Sending…' : 'Try again', 'send', { primary: true, disabled: ui.sending }) + '</div>' };
+        '<div class="btn-row">' + btn('Edit order', 'menu', { disabled: ui.sending }) + btn(ui.sending ? 'Sending…' : 'Try again', 'send', { hero: true, disabled: ui.sending }) + '</div>' };
   };
 
   VIEWS['dining-sent'] = function () {
@@ -308,7 +308,7 @@
       '<div class="hk-row"><input class="text-field" id="hk-other" data-model="hk.other" maxlength="80" placeholder="Something else? Type it here" value="' + esc(ui.hk.other) + '" aria-label="Something else"></div>';
     var n = hkCount();
     var bar = n
-      ? '<div class="cart-bar"><span>Your request · <strong>' + n + ' item' + (n > 1 ? 's' : '') + '</strong> · to Room ' + ROOM + '</span><button class="btn btn-brass" data-act="hk-send">Send request</button></div>'
+      ? '<div class="cart-bar"><span>Your request · <strong>' + n + ' item' + (n > 1 ? 's' : '') + '</strong> · to Room ' + ROOM + '</span><button class="btn btn-hero" data-act="hk-send">Send request</button></div>'
       : '<div class="cart-bar empty"><span>Choose as many as you like — or just tell Kira</span><button class="btn btn-brass" disabled>Send request</button></div>';
     // Kira speaks once when the screen opens (or once to acknowledge something said by voice) —
     // she doesn't re-read the list on every tap; the summary bar shows it.
@@ -360,7 +360,7 @@
         '<div class="g-field-row"><span class="label">Requested</span><button class="g-select-chip" data-act="co-all" aria-expanded="' + ui.co.showAll + '">' + (valid ? to : 'Choose') + ' ▾</button></div></div>' +
         (ui.co.showAll ? all : '<div class="quick-grid">' + chips + '</div>') +
         '<p class="task-note">A late checkout fee may apply — you’ll see it and confirm before anything is charged.</p>' +
-        '<div class="btn-row">' + btn('Request extension', 'co-send', { primary: true, disabled: !valid }) + '</div>' };
+        '<div class="btn-row">' + btn('Request extension', 'co-send', { hero: true, disabled: !valid }) + '</div>' };
   };
 
   VIEWS['checkout-track'] = function () {
@@ -378,7 +378,7 @@
         html: banner('good', 'Approved — new checkout: ' + r.to) +
           '<div class="guest-card"><div class="g-field-row"><span class="label">Late checkout fee</span><span class="value">' + F.money(r.fee) + '</span></div><div class="g-field-row"><span class="label">Charged to</span><span class="value">Room ' + ROOM + '</span></div></div>' +
           '<p class="task-note">Declining keeps your original ' + esc(r.from) + ' checkout.</p>' +
-          '<div class="btn-row">' + btn('Decline', 'co-decline', { arg: r.id }) + btn('Confirm charge', 'co-confirm', { primary: true, arg: r.id }) + '</div>' };
+          '<div class="btn-row">' + btn('Decline', 'co-decline', { arg: r.id }) + btn('Confirm charge', 'co-confirm', { hero: true, arg: r.id }) + '</div>' };
     }
     if (r.status === 'confirmed' && r.fee) {
       return { context: ctx, kira: { mood: 'wake', line: 'All set — enjoy the extra time.' },
@@ -411,7 +411,7 @@
     return { context: 'Valet', kira: { mood: 'speaking', line: 'Shall I call for your car now?' },
       html: head('', 'Bring my car') + '<div class="guest-card">' + rows + '<div class="g-field-row"><span class="label">Pick-up</span><span class="value">Main entrance</span></div></div>' +
         (v ? '' : '<p class="task-note">We don’t have your vehicle on file — the valet team will confirm the details with you at the entrance.</p>') +
-        '<div class="btn-row">' + btn('Bring my car', 'valet-send', { primary: true }) + '</div>' };
+        '<div class="btn-row">' + btn('Bring my car', 'valet-send', { hero: true }) + '</div>' };
   };
 
   VIEWS['valet-track'] = function () {

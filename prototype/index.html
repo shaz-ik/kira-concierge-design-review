@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kira Concierge — Working Prototype</title>
-<link rel="stylesheet" href="shared/tokens.css?v=1">
-<link rel="stylesheet" href="shared/proto.css?v=2">
+<link rel="stylesheet" href="shared/tokens.css?v=2">
+<link rel="stylesheet" href="shared/proto.css?v=3">
 <style>
   body { background: var(--sand); min-height: 100vh; }
   .wrap { max-width: 1040px; margin: 0 auto; padding: 0 var(--sp-5); }
@@ -15,19 +15,19 @@
   .hero p { color: var(--muted-on-sand); }
 
   .feature { display: grid; grid-template-columns: 1.3fr 1fr; gap: var(--sp-4); margin-bottom: var(--sp-4); }
-  .card { position: relative; display: flex; flex-direction: column; gap: var(--sp-2); background: var(--paper); border: 1px solid rgba(36,31,22,.1); border-radius: var(--radius-tool); padding: var(--sp-5); text-decoration: none; color: var(--ink-on-sand); transition: border-color .15s, box-shadow .15s, transform .15s; }
-  .card:hover { border-color: var(--brass); box-shadow: 0 10px 30px -18px rgba(21,32,31,.45); transform: translateY(-1px); }
+  .card { position: relative; display: flex; flex-direction: column; gap: var(--sp-2); background: var(--paper); border: 1px solid rgba(19,19,19,.1); border-radius: var(--radius-tool); padding: var(--sp-5); text-decoration: none; color: var(--ink-on-sand); transition: border-color .15s, box-shadow .15s, transform .15s; }
+  .card:hover { border-color: var(--brass); box-shadow: 0 10px 30px -18px rgba(19,19,19,.45); transform: translateY(-1px); }
   .card .tag { font-size: 12px; color: var(--brass-deep); font-weight: 600; letter-spacing: .02em; }
   .card h2 { font-size: var(--fs-h2); font-weight: 700; }
   .card p { color: var(--muted-on-sand); font-size: var(--fs-small); }
   .card .live { margin-top: auto; padding-top: var(--sp-3); font-size: 12px; color: var(--lagoon); display: flex; align-items: center; gap: var(--sp-2); }
-  .card .live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgba(91,122,99,.18); }
-  .card .live.hot::before { background: var(--brass); box-shadow: 0 0 0 3px rgba(79,192,239,.25); }
+  .card .live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgba(34,197,94,.18); }
+  .card .live.hot::before { background: var(--brass); box-shadow: 0 0 0 3px rgba(140,78,246,.25); }
 
   .card.dark {
-    color: var(--ink-on-dark); border-color: rgba(167,227,247,.25);
+    color: var(--ink-on-dark); border-color: rgba(196,166,255,.25);
     background:
-      radial-gradient(ellipse 70% 60% at 20% 0%, rgba(79,192,239,.22), transparent 70%),
+      radial-gradient(ellipse 70% 60% at 20% 0%, rgba(140,78,246,.22), transparent 70%),
       radial-gradient(ellipse at 50% 30%, var(--dusk-ink-2), var(--dusk-ink) 80%);
   }
   .card.dark .tag { color: var(--brass-soft); }
@@ -35,18 +35,18 @@
   .card.dark .live { color: var(--brass-soft); }
   .card .cta { align-self: flex-start; margin-top: var(--sp-3); }
   .card .faces { display: flex; gap: var(--sp-2); margin-top: var(--sp-2); }
-  .card .faces img { width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(167,227,247,.45); }
+  .card .faces img { width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(196,166,255,.45); }
 
   .section-title { font-size: var(--fs-h2); font-weight: 700; margin: var(--sp-6) 0 var(--sp-3); }
   .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-4); }
 
-  .panel { background: var(--paper); border: 1px solid rgba(36,31,22,.1); border-radius: var(--radius-tool); padding: var(--sp-5); }
+  .panel { background: var(--paper); border: 1px solid rgba(19,19,19,.1); border-radius: var(--radius-tool); padding: var(--sp-5); }
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
-  .control { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-4); padding: var(--sp-3) 0; border-bottom: 1px solid rgba(36,31,22,.07); }
+  .control { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-4); padding: var(--sp-3) 0; border-bottom: 1px solid rgba(19,19,19,.07); }
   .control:last-of-type { border-bottom: none; }
   .control strong { display: block; font-size: var(--fs-small); }
   .control span { font-size: 12px; color: var(--muted-on-sand); }
-  .switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; border-radius: 999px; background: rgba(36,31,22,.18); border: none; cursor: pointer; transition: background .15s; }
+  .switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; border-radius: 999px; background: rgba(19,19,19,.18); border: none; cursor: pointer; transition: background .15s; }
   .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .15s; }
   .switch[aria-checked="true"] { background: var(--brass-deep); }
   .switch[aria-checked="true"]::after { transform: translateX(18px); }
@@ -89,7 +89,7 @@
         <h2>Side-by-side demo</h2>
         <p>The guest tablet on the left, any staff app on the right. Order on the tablet, then work it through the kitchen, waiter, housekeeping, valet or front desk.</p>
         <div class="faces"><img src="assets/kira-idle.jpg" alt=""><img src="assets/kira-listening.jpg" alt=""><img src="assets/kira-speaking.jpg" alt=""><img src="assets/kira-wake.jpg" alt=""></div>
-        <span class="btn btn-brass cta">Open the demo</span>
+        <span class="btn btn-hero cta">Open the demo</span>
       </a>
       <a class="card" href="guest/index.html">
         <div class="tag">Guest · in-room tablet</div>
@@ -140,7 +140,7 @@
     <p class="note">This prototype runs entirely in your browser. There’s no backend. The shared hotel lives in this browser’s local storage, so apps open in other tabs of the same browser stay in sync, but other people’s browsers don’t. Voice is simulated: tap a phrase or type, or use the microphone where the browser supports it.</p>
   </main>
 
-<script src="shared/kira.js?v=2"></script>
+<script src="shared/kira.js?v=3"></script>
 <script>
 (function () {
   var S = Kira.store;

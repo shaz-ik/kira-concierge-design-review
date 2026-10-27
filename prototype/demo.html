@@ -4,36 +4,36 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kira Concierge — Live Demo</title>
-<link rel="stylesheet" href="shared/tokens.css?v=1">
-<link rel="stylesheet" href="shared/proto.css?v=2">
+<link rel="stylesheet" href="shared/tokens.css?v=2">
+<link rel="stylesheet" href="shared/proto.css?v=3">
 <style>
   html, body { height: 100%; }
   body { display: flex; flex-direction: column; background: var(--dusk-ink); overflow: hidden; }
   .bar { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap; padding: var(--sp-2) var(--sp-4); background: var(--lagoon-deep); color: var(--ink-on-dark); font-size: var(--fs-small); }
   .bar .brand { font-weight: 700; color: var(--brass-soft); text-decoration: none; display: flex; align-items: center; gap: 8px; }
-  .bar .brand::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff3d6, var(--brass-soft) 55%, var(--brass) 100%); box-shadow: 0 0 7px 1px rgba(167,227,247,.55); }
+  .bar .brand::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffffff, var(--brass-soft) 55%, var(--brass) 100%); box-shadow: 0 0 7px 1px rgba(196,166,255,.55); }
   .bar .controls { display: flex; align-items: center; gap: var(--sp-4); flex-wrap: wrap; }
-  .toggle { display: inline-flex; align-items: center; gap: var(--sp-2); background: none; border: none; color: rgba(244,239,227,.8); font: inherit; cursor: pointer; padding: 4px 0; }
-  .toggle .sw { position: relative; width: 30px; height: 17px; border-radius: 999px; background: rgba(244,239,227,.2); transition: background .15s; }
+  .toggle { display: inline-flex; align-items: center; gap: var(--sp-2); background: none; border: none; color: rgba(255,255,255,.8); font: inherit; cursor: pointer; padding: 4px 0; }
+  .toggle .sw { position: relative; width: 30px; height: 17px; border-radius: 999px; background: rgba(255,255,255,.2); transition: background .15s; }
   .toggle .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: #fff; transition: transform .15s; }
   .toggle[aria-checked="true"] .sw { background: var(--brass); }
   .toggle[aria-checked="true"] .sw::after { transform: translateX(13px); }
-  .bar-btn { background: rgba(244,239,227,.08); border: 1px solid rgba(244,239,227,.2); color: var(--ink-on-dark); font: inherit; font-size: 12px; padding: 4px 12px; border-radius: 999px; cursor: pointer; text-decoration: none; }
-  .bar-btn:hover { background: rgba(244,239,227,.16); }
+  .bar-btn { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2); color: var(--ink-on-dark); font: inherit; font-size: 12px; padding: 4px 12px; border-radius: 999px; cursor: pointer; text-decoration: none; }
+  .bar-btn:hover { background: rgba(255,255,255,.16); }
 
   .split { flex: 1; min-height: 0; display: flex; }
-  .pane-guest { flex: 1.35; min-width: 0; position: relative; background: #03070c; }
-  .pane-staff { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--paper); border-left: 1px solid rgba(167,227,247,.2); }
+  .pane-guest { flex: 1.35; min-width: 0; position: relative; background: #0b0b0d; }
+  .pane-staff { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--paper); border-left: 1px solid rgba(196,166,255,.2); }
   .pane-label { position: absolute; top: 8px; left: 12px; z-index: 2; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted-on-dark); pointer-events: none; }
   iframe { border: 0; width: 100%; height: 100%; display: block; }
-  .tabs { flex-shrink: 0; display: flex; gap: 2px; overflow-x: auto; padding: var(--sp-2) var(--sp-2) 0; background: var(--sand-2); border-bottom: 1px solid rgba(36,31,22,.12); scrollbar-width: none; }
+  .tabs { flex-shrink: 0; display: flex; gap: 2px; overflow-x: auto; padding: var(--sp-2) var(--sp-2) 0; background: var(--sand-2); border-bottom: 1px solid rgba(19,19,19,.12); scrollbar-width: none; }
   .tabs button { position: relative; flex-shrink: 0; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--muted-on-sand); background: none; border: none; border-radius: var(--radius-tool) var(--radius-tool) 0 0; padding: 8px 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
   .tabs button:hover { color: var(--ink-on-sand); background: rgba(255,255,255,.4); }
   .tabs button[aria-selected="true"] { background: var(--paper); color: var(--ink-on-sand); box-shadow: inset 0 2px 0 var(--brass); }
-  .tabs .n { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; font-size: 11px; line-height: 18px; text-align: center; background: var(--brass); color: #04151c; }
+  .tabs .n { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; font-size: 11px; line-height: 18px; text-align: center; background: var(--brass); color: #ffffff; }
   .tabs .n:empty { display: none; }
   .tabs button.ping .n { animation: ping 1.2s ease-out 3; }
-  @keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(79,192,239,.7); } 100% { box-shadow: 0 0 0 8px rgba(79,192,239,0); } }
+  @keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(140,78,246,.7); } 100% { box-shadow: 0 0 0 8px rgba(140,78,246,0); } }
   .frames { flex: 1; min-height: 0; position: relative; }
   .frames iframe { position: absolute; inset: 0; visibility: hidden; }
   .frames iframe.on { visibility: visible; }
@@ -43,7 +43,7 @@
     .split { flex-direction: column; }
     .pane-guest { flex: none; height: 62.5vw; min-height: 220px; }
     .pane-label { display: none; }
-    .pane-staff { flex: none; height: 88vh; border-left: none; border-top: 1px solid rgba(167,227,247,.2); }
+    .pane-staff { flex: none; height: 88vh; border-left: none; border-top: 1px solid rgba(196,166,255,.2); }
   }
 </style>
 </head>
@@ -67,7 +67,7 @@
       <div class="frames" id="frames"></div>
     </section>
   </div>
-<script src="shared/kira.js?v=2"></script>
+<script src="shared/kira.js?v=3"></script>
 <script>
 (function () {
   var S = Kira.store;
