@@ -98,6 +98,9 @@
       '604': { number: '604', floor: 6, type: 'Royal Suite',   guest: 'Mr. K. Tanaka',   tier: 'Kira Privé — Platinum', checkedIn: '17 Oct', nights: 6, checkout: '3:00 PM', nextArrival: null,      lang: 'EN', tablet: 'offline', vehicle: null }
     };
 
+    // Do-not-disturb: one room already has it on, so the front desk list isn't empty at the start
+    rooms['320'].dnd = { on: true, since: ago(42) };
+
     var item = function (menuId, qty, note) {
       var m = menu.filter(function (x) { return x.id === menuId; })[0];
       return { menuId: menuId, name: m.name, qty: qty, price: m.price, note: note || '', allergens: m.allergens };
@@ -307,6 +310,16 @@
     });
   }
 
+  /** Turn a room's do-not-disturb on or off (the front desk and housekeeping see it live). */
+  function setDnd(room, on) {
+    return update(function (s) {
+      if (!s.rooms[room]) return null;
+      s.rooms[room].dnd = on ? { on: true, since: Date.now() } : null;
+      return s.rooms[room].dnd;
+    });
+  }
+  function dndOf(room) { var r = state.rooms[room]; return r && r.dnd && r.dnd.on ? r.dnd : null; }
+
   function isOpen(r) { return !CLOSED[r.status]; }
   function statusLabel(r) { return (STATUS[r.dept] && STATUS[r.dept][r.status]) || r.status; }
   function deptLabel(r) { return DEPTS[r.dept] ? DEPTS[r.dept].label : r.dept; }
@@ -462,6 +475,8 @@
       setStatus: setStatus,
       setStatusIf: setStatusIf,
       patch: patch,
+      setDnd: setDnd,
+      dndOf: dndOf,
       isOpen: isOpen,
       statusLabel: statusLabel,
       deptLabel: deptLabel,

@@ -690,6 +690,29 @@
   .svc-row, .svc-row:hover, .svc-row:active { transform: none; }
   .svc-row:active { background: rgba(255,255,255,.14); }
   html.theme-light .svc-row:active { background: rgba(19,19,19,.13); }
+
+  /* Top bar: time + live weather, and Do not disturb */
+  .tablet-navbar .nav-group { flex-shrink: 0; }
+  .nav-room { white-space: nowrap; }
+  .nav-weather { display: inline-flex; align-items: center; gap: 6px; padding: 0 4px 0 6px; font-size: calc(14px * var(--ts, 1)); font-weight: 500; color: var(--ink-on-dark); white-space: nowrap; }
+  .nav-weather .wx-time { color: var(--muted-on-dark); margin-right: 4px; }
+  .nav-weather img { width: 28px; height: 28px; filter: drop-shadow(0 3px 5px rgba(0,0,0,.35)); }
+  .nav-weather img:not([src]) { display: none; }
+  html.theme-light .nav-weather img { filter: drop-shadow(0 3px 5px rgba(60,40,120,.2)); }
+  .dnd-btn { gap: 8px; }
+  .dnd-btn svg { transition: transform .3s cubic-bezier(.3,.7,.4,1.4); }
+  .dnd-btn.on { background: rgba(239,68,68,.24); color: #FECACA; }
+  .dnd-btn.on svg { transform: rotate(180deg); fill: rgba(254,202,202,.25); }
+  html.theme-light .dnd-btn.on { background: rgba(220,38,38,.12); color: #B91C1C; }
+  .dnd-text { overflow: hidden; }
+  .help-short { display: none; }
+  /* compact steps when the bar runs out of room (set by fitNav, and while the volume slider is open) */
+  .tablet-navbar.c1 .dnd-text, .tablet-navbar:has(.vol.open) .dnd-text { display: none; }
+  .tablet-navbar.c1 .dnd-btn, .tablet-navbar:has(.vol.open) .dnd-btn { width: 44px; padding: 0; }
+  .tablet-navbar.c2 .help-long, .tablet-navbar:has(.vol.open) .help-long { display: none; }
+  .tablet-navbar.c2 .help-short, .tablet-navbar:has(.vol.open) .help-short { display: inline; }
+  .tablet-navbar.c3 .wx-time { display: none; }
+  .tablet-navbar.c4 .nav-room { display: none; }
 </style>
 </head>
 <body class="guest-app">
@@ -698,9 +721,11 @@
       <div class="tablet-navbar">
         <div class="nav-group">
           <span class="nav-room" id="room-chip">Room 412</span>
+          <span class="nav-weather" id="nav-weather" role="status"><span class="wx-time" id="wx-time"></span><img id="wx-icon" alt="" width="28" height="28"><span id="wx-temp"></span></span>
           <button class="nav-btn" id="lang-btn" aria-haspopup="dialog" aria-label="Language: English"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>EN</button>
         </div>
         <div class="nav-group">
+          <button class="nav-btn dnd-btn" id="dnd-btn" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M7.5 12h9"/></svg><span class="dnd-text">Do not disturb</span></button>
           <button class="nav-btn nav-icon-only" id="theme-btn"></button>
           <div class="vol" id="vol" role="group" aria-label="Volume">
             <button class="nav-btn nav-icon-only vol-btn" id="vol-btn" aria-expanded="false" aria-controls="vol-panel"></button>
@@ -710,7 +735,7 @@
             </div>
           </div>
           <span class="nav-seg" role="group" aria-label="Text size"><button class="nav-btn" id="text-down" aria-label="Smaller text"><span class="a-sm">A</span>−</button><button class="nav-btn" id="text-up" aria-label="Larger text"><span class="a-lg">A</span>+</button></span>
-          <button class="nav-btn nav-help" id="help-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.93 4.93 4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M4.93 19.07l4.24-4.24"/></svg>Help / Emergency</button>
+          <button class="nav-btn nav-help" id="help-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.93 4.93 4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M4.93 19.07l4.24-4.24"/></svg><span class="help-long">Help / Emergency</span><span class="help-short">Help</span></button>
         </div>
       </div>
       <div class="tablet-context" id="context"></div>
@@ -720,7 +745,7 @@
     </div>
   </div>
   <p class="rotate-hint">Rotate your phone for a bigger tablet view</p>
-<script src="../shared/kira.js?v=3"></script>
-<script src="guest.js?v=16"></script>
+<script src="../shared/kira.js?v=4"></script>
+<script src="guest.js?v=17"></script>
 </body>
 </html>

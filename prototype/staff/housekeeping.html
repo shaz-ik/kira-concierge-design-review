@@ -69,6 +69,7 @@
     .data-table .c-time, .data-table .c-by { display: none; }
     .data-table .m-only { display: block; }
   }
+  .ticket-tags { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-top: var(--sp-2); }
 </style>
 </head>
 <body class="tool-app">
@@ -80,7 +81,7 @@
     </div>
   </div>
 
-<script src="../shared/kira.js?v=3"></script>
+<script src="../shared/kira.js?v=4"></script>
 <script>
 (function () {
   'use strict';
@@ -211,6 +212,7 @@
     return '<div class="' + cls + '" role="button" tabindex="0" data-action="open" data-id="' + esc(r.id) + '" data-fkey="card-' + esc(r.id) + '" aria-label="' + esc(label) + '">' +
       '<div class="ticket-top"><span><span class="room">Room ' + esc(r.room) + '</span> <span class="rid">' + esc(r.ref) + '</span></span>' + badge + '</div>' +
       '<div class="ticket-items">' + esc(r.title) + '</div>' +
+      (!done && Kira.store.dndOf(r.room) ? '<div class="ticket-tags"><span class="badge badge-warn">Do not disturb</span></div>' : '') +
       (r.note ? '<div class="ticket-note">“' + esc(r.note) + '”</div>' : '') +
       '<div class="ticket-meta">' + meta + '</div>' +
     '</div>';

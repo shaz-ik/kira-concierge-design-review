@@ -565,8 +565,7 @@
   }
 
   function homeKiraHTML() {
-    return '<p class="bento-meta" id="home-time"></p>' +
-      '<div class="ai-home">' +
+    return '<div class="ai-home">' +
         '<button class="kira-tap" data-act="voice" aria-label="Talk to Kira"><div class="kira-photo-wrap"><img src="' + IMG.idle + '" alt="Kira"></div></button>' +
         '<p class="home-greeting">' + greeting() + '</p><p class="avatar-sub">Say “Hey Kira”, or tap to begin</p>' +
         '<button class="btn btn-ghost-dark talk-btn" data-act="voice">' + MIC + 'Talk to Kira</button>' +
@@ -631,7 +630,6 @@
 
     if (mode === 'home') {
       setMood('idle'); lastLine = '';
-      document.getElementById('home-time').innerHTML = esc(F.time()) + ' · 24°C, clear';
       renderHomeActive();
     } else {
       var v = VIEWS[ui.view]();
@@ -663,7 +661,71 @@
   var SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
   var MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
 
+  /* ---------------- Time & weather (top bar) ----------------
+     Live current weather for Dubai Marina from Open-Meteo (free, no key), refreshed every 15 min.
+     Falls back to 24°C sunny/clear offline. ?weather=sunny|clear|partly|cloudy|rain|storm previews an icon. */
+  var WX = {
+    sunny: { file: 'wx-sunny', label: 'Sunny' }, clear: { file: 'wx-clear', label: 'Clear' }, partly: { file: 'wx-partly', label: 'Partly cloudy' },
+    cloudy: { file: 'wx-cloudy', label: 'Cloudy' }, rain: { file: 'wx-rain', label: 'Rain' }, storm: { file: 'wx-storm', label: 'Thunderstorm' }
+  };
+  var weather = { code: null, temp: 24, isDay: null };
+  var WX_FORCE = ((/[?&]weather=(\w+)/.exec(location.search) || [])[1] || '').toLowerCase();
+  function wxKind() {
+    if (WX[WX_FORCE]) return WX_FORCE;
+    var day = weather.isDay != null ? weather.isDay : (function (h) { return h >= 6 && h < 18; })(new Date().getHours());
+    var c = weather.code;
+    if (c == null || c <= 1) return day ? 'sunny' : 'clear';
+    if (c >= 95) return 'storm';
+    if ((c >= 51 && c <= 67) || (c >= 80 && c <= 82)) return 'rain';
+    if (c === 2) return day ? 'partly' : 'cloudy';
+    return 'cloudy';
+  }
+  function loadWeather() {
+    if (!window.fetch) return;
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=25.08&longitude=55.14&current=temperature_2m,weather_code,is_day')
+      .then(function (r) { return r.json(); })
+      .then(function (d) { if (!d || !d.current) return; weather.code = d.current.weather_code; weather.temp = Math.round(d.current.temperature_2m); weather.isDay = !!d.current.is_day; renderNav(); })
+      .catch(function () {});
+  }
+  var wxKey = '';
+  function renderWeather() {
+    var kind = wxKind(), info = WX[kind], key = kind + '|' + weather.temp + '|' + F.time();
+    if (key === wxKey) return;
+    wxKey = key;
+    document.getElementById('wx-time').textContent = F.time();
+    var img = document.getElementById('wx-icon');
+    img.src = '../assets/icons/' + info.file + '.png';
+    document.getElementById('wx-temp').textContent = weather.temp + '°C';
+    document.getElementById('nav-weather').setAttribute('aria-label', F.time() + ', ' + info.label + ', ' + weather.temp + ' degrees');
+    img.title = info.label;
+  }
+
+  /* ---------------- Do not disturb ---------------- */
+  var dndBtn = document.getElementById('dnd-btn');
+  function renderDnd() {
+    var on = !!S.dndOf(ROOM);
+    dndBtn.classList.toggle('on', on);
+    dndBtn.setAttribute('aria-pressed', String(on));
+    dndBtn.setAttribute('aria-label', on ? 'Do not disturb is on — tap to turn off' : 'Turn on do not disturb');
+  }
+  dndBtn.addEventListener('click', function () {
+    var on = !S.dndOf(ROOM);
+    sound('tick');
+    S.setDnd(ROOM, on);
+    ui$.toast(on ? 'Do not disturb is on — the front desk has been told' : 'Do not disturb is off', on ? 'ok' : undefined);
+    speak(on ? 'Do not disturb is on. I’ve let the front desk know.' : 'Do not disturb is off.');
+  });
+
+  // When the bar runs out of room (bigger text), drop the least important labels one step at a time.
+  var navEl = document.querySelector('.tablet-navbar');
+  function fitNav() {
+    navEl.classList.remove('c1', 'c2', 'c3', 'c4');
+    ['c1', 'c2', 'c3', 'c4'].forEach(function (c) { if (navEl.scrollWidth > navEl.clientWidth + 1) navEl.classList.add(c); });
+  }
+
   function renderNav() {
+    renderWeather();
+    renderDnd();
     var light = document.documentElement.classList.contains('theme-light');
     var tb = document.getElementById('theme-btn');
     tb.innerHTML = light ? MOON : SUN;
@@ -671,6 +733,7 @@
     tb.title = tb.getAttribute('aria-label');
     renderVolume();
     document.getElementById('room-chip').textContent = 'Room ' + ROOM;
+    fitNav();
   }
 
   /* ---------------- Volume control ----------------
@@ -1168,6 +1231,7 @@
     document.getElementById('text-down').disabled = ui.textScale <= -1;
     document.getElementById('text-up').disabled = ui.textScale >= TEXT_STEPS.length - 2;
     try { localStorage.setItem('kira-guest-text', String(ui.textScale)); } catch (e) {}
+    if (typeof fitNav === 'function' && navEl) fitNav();
     if (!quiet) {
       sound('tick');
       document.querySelectorAll('.proto-toast').forEach(function (t) { if (/^Text size:/.test(t.textContent)) t.remove(); }); // replace, don't stack
@@ -1211,6 +1275,8 @@
     render();
   });
   S.runAutopilot();
+  loadWeather();
+  setInterval(loadWeather, 15 * 60000);
   ui$.every(function () { if (!ui.voice.busy) render(); }, 15000);
   ui$.launcherPill('../index.html');
 })();

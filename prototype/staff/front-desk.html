@@ -77,6 +77,12 @@
   .help-alert .meta { font-size: 12px; color: var(--muted-on-sand); }
   .help-alert .btn-tool { flex-shrink: 0; background: var(--paper); }
   .help-alert.is-new { animation: alert-arrive 1.2s ease-out 2; }
+  .dnd-strip { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-tool); background: rgba(91,43,184,.07); font-size: var(--fs-small); }
+  .dnd-label { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--brass-deep); margin-right: var(--sp-1); }
+  .dnd-label svg { width: 16px; height: 16px; }
+  .dnd-chip { padding: 3px 10px; border-radius: 999px; background: var(--paper); box-shadow: 0 1px 2px rgba(19,19,19,.08); color: var(--ink-on-sand); }
+  .dnd-chip strong { font-weight: 700; }
+  .dnd-chip.is-new { animation: alert-arrive 1.2s ease-out 2; }
   @keyframes pulse-err { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,.55); } 100% { box-shadow: 0 0 0 9px rgba(239,68,68,0); } }
   @keyframes pulse-warn { 0% { box-shadow: 0 0 0 0 rgba(245,158,11,.55); } 100% { box-shadow: 0 0 0 9px rgba(245,158,11,0); } }
   @keyframes alert-arrive { 0% { box-shadow: 0 0 0 4px rgba(239,68,68,.35); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
@@ -129,7 +135,7 @@
     </main>
   </div>
 
-<script src="../shared/kira.js?v=3"></script>
+<script src="../shared/kira.js?v=4"></script>
 <script>
 (function () {
   'use strict';
@@ -280,15 +286,28 @@
 
   /* ---------------- Arrivals & guest-side changes ---------------- */
 
+  let prevDnd = null;
+  function dndRooms(state) { return Object.keys(state.rooms).filter(n => state.rooms[n].dnd && state.rooms[n].dnd.on); }
+  function detectDnd(state) {
+    const now = dndRooms(state);
+    if (prevDnd !== null) {
+      now.filter(n => !prevDnd.includes(n)).forEach(n => { toast(`Room ${n} turned on Do not disturb`, 'warn'); newUntil['dnd:' + n] = Date.now() + NEW_MS; chime(false); });
+      prevDnd.filter(n => !now.includes(n)).forEach(n => toast(`Room ${n} turned off Do not disturb`));
+    }
+    prevDnd = now;
+  }
+
   function detectChanges(state) {
     const reqs = state.requests;
     if (seen === null || state.seededAt !== seededAt) {      // first render, or the demo was reset
+      prevDnd = dndRooms(state);
       seen = new Set(reqs.map(keyOf));
       prevStatus = {};
       reqs.forEach(r => { prevStatus[keyOf(r)] = r.status; });
       seededAt = state.seededAt;
       return;
     }
+    detectDnd(state);
     let sound = null;
     reqs.forEach(r => {
       const k = keyOf(r);
@@ -339,6 +358,16 @@
     document.title = (pendingCount ? '(' + pendingCount + ') ' : '') + 'Front Desk — Kira Concierge';
   }
 
+  function dndHTML(state) {
+    const rooms = dndRooms(state).sort((a, b) => state.rooms[b].dnd.since - state.rooms[a].dnd.since);
+    if (!rooms.length) return '';
+    const chips = rooms.map(n => {
+      const r = state.rooms[n];
+      return `<span class="dnd-chip${isFresh('dnd:' + n) ? ' is-new' : ''}"><strong>Room ${esc(n)}</strong> · since ${esc(F.time(r.dnd.since))}${r.guest ? ' · ' + esc(r.guest) : ''}</span>`;
+    }).join('');
+    return `<div class="dnd-strip" role="status"><span class="dnd-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M7.5 12h9"/></svg>Do not disturb</span>${chips}</div>`;
+  }
+
   function alertsHTML(state) {
     const open = state.requests
       .filter(r => r.dept === 'help' && r.status === 'open')
@@ -353,7 +382,7 @@
           <div class="msg"><strong>${esc(headline)}</strong><span class="meta">${esc(meta)}</span></div>
           <button type="button" class="btn-tool btn-tool-secondary" data-action="resolve" data-id="${esc(r.id)}">Mark resolved</button>
         </div>`;
-    }).join('');
+    }).join('') + dndHTML(state);
   }
 
   function approvalsHTML(state, pending) {
