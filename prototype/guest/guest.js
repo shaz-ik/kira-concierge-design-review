@@ -511,8 +511,16 @@
     renderNav();
   }
 
+  var SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
+  var MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
+
   function renderNav() {
     document.getElementById('home-btn').hidden = ui.view === 'home';
+    var light = document.documentElement.classList.contains('theme-light');
+    var tb = document.getElementById('theme-btn');
+    tb.innerHTML = light ? MOON : SUN;
+    tb.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
+    tb.title = tb.getAttribute('aria-label');
     var mute = document.getElementById('mute-btn');
     mute.setAttribute('aria-pressed', String(ui.muted));
     mute.classList.toggle('muted', ui.muted);
@@ -883,6 +891,11 @@
     ui.muted = !ui.muted;
     if (ui.muted && 'speechSynthesis' in window) window.speechSynthesis.cancel();
     try { localStorage.setItem('kira-guest-muted', ui.muted ? '1' : '0'); } catch (e) {}
+    renderNav();
+  });
+  document.getElementById('theme-btn').addEventListener('click', function () {
+    var light = document.documentElement.classList.toggle('theme-light');
+    try { localStorage.setItem('kira-guest-theme', light ? 'light' : 'dark'); } catch (e) {}
     renderNav();
   });
   document.getElementById('text-up').addEventListener('click', function () { setTextScale(ui.textScale + 1); });

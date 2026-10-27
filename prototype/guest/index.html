@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kira — Guest Tablet</title>
+<script>try { if (localStorage.getItem('kira-guest-theme') === 'light') document.documentElement.classList.add('theme-light'); } catch (e) {}</script>
 <link rel="stylesheet" href="../shared/tokens.css?v=3">
 <link rel="stylesheet" href="../shared/proto.css?v=3">
 <style>
@@ -304,6 +305,76 @@
     .g-label.active, .order-total-row, .task-eyebrow, .qty-pill, .value, .g-select-chip, .add-btn, strong, .kira-notice strong) { font-weight: 500; }
   .home-greeting { font-size: 28px; letter-spacing: -.01em; }
   .task-title { letter-spacing: -.01em; }
+
+  /* =====================================================================
+     Light theme (Kira light): white frosted glass over a pale lilac/blue
+     wash. Switched from the top bar; remembered per tablet.
+     ===================================================================== */
+  .nav-icon-only { width: 44px; padding: 0; }
+  html.theme-light {
+    --ink-on-dark: #131313;
+    --muted-on-dark: #5F5E6B;
+    --brass-soft: #5B2BB8;
+    --glass: linear-gradient(180deg, rgba(255,255,255,.80), rgba(255,255,255,.54));
+    --glass-strong: linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.74));
+    --glass-edge: inset 0 1px 0 rgba(255,255,255,1), inset 0 0 0 1px rgba(255,255,255,.6);
+  }
+  html.theme-light body.guest-app { background: #E7E5EE; }
+  html.theme-light .tablet-frame.app {
+    color: #131313;
+    background:
+      radial-gradient(ellipse 58% 52% at 10% -8%, rgba(140,78,246,.24), rgba(140,78,246,.08) 45%, transparent 75%),
+      radial-gradient(ellipse 34% 40% at 94% 34%, rgba(94,161,243,.24), transparent 70%),
+      radial-gradient(ellipse 42% 34% at 34% 92%, rgba(140,78,246,.18), transparent 70%),
+      radial-gradient(ellipse 36% 32% at 82% 104%, rgba(201,179,247,.45), transparent 70%),
+      linear-gradient(rgba(96,165,250,.04), rgba(96,165,250,.04)),
+      #F7F7F9;
+    box-shadow: 0 30px 80px -30px rgba(60,40,120,.35);
+  }
+  html.theme-light .tablet-frame.app::before {
+    background-image:
+      repeating-linear-gradient(60deg, rgba(19,19,19,.03) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(-60deg, rgba(19,19,19,.03) 0 1px, transparent 1px 28px);
+  }
+  html.theme-light .tablet-frame.app::after { background: linear-gradient(90deg, transparent, rgba(140,78,246,.5), transparent); box-shadow: 0 0 18px 1px rgba(140,78,246,.25); }
+
+  html.theme-light :is(.guest-card, .home-tile, .cart-bar, .nav-btn, .nav-seg, .quick-chip, .btn-ghost-dark, .track-chip,
+    .subtitle-bar, .add-btn, .text-field, .g-select-chip, .g-banner-pending, .menu-item-unavailable-tag) {
+    box-shadow: var(--glass-edge), 0 10px 28px -16px rgba(60,40,120,.28);
+  }
+  html.theme-light .nav-seg .nav-btn { box-shadow: none; }
+  html.theme-light .nav-seg .nav-btn:hover { background: rgba(19,19,19,.05); }
+  html.theme-light .subtitle-bar { background: var(--glass-strong); color: #131313; }
+  html.theme-light .sheet, html.theme-light .kira-notice { background: linear-gradient(180deg, rgba(255,255,255,.97), rgba(255,255,255,.9)); box-shadow: var(--glass-edge), 0 30px 70px -24px rgba(60,40,120,.35); color: #131313; }
+  html.theme-light .sheet-scrim { background: rgba(40,30,70,.22); }
+  html.theme-light .text-field { color: #131313; }
+  html.theme-light .text-field::placeholder { color: #6E6D79; }
+
+  /* Solid states, Kira light: #5B2BB8 solid with white text; lavender pill behind icons */
+  html.theme-light .btn-brass, html.theme-light .quick-chip.selected, html.theme-light .add-btn.on { background: #5B2BB8; color: #FFFFFF; box-shadow: 0 8px 20px -10px rgba(91,43,184,.6); }
+  html.theme-light .btn-brass:hover, html.theme-light .quick-chip.selected:hover { background: #6B3BCC; }
+  html.theme-light .add-btn { color: #5B2BB8; }
+  html.theme-light .add-btn.on { color: #FFFFFF; }
+  html.theme-light .home-tile .ico { background: #E9DEFB; color: #8C4EF6; }
+  html.theme-light .order-total-row { background: #EFE7FD; }
+  html.theme-light .kira-photo-wrap { box-shadow: 0 0 0 6px rgba(140,78,246,.12), 0 0 30px 6px rgba(140,78,246,.22); }
+  html.theme-light .kira-photo-wrap.small { box-shadow: 0 0 0 4px rgba(140,78,246,.12), 0 0 16px 2px rgba(140,78,246,.22); }
+  html.theme-light .track-chip .dot { background: #8C4EF6; box-shadow: 0 0 8px rgba(140,78,246,.6); }
+
+  /* Status tints */
+  html.theme-light .g-banner-good { background: rgba(22,163,74,.12); color: #15803D; }
+  html.theme-light .g-banner-warn { background: rgba(180,83,9,.12); color: #B45309; }
+  html.theme-light .menu-item .allergen { color: #B45309; }
+  html.theme-light .nav-help { background: rgba(220,38,38,.1); color: #B91C1C; }
+  html.theme-light .nav-help:hover { background: rgba(220,38,38,.16); }
+  html.theme-light .btn-danger { background: #DC2626; }
+
+  /* Tracker */
+  html.theme-light .g-dot, html.theme-light .g-line { background: rgba(19,19,19,.12); }
+  html.theme-light .g-dot.done, html.theme-light .g-line.done { background: #8C4EF6; }
+  html.theme-light .g-dot.active { background: #FFFFFF; border-color: #8C4EF6; box-shadow: 0 0 0 4px rgba(140,78,246,.18); }
+  html.theme-light :is(.menu-card, .hk-list, .scroll-col) { scrollbar-color: rgba(91,43,184,.3) transparent; }
+  html.theme-light .proto-pill { color: #FFFFFF; }
 </style>
 </head>
 <body class="guest-app">
@@ -316,6 +387,7 @@
           <button class="nav-btn" id="lang-btn" aria-haspopup="dialog" aria-label="Language: English"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>EN</button>
         </div>
         <div class="nav-group">
+          <button class="nav-btn nav-icon-only" id="theme-btn"></button>
           <button class="nav-btn" id="mute-btn" aria-pressed="false"></button>
           <span class="nav-seg" role="group" aria-label="Text size"><button class="nav-btn" id="text-down" aria-label="Smaller text"><span class="a-sm">A</span>−</button><button class="nav-btn" id="text-up" aria-label="Larger text"><span class="a-lg">A</span>+</button></span>
           <button class="nav-btn nav-help" id="help-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.93 4.93 4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M4.93 19.07l4.24-4.24"/></svg>Help / Emergency</button>
@@ -329,6 +401,6 @@
   </div>
   <p class="rotate-hint">Rotate your phone for a bigger tablet view</p>
 <script src="../shared/kira.js?v=3"></script>
-<script src="guest.js?v=4"></script>
+<script src="guest.js?v=5"></script>
 </body>
 </html>
