@@ -243,9 +243,8 @@
     animTimers[el.id + cls] = setTimeout(function () { el.classList.remove(cls); }, ms || 900);
   }
 
-  function shortcut(act, icon, name, info) {
-    return '<button class="shortcut" data-act="' + act + '"><img src="' + ICON + icon + '.png" alt="" width="40" height="40">' +
-      '<span class="svc-text"><span class="name">' + esc(name) + '</span><span class="info">' + esc(info) + '</span></span></button>';
+  function shortcut(act, icon, name) {
+    return '<button class="shortcut" data-act="' + act + '"><img src="' + ICON + icon + '.png" alt="" width="36" height="36"><span class="name">' + esc(name) + '</span></button>';
   }
   // Welcome backdrop: a Dubai Marina skyline in two layers over the water, drawn once (same towers every time)
   var skyline = null;
@@ -279,7 +278,7 @@
           '<p class="home-greeting">' + greeting() + '</p>' +
           '<p class="avatar-sub">Welcome to the Grand Marina. I’m Kira — ask me anything about the hotel, or let me show you the way.</p>' +
           '<button class="btn btn-hero talk-btn" data-act="voice">' + MIC + 'Talk to Kira</button>' +
-          '<div class="shortcuts">' + shortcut('places', 'place-all', 'Find a place', 'Directions on a 3D map') + shortcut('info', 'info', 'Hotel info', 'Wi-Fi, dining, what’s on') + '</div>' +
+          '<div class="shortcuts">' + shortcut('places', 'place-all', 'Find a place') + shortcut('info', 'info', 'Hotel info') + '</div>' +
         '</div>' +
       '</div>';
   }

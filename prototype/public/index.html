@@ -48,18 +48,18 @@
   .welcome-copy .avatar-sub { margin-top: 6px; max-width: 560px; font-size: calc(16px * var(--ts, 1)); line-height: 1.45; color: var(--muted-on-dark); }
   .welcome-copy .talk-btn { margin-top: 22px; min-height: 52px; padding: 0 30px; }
   .shortcuts { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 16px; }
+  /* shortcuts: solid filled buttons (not glass) — icon + name only */
   .shortcut {
-    display: flex; align-items: center; gap: 12px; min-width: 230px; min-height: 64px; padding: 10px 20px 10px 12px;
-    border: none; border-radius: 20px; background: var(--glass); box-shadow: var(--glass-edge), 0 14px 30px -20px rgba(0,0,0,.8);
-    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
-    color: var(--ink-on-dark); font-family: inherit; text-align: left; cursor: pointer; transition: background-color .2s, transform .14s cubic-bezier(.3,.7,.4,1.4);
+    display: flex; align-items: center; justify-content: center; gap: 10px; min-width: 200px; min-height: 56px; padding: 0 24px 0 16px;
+    border: none; border-radius: 999px; background: #2E2838; box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 12px 28px -14px rgba(0,0,0,.8);
+    color: #FFFFFF; font-family: inherit; cursor: pointer; transition: background-color .2s, transform .14s cubic-bezier(.3,.7,.4,1.4);
   }
-  .shortcut:hover { background: var(--glass-strong); }
+  .shortcut:hover { background: #383143; }
   .shortcut:active { transform: scale(.97); }
-  .shortcut img { width: calc(40px * (2.2 - var(--ts)) / 1.2); height: auto; flex-shrink: 0; filter: drop-shadow(0 6px 8px rgba(0,0,0,.35)); }
-  .shortcut .name { font-size: calc(15.5px * var(--ts, 1)); font-weight: 500; }
-  .shortcut .info { font-size: calc(12.5px * var(--ts, 1)); color: var(--muted-on-dark); }
-  html.theme-light .shortcut { box-shadow: var(--glass-edge), 0 10px 26px -16px rgba(60,40,120,.3); }
+  .shortcut img { width: calc(32px * (2.2 - var(--ts)) / 1.2); height: auto; flex-shrink: 0; filter: drop-shadow(0 4px 6px rgba(0,0,0,.35)); }
+  .shortcut .name { font-size: calc(16px * var(--ts, 1)); font-weight: 500; }
+  html.theme-light .shortcut { background: #FFFFFF; color: #131313; box-shadow: 0 10px 26px -14px rgba(60,40,120,.35); }
+  html.theme-light .shortcut:hover { background: #F4EFFD; }
   html.theme-light .shortcut img { filter: drop-shadow(0 6px 8px rgba(60,40,120,.2)); }
   .bento.swap .welcome-copy > * { animation: rise-in .55s cubic-bezier(.22,.9,.24,1) both; }
   .bento.swap .welcome-copy > :nth-child(1) { animation-delay: .18s; } .bento.swap .welcome-copy > :nth-child(2) { animation-delay: .24s; }
@@ -208,7 +208,7 @@
   <p class="rotate-hint">Rotate your phone for a bigger tablet view</p>
 <script src="../shared/kira.js?v=5"></script>
 <script src="hotel-map.js?v=4"></script>
-<script src="public.js?v=7"></script>
+<script src="public.js?v=8"></script>
 <script type="module" src="map3d.js?v=8"></script>
 </body>
 </html>
