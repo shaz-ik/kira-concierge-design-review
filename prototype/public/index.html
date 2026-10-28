@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kira — Public Kiosk</title>
-<script>try { if (localStorage.getItem('kira-kiosk-theme') === 'light') document.documentElement.classList.add('theme-light'); } catch (e) {}</script>
 <link rel="stylesheet" href="../shared/tokens.css?v=3">
 <link rel="stylesheet" href="../shared/proto.css?v=3">
 <link rel="stylesheet" href="../shared/tablet.css?v=1">
@@ -16,9 +15,20 @@
      with the steps beside it (40%).
      ===================================================================== */
 
-  /* Top bar: where this kiosk stands */
-  .nav-where { display: inline-flex; align-items: center; gap: 6px; }
-  .nav-where svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--brass-soft); }
+  /* No top bar on the kiosk: the panels take the whole screen. Where / time / weather, language
+     and Help sit at the top of the welcome; every other screen keeps Help in its header. */
+  .tablet-body.bento-home { padding-top: 20px; }
+  .welcome-top { position: absolute; z-index: 2; top: 18px; left: 22px; right: 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .kiosk-status { display: flex; align-items: center; gap: 16px; font-size: calc(14px * var(--ts, 1)); font-weight: 500; color: var(--ink-on-dark); white-space: nowrap; }
+  .kiosk-status .where { display: inline-flex; align-items: center; gap: 6px; color: var(--muted-on-dark); }
+  .kiosk-status .where svg { width: 16px; height: 16px; color: var(--brass-soft); }
+  .kiosk-status .time { color: var(--muted-on-dark); }
+  .kiosk-status .wx { display: inline-flex; align-items: center; gap: 6px; }
+  .kiosk-status .wx img { width: 26px; height: 26px; filter: drop-shadow(0 3px 5px rgba(0,0,0,.35)); }
+  .welcome-actions { display: flex; gap: 8px; }
+  .welcome-actions .nav-btn { font-size: calc(14px * var(--ts, 1)); }
+  .help-mini { margin-left: 4px; flex-shrink: 0; }
+  .panel-head .panel-title + .help-mini { margin-left: auto; }
 
   /* Welcome: the Kira panel fills the screen; drifting glows and the Marina skyline behind */
   .tablet-body.bento-home .bento-ai:has(.welcome) { padding: 0; background: var(--glass); }
@@ -42,10 +52,10 @@
   html.theme-light .skyline .shimmer { stroke: rgba(140,78,246,.3); }
   @media (prefers-reduced-motion: reduce) { .orb, .skyline .shimmer { animation: none; } }
 
-  .welcome-copy { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px 40px 40px; text-align: center; }
+  .welcome-copy { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 72px 40px 40px; text-align: center; }
   .welcome-copy .kira-photo-wrap { width: calc(132px * (2.2 - var(--ts)) / 1.2); }
   .welcome-copy .home-greeting { margin-top: 18px; font-size: calc(34px * var(--ts, 1)); }
-  .welcome-copy .avatar-sub { margin-top: 6px; max-width: 560px; font-size: calc(16px * var(--ts, 1)); line-height: 1.45; color: var(--muted-on-dark); }
+  .welcome-copy .avatar-sub { margin-top: 6px; max-width: 560px; text-wrap: balance; font-size: calc(16px * var(--ts, 1)); line-height: 1.45; color: var(--muted-on-dark); }
   .welcome-copy .talk-btn { margin-top: 22px; min-height: 52px; padding: 0 30px; }
   .shortcuts { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 16px; }
   /* shortcuts: solid filled buttons (not glass) — icon + name only */
@@ -181,25 +191,6 @@
 <body class="guest-app">
   <div class="stage" id="stage">
     <div class="tablet-frame app" id="tablet">
-      <div class="tablet-navbar">
-        <div class="nav-group">
-          <span class="nav-room nav-where" id="where-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><span id="where-text"></span></span>
-          <span class="nav-weather" id="nav-weather" role="status"><span class="wx-time" id="wx-time"></span><img id="wx-icon" alt="" width="28" height="28"><span id="wx-temp"></span></span>
-          <button class="nav-btn" id="lang-btn" aria-haspopup="dialog" aria-label="Language: English"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>EN</button>
-        </div>
-        <div class="nav-group">
-          <button class="nav-btn nav-icon-only" id="theme-btn"></button>
-          <div class="vol" id="vol" role="group" aria-label="Volume">
-            <button class="nav-btn nav-icon-only vol-btn" id="vol-btn" aria-expanded="false" aria-controls="vol-panel"></button>
-            <div class="vol-panel" id="vol-panel">
-              <input type="range" class="vol-range" id="vol-range" min="0" max="100" step="1" aria-label="Kira volume">
-              <button class="vol-mute" id="mute-btn" aria-pressed="false"></button>
-            </div>
-          </div>
-          <span class="nav-seg" role="group" aria-label="Text size"><button class="nav-btn" id="text-down" aria-label="Smaller text"><span class="a-sm">A</span>−</button><button class="nav-btn" id="text-up" aria-label="Larger text"><span class="a-lg">A</span>+</button></span>
-          <button class="nav-btn nav-help" id="help-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.93 4.93 4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M4.93 19.07l4.24-4.24"/></svg><span class="help-long">Help / Emergency</span><span class="help-short">Help</span></button>
-        </div>
-      </div>
       <div class="tablet-context" id="context"></div>
       <div class="tablet-body" id="body"></div>
       <div id="overlay"></div>
@@ -208,7 +199,7 @@
   <p class="rotate-hint">Rotate your phone for a bigger tablet view</p>
 <script src="../shared/kira.js?v=5"></script>
 <script src="hotel-map.js?v=4"></script>
-<script src="public.js?v=8"></script>
+<script src="public.js?v=9"></script>
 <script type="module" src="map3d.js?v=8"></script>
 </body>
 </html>

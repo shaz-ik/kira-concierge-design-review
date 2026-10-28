@@ -31,7 +31,7 @@
     voice: { text: '', typing: '', busy: false },
     voiceFrom: null,
     overlay: null, helpKind: null, helpId: null,
-    muted: false, volume: 0.8, textScale: 0
+    muted: false, volume: 0.8
   };
   var seededAt = S.get().seededAt;
 
@@ -121,6 +121,9 @@
   var VIEWS = {};
   var MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/></svg>';
   var BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
+  var GLOBE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
+  var LIFEBUOY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.93 4.93 4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M4.93 19.07l4.24-4.24"/></svg>';
+  var HELP_MINI = '<button class="nav-btn nav-help nav-icon-only help-mini" data-act="help" aria-label="Help or emergency" title="Help / Emergency">' + LIFEBUOY + '</button>';
   var REPLAY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>';
   var DRAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>';
 
@@ -272,6 +275,9 @@
   }
   function homeKiraHTML() {
     return '<div class="welcome">' +
+        '<div class="welcome-top"><div class="kiosk-status" id="kiosk-status" role="status"></div><div class="welcome-actions">' +
+          '<button class="nav-btn" data-act="lang" aria-haspopup="dialog" aria-label="Language: English">' + GLOBE + 'EN</button>' +
+          '<button class="nav-btn nav-help" data-act="help">' + LIFEBUOY + 'Help / Emergency</button></div></div>' +
         '<div class="welcome-bg" aria-hidden="true"><span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span>' + skylineSVG() + '</div>' +
         '<div class="welcome-copy">' +
           '<button class="kira-tap" data-act="voice" aria-label="Talk to Kira"><div class="kira-photo-wrap"><img src="' + IMG.idle + '" alt="Kira"></div></button>' +
@@ -283,11 +289,11 @@
       '</div>';
   }
   function voiceShellHTML() {
-    return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title">Talk to Kira</p></div>' +
+    return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title">Talk to Kira</p>' + HELP_MINI + '</div>' +
       '<div class="voice-grid"><div class="kira-stage" id="kira-big"></div><div class="voice-side" id="voice-col"></div></div>';
   }
   function flowShellHTML() {
-    return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title" id="flow-title"></p><div class="kira-mini" id="kira-mini"></div></div>' +
+    return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title" id="flow-title"></p><div class="kira-mini" id="kira-mini"></div>' + HELP_MINI + '</div>' +
       '<div class="task-col flow-body" id="task-col"></div>';
   }
 
@@ -361,13 +367,10 @@
       if (el && el !== document.activeElement) { el.focus(); try { if (selStart != null) el.setSelectionRange(selStart, selStart); } catch (e) {} }
     }
     renderOverlay();
-    renderNav();
+    renderStatus();
   }
 
-  var SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
-  var MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
-
-  /* ---------------- Time & weather (top bar) — same source as the guest tablet ---------------- */
+  /* ---------------- Where, time & weather (top of the welcome screen) — same weather source as the guest tablet ---------------- */
 
   var WX = {
     sunny: { file: 'wx-sunny', label: 'Sunny' }, clear: { file: 'wx-clear', label: 'Clear' }, partly: { file: 'wx-partly', label: 'Partly cloudy' },
@@ -389,82 +392,21 @@
     if (!window.fetch) return;
     fetch('https://api.open-meteo.com/v1/forecast?latitude=25.08&longitude=55.14&current=temperature_2m,weather_code,is_day')
       .then(function (r) { return r.json(); })
-      .then(function (d) { if (!d || !d.current) return; weather.code = d.current.weather_code; weather.temp = Math.round(d.current.temperature_2m); weather.isDay = !!d.current.is_day; renderNav(); })
+      .then(function (d) { if (!d || !d.current) return; weather.code = d.current.weather_code; weather.temp = Math.round(d.current.temperature_2m); weather.isDay = !!d.current.is_day; renderStatus(); })
       .catch(function () {});
   }
-  var wxKey = '';
-  function renderWeather() {
-    var kind = wxKind(), info = WX[kind], key = kind + '|' + weather.temp + '|' + F.time();
-    if (key === wxKey) return;
-    wxKey = key;
-    document.getElementById('wx-time').textContent = F.time();
-    var img = document.getElementById('wx-icon');
-    img.src = ICON + info.file + '.png';
-    document.getElementById('wx-temp').textContent = weather.temp + '°C';
-    document.getElementById('nav-weather').setAttribute('aria-label', F.time() + ', ' + info.label + ', ' + weather.temp + ' degrees');
-    img.title = info.label;
+  var PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>';
+  function renderStatus() {
+    var el = document.getElementById('kiosk-status');
+    if (!el) return;
+    var info = WX[wxKind()], key = info.file + '|' + weather.temp + '|' + F.time();
+    if (el.dataset.key === key) return;
+    el.dataset.key = key;
+    el.setAttribute('aria-label', KIOSK.label + ', ' + floorShort(KIOSK.floor) + '. ' + F.time() + ', ' + info.label + ', ' + weather.temp + ' degrees');
+    el.innerHTML = '<span class="where">' + PIN + esc(KIOSK.label + ' · ' + floorShort(KIOSK.floor)) + '</span><span class="time">' + esc(F.time()) + '</span>' +
+      '<span class="wx"><img src="' + ICON + info.file + '.png" alt="" width="26" height="26" title="' + esc(info.label) + '">' + weather.temp + '°C</span>';
   }
   function weatherText() { return 'It’s ' + weather.temp + '°C and ' + WX[wxKind()].label.toLowerCase() + ' in Dubai Marina right now.'; }
-
-  var navEl = document.querySelector('.tablet-navbar');
-  function fitNav() {
-    navEl.classList.remove('c1', 'c2', 'c3', 'c4');
-    ['c1', 'c2', 'c3', 'c4'].forEach(function (c) { if (navEl.scrollWidth > navEl.clientWidth + 1) navEl.classList.add(c); });
-  }
-
-  function renderNav() {
-    renderWeather();
-    var light = document.documentElement.classList.contains('theme-light');
-    var tb = document.getElementById('theme-btn');
-    tb.innerHTML = light ? MOON : SUN;
-    tb.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
-    tb.title = tb.getAttribute('aria-label');
-    renderVolume();
-    document.getElementById('where-text').textContent = KIOSK.label + ' · ' + floorShort(KIOSK.floor);
-    fitNav();
-  }
-
-  /* ---------------- Volume (speaker → slider + mute, folds back after 3 s) ---------------- */
-
-  var SPK = '<path d="M11 5 6 9H2v6h4l5 4V5Z"/>';
-  function speakerIcon(level) {
-    var waves = level === 'off' ? '<path d="m22 9-6 6M16 9l6 6"/>' : level === 'low' ? '<path d="M15.5 8.5a5 5 0 0 1 0 7"/>' : '<path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>';
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + SPK + waves + '</svg>';
-  }
-  var volEl = document.getElementById('vol'), volBtn = document.getElementById('vol-btn'), volRange = document.getElementById('vol-range'), muteBtn = document.getElementById('mute-btn');
-  var volTimer = null, volKey = '';
-  function renderVolume() {
-    var silent = ui.muted || ui.volume <= 0, pct = Math.round(ui.volume * 100);
-    var level = silent ? 'off' : ui.volume < 0.5 ? 'low' : 'high';
-    var key = level + '|' + pct + '|' + ui.muted;
-    if (key === volKey) return;
-    volKey = key;
-    volBtn.innerHTML = speakerIcon(level);
-    volBtn.setAttribute('aria-label', silent ? 'Volume — muted' : 'Volume ' + pct + '%');
-    if (document.activeElement !== volRange) volRange.value = pct;
-    volRange.style.setProperty('--val', (ui.muted ? 0 : pct) + '%');
-    volRange.setAttribute('aria-valuetext', ui.muted ? 'Muted' : pct + '%');
-    volEl.classList.toggle('is-muted', silent);
-    muteBtn.innerHTML = speakerIcon(ui.muted ? 'high' : 'off');
-    muteBtn.setAttribute('aria-pressed', String(ui.muted));
-    muteBtn.setAttribute('aria-label', ui.muted ? 'Unmute Kira' : 'Mute Kira');
-    muteBtn.title = muteBtn.getAttribute('aria-label');
-  }
-  function volKeepOpen() { clearTimeout(volTimer); volTimer = setTimeout(volClose, 3000); }
-  function volOpen() { volEl.classList.add('open'); volBtn.setAttribute('aria-expanded', 'true'); volKeepOpen(); }
-  function volClose() { clearTimeout(volTimer); volEl.classList.remove('open'); volBtn.setAttribute('aria-expanded', 'false'); }
-  function saveVolume() { try { localStorage.setItem('kira-kiosk-volume', String(ui.volume)); localStorage.setItem('kira-kiosk-muted', ui.muted ? '1' : '0'); } catch (e) {} }
-  volBtn.addEventListener('click', function () { if (volEl.classList.contains('open')) volClose(); else { sound('tick'); volOpen(); } });
-  volRange.addEventListener('input', function () {
-    ui.volume = volRange.value / 100;
-    if (ui.volume > 0 && ui.muted) ui.muted = false;
-    saveVolume(); renderVolume(); volKeepOpen();
-  });
-  volRange.addEventListener('change', function () { sound('tick'); volKeepOpen(); });
-  ['pointerdown', 'pointermove', 'keydown', 'focusin'].forEach(function (ev) {
-    volEl.addEventListener(ev, function () { if (volEl.classList.contains('open')) volKeepOpen(); });
-  });
-  document.addEventListener('pointerdown', function (e) { if (volEl.classList.contains('open') && !volEl.contains(e.target)) volClose(); });
 
   /* ---------------- Help (sends a staff alert to the front desk) ---------------- */
 
@@ -636,6 +578,8 @@
     },
     say: function (a) { hear(a); },
     mic: toggleMic,
+    help: function () { ui.overlay = 'help'; render(); },
+    lang: function () { ui.overlay = 'lang'; render(); },
     'overlay-close': function () { ui.overlay = null; render(); },
     scrim: function () { if (ui.overlay !== 'help-confirm') { ui.overlay = null; render(); } },
     'help-assist': function () { HANDLERS['help-send']('assist'); },
@@ -675,44 +619,11 @@
     if (e.target.dataset.form === 'voice') { e.preventDefault(); hear(ui.voice.text); }
   });
 
-  muteBtn.addEventListener('click', function () {
-    ui.muted = !ui.muted;
-    if (!ui.muted && ui.volume <= 0) ui.volume = 0.5;
-    if (ui.muted && 'speechSynthesis' in window) window.speechSynthesis.cancel();
-    saveVolume(); renderVolume(); volKeepOpen();
-    if (!ui.muted) sound('tick');
-  });
-  document.getElementById('theme-btn').addEventListener('click', function () {
-    var light = document.documentElement.classList.toggle('theme-light');
-    try { localStorage.setItem('kira-kiosk-theme', light ? 'light' : 'dark'); } catch (e) {}
-    if (window.KiraMap) KiraMap.setTheme(light);
-    renderNav();
-  });
-  document.getElementById('text-up').addEventListener('click', function () { setTextScale(ui.textScale + 1); });
-  document.getElementById('text-down').addEventListener('click', function () { setTextScale(ui.textScale - 1); });
-  document.getElementById('lang-btn').addEventListener('click', function () { ui.overlay = 'lang'; render(); });
-  document.getElementById('help-btn').addEventListener('click', function () { ui.overlay = 'help'; render(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && ui.overlay) { ui.overlay = null; render(); } });
 
-  var TEXT_STEPS = [1, 1.12, 1.25], TEXT_NAMES = ['Default', 'Large', 'Larger'];
-  function setTextScale(n, quiet) {
-    ui.textScale = Math.max(0, Math.min(TEXT_STEPS.length - 1, n));
-    var f = TEXT_STEPS[ui.textScale];
-    document.documentElement.style.setProperty('--ts', f);
-    document.documentElement.style.fontSize = (16 * f) + 'px';
-    document.getElementById('text-down').disabled = ui.textScale <= 0;
-    document.getElementById('text-up').disabled = ui.textScale >= TEXT_STEPS.length - 1;
-    fitNav();
-    if (!quiet) {
-      sound('tick');
-      document.querySelectorAll('.proto-toast').forEach(function (t) { if (/^Text size:/.test(t.textContent)) t.remove(); }); // replace, don't stack
-      ui$.toast('Text size: ' + TEXT_NAMES[ui.textScale]);
-    }
-  }
-
   /* ---------------- A public screen resets itself ----------------
-     After a minute untouched it returns to the welcome screen with default text size, so the
-     next visitor never lands on someone else's directions or question. */
+     After a minute untouched it returns to the welcome screen, so the next visitor never
+     lands on someone else's directions or question. */
 
   var lastTouch = Date.now();
   function touched() { lastTouch = Date.now(); }
@@ -721,11 +632,10 @@
     if (Date.now() - lastTouch < IDLE_MS || ui.voice.busy || recognizing) return;
     var helpOpen = ui.overlay === 'help-sent' && ui.helpId && S.find(ui.helpId) && S.find(ui.helpId).status === 'open';
     if (helpOpen) return; // someone is on their way here — keep that on screen
-    if (ui.view === 'home' && !ui.overlay && ui.textScale === 0) return;
+    if (ui.view === 'home' && !ui.overlay) return;
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     ui.view = 'home'; ui.place = null; ui.answer = null; ui.reply = ''; ui.heard = ''; ui.overlay = null; ui.dirFrom = null; ui.topic = null; ui.placeCat = 'popular';
     ui.voice = { text: '', typing: '', busy: false };
-    setTextScale(0, true);
     render();
   }, 5000);
 
@@ -744,12 +654,6 @@
 
   /* ---------------- Boot ---------------- */
 
-  setTextScale(0, true);
-  try {
-    ui.muted = localStorage.getItem('kira-kiosk-muted') === '1';
-    var savedVol = parseFloat(localStorage.getItem('kira-kiosk-volume'));
-    if (!isNaN(savedVol)) ui.volume = Math.max(0, Math.min(1, savedVol));
-  } catch (e) {}
   var placeHash = /^#to=(\w+)/.exec(location.hash);
   if (placeHash && H.place(placeHash[1])) { ui.place = placeHash[1]; ui.view = 'directions'; }
 
@@ -760,6 +664,6 @@
   render();
   loadWeather();
   setInterval(loadWeather, 15 * 60000);
-  ui$.every(function () { if (!ui.voice.busy) renderNav(); }, 15000);
+  ui$.every(renderStatus, 15000);
   ui$.launcherPill('../index.html');
 })();
