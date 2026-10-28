@@ -10,7 +10,7 @@
   html, body { height: 100%; }
   body { display: flex; flex-direction: column; background: var(--dusk-ink); overflow: hidden; }
 
-  /* Top bar: brand · Guest | Staff switch · demo controls */
+  /* Top bar: brand · Guest | Kiosk | Staff switch · demo controls */
   .bar { flex-shrink: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; padding: 8px 16px; background: var(--lagoon-deep); color: var(--ink-on-dark); font-size: var(--fs-small); }
   .bar .brand { justify-self: start; font-weight: 600; color: var(--brass-soft); text-decoration: none; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
   .bar .brand::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffffff, var(--brass-soft) 55%, var(--brass) 100%); box-shadow: 0 0 7px 1px rgba(196,166,255,.55); }
@@ -21,6 +21,7 @@
   .sides .n { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; font-size: 11px; line-height: 18px; text-align: center; background: var(--brass); color: #fff; }
   .sides .n:empty { display: none; }
   .sides button.ping .n { animation: ping 1.2s ease-out 3; }
+  .sides .short { display: none; }
   .bar .controls { margin-left: auto; display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; justify-content: flex-end; }
   .toggle { display: inline-flex; align-items: center; gap: var(--sp-2); background: none; border: none; color: rgba(255,255,255,.8); font: inherit; cursor: pointer; padding: 4px 0; white-space: nowrap; }
   .toggle .sw { position: relative; width: 30px; height: 17px; border-radius: 999px; background: rgba(255,255,255,.2); transition: background .15s; }
@@ -35,7 +36,7 @@
   .side { position: absolute; inset: 0; display: flex; flex-direction: column; }
   .side[hidden], .side[hidden] iframe, .side[hidden] iframe.on { visibility: hidden; pointer-events: none; }
   .side[hidden] { display: flex; }
-  .side-guest { background: #0b0b0d; }
+  .side-guest, .side-kiosk { background: #0b0b0d; }
   .side-staff { background: var(--paper); }
   iframe { border: 0; width: 100%; height: 100%; display: block; }
   .tabs { flex-shrink: 0; display: flex; gap: 2px; overflow-x: auto; padding: 8px 12px 0; background: var(--sand-2); border-bottom: 1px solid rgba(19,19,19,.1); scrollbar-width: none; }
@@ -55,7 +56,9 @@
     .bar { justify-content: center; gap: 8px; padding: 8px 10px; }
     .bar .brand { display: none; }
     .sides { width: 100%; }
-    .sides button { flex: 1; justify-content: center; }
+    .sides button { flex: 1; justify-content: center; padding: 0 10px; }
+    .sides .long { display: none; }
+    .sides .short { display: inline; }
     .bar .controls { margin-left: 0; width: 100%; justify-content: space-between; gap: 8px; flex-wrap: nowrap; }
     .toggle .long { display: none; }
     .toggle .short { display: inline; }
@@ -66,8 +69,9 @@
   <div class="bar">
     <a class="brand" href="index.html" title="Back to the prototype launcher">Kira Concierge · Live demo</a>
     <div class="sides" role="tablist" aria-label="Which side of the app">
-      <button role="tab" id="side-guest-tab" data-side="guest" aria-controls="side-guest">Guest tablet</button>
-      <button role="tab" id="side-staff-tab" data-side="staff" aria-controls="side-staff">Staff apps<span class="n"></span></button>
+      <button role="tab" id="side-guest-tab" data-side="guest" aria-controls="side-guest"><span>Guest<span class="long"> tablet</span></span></button>
+      <button role="tab" id="side-kiosk-tab" data-side="kiosk" aria-controls="side-kiosk"><span><span class="long">Public kiosk</span><span class="short">Kiosk</span></span></button>
+      <button role="tab" id="side-staff-tab" data-side="staff" aria-controls="side-staff"><span>Staff<span class="long"> apps</span></span><span class="n"></span></button>
     </div>
     <div class="controls">
       <button class="toggle" role="switch" id="autopilot" aria-checked="false"><span class="sw"></span><span>Autopilot<span class="long"> staff</span></span></button>
@@ -80,12 +84,15 @@
     <section class="side side-guest" id="side-guest" role="tabpanel" aria-labelledby="side-guest-tab">
       <iframe src="guest/index.html" title="Guest tablet — Room 412" allow="microphone; autoplay"></iframe>
     </section>
+    <section class="side side-kiosk" id="side-kiosk" role="tabpanel" aria-labelledby="side-kiosk-tab" hidden>
+      <iframe src="public/index.html" title="Public kiosk — lobby" allow="microphone; autoplay"></iframe>
+    </section>
     <section class="side side-staff" id="side-staff" role="tabpanel" aria-labelledby="side-staff-tab" hidden>
       <div class="tabs" role="tablist" id="tabs" aria-label="Staff apps"></div>
       <div class="frames" id="frames"></div>
     </section>
   </main>
-<script src="shared/kira.js?v=4"></script>
+<script src="shared/kira.js?v=5"></script>
 <script>
 (function () {
   var S = Kira.store;
@@ -99,13 +106,12 @@
   ];
   function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} }
 
-  /* ---- Guest | Staff switch (also reachable as demo.html#guest / demo.html#staff) ---- */
-  var side = null;
+  /* ---- Guest | Kiosk | Staff switch (also reachable as demo.html#guest / #kiosk / #staff) ---- */
+  var side = null, SIDES = ['guest', 'kiosk', 'staff'];
   function showSide(s) {
-    side = s === 'staff' ? 'staff' : 'guest';
+    side = SIDES.indexOf(s) >= 0 ? s : 'guest';
     store('kira-demo-side', side);
-    document.getElementById('side-guest').hidden = side !== 'guest';
-    document.getElementById('side-staff').hidden = side !== 'staff';
+    SIDES.forEach(function (x) { document.getElementById('side-' + x).hidden = side !== x; });
     document.querySelectorAll('.sides [data-side]').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.side === side)); });
     if (side === 'staff') { document.getElementById('side-staff-tab').classList.remove('ping'); showApp(current); }
     if (location.hash !== '#' + side) history.replaceState(null, '', '#' + side);

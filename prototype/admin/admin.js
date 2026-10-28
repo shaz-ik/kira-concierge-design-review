@@ -1079,7 +1079,7 @@
     arrivals.forEach(function (r) { markFresh('req:' + r.id); });
     if (arrivals.length === 1) {
       var r = arrivals[0];
-      toast('New request · Room ' + r.room + ' · ' + store.deptLabel(r) + ': ' + truncate(store.summary(r), 48), 'ok');
+      toast('New request · ' + (r.kiosk || 'Room ' + r.room) + ' · ' + store.deptLabel(r) + ': ' + truncate(store.summary(r), 48), 'ok');
     } else if (arrivals.length > 1) {
       toast(arrivals.length + ' new requests on the board', 'ok');
     }

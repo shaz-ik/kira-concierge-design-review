@@ -1,0 +1,712 @@
+/* Kira Concierge — public hall kiosk (working prototype).
+   A tablet in the hotel's public halls, for anyone — not tied to a room. Two jobs:
+   answer questions about the hotel, and give directions on a 3D map of the building.
+   Same components and behaviour as the guest tablet (bento home, morphing panels,
+   Kira's voice, top-bar controls); Help sends a staff alert to the front desk. */
+(function () {
+  'use strict';
+
+  var S = Kira.store, F = Kira.fmt, esc = F.esc, ui$ = Kira.ui, H = window.KiraHotel;
+  var KIOSK = H.kiosk(((/[?&]kiosk=(\w+)/.exec(location.search)) || [])[1]);
+  var KIOSK_NAME = KIOSK.label + ' kiosk · ' + H.floor(KIOSK.floor).name;
+  var IMG = {
+    idle: '../assets/kira-idle.jpg', listening: '../assets/kira-listening.jpg', thinking: '../assets/kira-thinking.jpg',
+    speaking: '../assets/kira-speaking.jpg', wake: '../assets/kira-wake.jpg'
+  };
+  var ICON = '../assets/icons/';
+  var IDLE_MS = 60000; // a public screen goes back to its welcome after a minute untouched
+  var ASK = ['Where’s the pool?', 'What’s the Wi-Fi?', 'When is breakfast?', 'Taxi to the airport', 'What’s on tonight?', 'Nearest restroom'];
+  var PHRASES = ['Where is the gym?', 'What time does the pool close?', 'How do I get to the spa?', 'What’s the Wi-Fi password?', 'Is there a prayer room?', 'How far is JBR Beach?'];
+
+  /* ---------------- Local state ---------------- */
+
+  var ui = {
+    view: 'home',          // home | directions | places | voice
+    place: null,           // place id being shown on the map
+    step: 0,               // step the walking light is on
+    answer: null,          // { title, place } — Kira's last answer, for "Show me the way"
+    heard: '', reply: '',
+    voice: { text: '', typing: '', busy: false },
+    voiceFrom: null,
+    overlay: null, helpKind: null, helpId: null,
+    muted: false, volume: 0.8, textScale: 0
+  };
+  var seededAt = S.get().seededAt;
+
+  var tablet = document.getElementById('tablet');
+  var body = document.getElementById('body');
+  var overlay = document.getElementById('overlay');
+
+  /* ---------------- Helpers ---------------- */
+
+  function greeting() { var h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; }
+  function btn(label, act, opts) {
+    opts = opts || {};
+    return '<button class="btn ' + (opts.hero ? 'btn-hero' : opts.primary ? 'btn-brass' : 'btn-ghost-dark') + '" data-act="' + act + '"' +
+      (opts.arg != null ? ' data-arg="' + esc(opts.arg) + '"' : '') + (opts.disabled ? ' disabled' : '') + '>' + esc(label) + '</button>';
+  }
+  function head(eyebrow, title) {
+    return '<div class="task-head">' + (eyebrow ? '<span class="task-eyebrow">' + esc(eyebrow) + '</span>' : '') + '<p class="task-title">' + esc(title) + '</p></div>';
+  }
+  function banner(kind, text, meta) {
+    return '<div class="g-banner g-banner-' + kind + '">' + esc(text) + (meta ? '<span class="meta">' + esc(meta) + '</span>' : '') + '</div>';
+  }
+  function floorShort(id) { return id === 'G' ? 'Ground floor' : H.floor(id).name; }
+  function openLine(p, short) {
+    var o = H.openStatus(p);
+    return o ? '<span class="open-dot' + (o.open ? '' : ' off') + '"></span>' + esc(short ? o.text.replace('Open now · until', 'Open until') : o.text) : '';
+  }
+  function placeAnswer(p) {
+    var where = p.floor === KIOSK.floor ? p.where : 'on ' + (p.floor === 'G' ? 'the ground floor' : H.floor(p.floor).name);
+    var o = H.openStatus(p);
+    return (p.say || p.name) + (p.plural ? ' are ' : ' is ') + where + (o ? ' — ' + o.text.replace('Open now · ', 'open now, ').replace('Closed · ', 'closed right now, ').replace('Open 24 hours', 'open 24 hours') : '') + '.';
+  }
+
+  /* ---------------- Kira: what she shows and says ---------------- */
+
+  var lastLine = '', speakUntil = 0, kiraKey = '', speakTimer = null, speakDelay = null;
+
+  function speak(text) {
+    if (ui.muted || ui.volume <= 0 || !('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text.replace(/[“”"]/g, '').replace(/(\d+) m\b/g, '$1 metres').replace(/\bmin\b/g, 'minute'));
+      u.rate = 1.02; u.pitch = 1.05; u.volume = ui.volume;
+      var voices = window.speechSynthesis.getVoices();
+      var pick = voices.filter(function (v) { return /en(-|_)(GB|US)/i.test(v.lang) && /female|samantha|serena|karen|moira|google uk english female|zira/i.test(v.name); })[0] ||
+                 voices.filter(function (v) { return /^en/i.test(v.lang); })[0];
+      if (pick) u.voice = pick;
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+
+  var MOODS = ['idle', 'listening', 'thinking', 'speaking', 'wake'];
+  function setMood(m) { MOODS.forEach(function (x) { body.classList.toggle('state-' + x, x === m); }); }
+
+  function setKira(k, targetId, size) {
+    var now = Date.now();
+    if (k.line && k.line !== lastLine) {
+      lastLine = k.line;
+      if (k.mood !== 'listening' && !k.quiet) {
+        // Each line is said once; a short delay drops lines skipped straight past.
+        var said = k.line;
+        clearTimeout(speakDelay);
+        speakDelay = setTimeout(function () { if (lastLine === said) speak(said); }, 400);
+        speakUntil = now + Math.min(7000, 900 + k.line.split(/\s+/).length * 330);
+        clearTimeout(speakTimer);
+        speakTimer = setTimeout(render, speakUntil - now + 20);
+      }
+    }
+    var mood = k.mood === 'speaking' && now > speakUntil ? 'idle' : k.mood;
+    setMood(mood);
+    var col = document.getElementById(targetId);
+    if (!col) return;
+    var key = targetId + '|' + mood + '|' + k.line + '|' + (k.caption || '');
+    if (key === kiraKey) return;
+    kiraKey = key;
+    if (size === 'mini') {
+      col.innerHTML = '<button class="kira-tap" data-act="voice" aria-label="Talk to Kira"><div class="kira-photo-wrap tiny"><img src="' + IMG[mood] + '" alt="Kira"></div></button>' +
+        (k.line ? '<div class="subtitle-bar">' + esc(k.line) + '</div>' : '');
+    } else {
+      col.innerHTML = '<div class="kira-photo-wrap"><img src="' + IMG[mood] + '" alt="Kira"></div>' +
+        (k.caption ? '<div class="avatar-caption">' + esc(k.caption) + '</div>' : '') +
+        (k.line ? '<div class="subtitle-bar">' + esc(k.line) + '</div>' : '');
+    }
+  }
+
+  /* ---------------- Views ---------------- */
+
+  var VIEWS = {};
+  var MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/></svg>';
+  var BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
+  var REPLAY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>';
+  var DRAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>';
+
+  function currentRoute() { return ui.place ? H.route(KIOSK.id, ui.place) : null; }
+
+  // Directions: the 3D map on the left (60%), the place and its steps on the right (40%).
+  VIEWS.directions = function () {
+    var r = currentRoute();
+    if (!r) { ui.view = 'home'; return null; }
+    var p = r.place, o = H.openStatus(p);
+    var steps = r.steps.map(function (s, i) {
+      return '<li class="dir-step' + (i === ui.step ? ' on' : '') + '" data-step="' + i + '"><span class="n">' + (i + 1) + '</span><span>' + esc(s) + '</span></li>';
+    }).join('');
+    return { context: 'Directions · ' + p.name, kira: { mood: 'speaking', line: r.line },
+      html: '<div class="status-split fill">' +
+        '<section class="status-detail map-card" aria-label="3D map of the hotel with the route to ' + esc(p.name) + '"><div class="map-slot" id="map-slot"></div>' +
+          '<span class="map-hint">' + DRAG + 'Drag to turn · pinch to zoom</span>' +
+          '<button class="nav-btn map-replay" data-act="replay">' + REPLAY + 'Replay</button></section>' +
+        '<aside class="status-actions is-summary dir-side" aria-label="Directions">' +
+          '<div class="dir-head"><img src="' + ICON + p.icon + '.png" alt="" width="52" height="52"><div><p class="side-heading">' + esc(p.name) + '</p><p class="dir-floor">' + esc(H.floorLabel(p.floor)) + '</p></div></div>' +
+          '<div class="dir-facts"><span><b>' + esc(r.time.charAt(0).toUpperCase() + r.time.slice(1)) + '</b> away</span>' + (o ? '<span>' + openLine(p, true) + '</span>' : '') + '</div>' +
+          '<ol class="dir-steps" data-scroll="steps">' + steps + '</ol>' +
+          '<div class="side-cta"><div class="status-btns">' + btn('Done', 'home', { hero: true }) + '</div></div>' +
+        '</aside></div>' };
+  };
+
+  // All places, grouped by floor; a floor guide and Talk to Kira beside them.
+  VIEWS.places = function () {
+    var list = H.FLOORS.map(function (f) {
+      var rows = H.PLACES.filter(function (p) { return p.floor === f.id; }).map(function (p) {
+        var o = H.openStatus(p);
+        return '<button class="place-row" data-act="go" data-arg="' + p.id + '"><img src="' + ICON + p.icon + '.png" alt="" width="36" height="36">' +
+          '<span class="svc-text"><span class="name">' + esc(p.name) + '</span><span class="info">' + esc(p.info) + '</span></span>' +
+          (o && p.open ? '<span class="place-open">' + openLine(p) + '</span>' : '') + '</button>';
+      }).join('');
+      return '<p class="places-floor"><span class="floor-badge">' + f.short + '</span>' + esc(f.id === 'G' ? 'Ground floor · ' + f.theme : f.name + ' · ' + f.theme) + '</p>' + rows;
+    }).join('');
+    var guide = [['G', 'Lobby', 'front desk, dining, lounge'], ['1', 'Meetings & events', 'ballroom, prayer room'], ['2', 'Wellness', 'fitness, spa, kids club'],
+      ['3–7', 'Guest rooms', ''], ['8', 'Rooftop', 'pool and Sky Bar']].map(function (g) {
+      return '<div><span class="floor-badge">' + g[0] + '</span><span><b>' + esc(g[1]) + '</b>' + (g[2] ? ' · ' + esc(g[2]) : '') + '</span></div>';
+    }).join('');
+    return { context: 'All places', kira: { mood: 'speaking', line: 'Tap a place and I’ll show you the way — or just tell me where you’re going.' },
+      html: '<div class="status-split fill"><section class="status-detail"><div class="places-list" data-scroll="places">' + list + '</div></section>' +
+        '<aside class="status-actions is-summary" aria-label="Hotel guide"><p class="side-heading">Hotel guide</p><div class="floor-guide">' + guide + '</div>' +
+        '<div class="side-cta"><div class="status-btns"><button class="btn btn-hero mic-btn" data-act="voice">' + MIC + 'Talk to Kira</button></div></div></aside></div>' };
+  };
+
+  var Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var recognizing = false;
+
+  VIEWS.voice = function () {
+    var v = ui.voice, a = !v.busy && !v.typing && ui.answer;
+    var kira = v.busy === 'thinking' ? { mood: 'thinking', line: '“' + v.typing + '”', caption: 'Thinking…' }
+      : v.typing ? { mood: 'listening', line: '“' + v.typing + '”', caption: 'Listening…' }
+      : recognizing ? { mood: 'listening', line: 'I’m listening — where would you like to go?', caption: 'Listening…' }
+      : ui.reply ? { mood: 'speaking', line: ui.reply }
+      : { mood: 'idle', line: Recognition ? 'Ask me anything about the hotel, or where something is.' : 'Tap a question, or type what you’d like to know.' };
+    var place = a && a.place && H.place(a.place);
+    var card = place
+      ? '<div class="answer-card"><img src="' + ICON + place.icon + '.png" alt="" width="44" height="44"><div><p class="name">' + esc(place.name) + '</p><p class="info">' + esc(floorShort(place.floor)) + (H.openStatus(place) ? ' · ' + esc(H.openStatus(place).text) : '') + '</p></div></div>' +
+        btn('Show me the way', 'go', { hero: true, arg: place.id })
+      : '';
+    var phrases = place ? PHRASES.slice(0, 2) : PHRASES;
+    var examples = phrases.map(function (p) { return '<button class="quick-chip" data-act="say" data-arg="' + esc(p) + '"' + (v.busy ? ' disabled' : '') + '>“' + esc(p) + '”</button>'; }).join('');
+    return { context: 'Talk to Kira', kira: kira,
+      html: '<div class="voice-panel">' + (place ? '' : head('', a ? a.title : 'Just ask')) +
+        (a ? card : '<p class="task-note">' + (Recognition ? 'Just speak — or tap a question, or type it.' : 'Tap a question, or type it.') + '</p>') +
+        '<div class="voice-examples">' + examples + '</div>' +
+        '<form class="voice-row" data-form="voice"><input class="text-field" id="voice-text" data-model="voice.text" placeholder="Type to Kira…" value="' + esc(v.text) + '" aria-label="Ask Kira" autocomplete="off"' + (v.busy ? ' disabled' : '') + '>' +
+        '<button class="btn btn-brass" type="submit"' + (v.busy ? ' disabled' : '') + '>Send</button></form>' +
+        (Recognition ? '<button class="btn mic-btn ' + (recognizing ? 'btn-ghost-dark live' : a ? 'btn-ghost-dark' : 'btn-hero') + '" data-act="mic"' + (v.busy ? ' disabled' : '') + '>' + MIC + (recognizing ? 'Listening… tap to stop' : 'Talk to Kira') + '</button>' : '') + '</div>' };
+  };
+
+  /* ---------------- One bento grid, three modes ----------------
+     home    → Kira 60% | places 40%
+     service → the places panel grows to full width (directions, all places)
+     kira    → the Kira panel grows to full width for talking */
+
+  var panelKeys = { ai: '', svc: '' }, lastView = null;
+  function modeOf(view) { return view === 'home' ? 'home' : view === 'voice' ? 'kira' : 'service'; }
+
+  function ensureShell() {
+    if (body.dataset.layout === 'bento') return;
+    body.dataset.layout = 'bento';
+    body.className = 'tablet-body bento-home mode-home state-idle';
+    body.innerHTML = '<section class="bento bento-ai" id="panel-ai" aria-label="Kira"></section><section class="bento bento-services" id="panel-svc" aria-label="Find your way"></section>';
+  }
+
+  var animTimers = {};
+  function play(el, cls, ms) {
+    el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+    clearTimeout(animTimers[el.id + cls]);
+    animTimers[el.id + cls] = setTimeout(function () { el.classList.remove(cls); }, ms || 900);
+  }
+
+  function homeKiraHTML() {
+    return '<div class="ai-home">' +
+        '<button class="kira-tap" data-act="voice" aria-label="Talk to Kira"><div class="kira-photo-wrap"><img src="' + IMG.idle + '" alt="Kira"></div></button>' +
+        '<p class="home-greeting">' + greeting() + '</p><p class="avatar-sub">Welcome to the Grand Marina. Ask me anything, or tap where you’d like to go.</p>' +
+        '<button class="btn btn-ghost-dark talk-btn" data-act="voice">' + MIC + 'Talk to Kira</button>' +
+        '<div class="home-active ask-row" data-scroll="ask">' + ASK.map(function (q) { return '<button class="quick-chip" data-act="say" data-arg="' + esc(q) + '">' + esc(q) + '</button>'; }).join('') + '</div>' +
+      '</div>';
+  }
+  function voiceShellHTML() {
+    return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title">Talk to Kira</p></div>' +
+      '<div class="voice-grid"><div class="kira-stage" id="kira-big"></div><div class="voice-side" id="voice-col"></div></div>';
+  }
+  function placesPanelHTML() {
+    return '<p class="bento-label">Where would you like to go?</p>' +
+      '<div class="place-grid">' + H.POPULAR.map(function (id) {
+        var p = H.place(id);
+        return '<button class="place-tile" data-act="go" data-arg="' + p.id + '"><img src="' + ICON + p.icon + '.png" alt="" width="42" height="42">' +
+          '<span class="name">' + esc(p.name) + '</span><span class="info">' + esc(floorShort(p.floor)) + '</span></button>';
+      }).join('') + '</div>' +
+      '<button class="svc-row all-row" data-act="places"><img src="' + ICON + 'place-all.png" alt="" width="44" height="44">' +
+        '<span class="svc-text"><span class="name">All places</span><span class="info">Dining, wellness, meetings and more</span></span></button>';
+  }
+  function flowShellHTML() {
+    return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title" id="flow-title"></p><div class="kira-mini" id="kira-mini"></div></div>' +
+      '<div class="task-col flow-body" id="task-col"></div>';
+  }
+
+  /* ---------------- 3D map ----------------
+     map3d.js loads as a module after this file; it calls back with 'kira-map-ready'.
+     If WebGL or the CDN isn't available, the steps on the right still guide the way. */
+
+  var mapKey = '', mapFailed = false;
+  function mountMap() {
+    var slot = document.getElementById('map-slot');
+    if (!slot) { mapKey = ''; return; }
+    if (mapFailed || !window.KiraMap) {
+      slot.innerHTML = '<p class="map-fallback">' + (mapFailed ? 'The 3D map isn’t available on this screen right now — the steps on the right will guide you.' : 'Loading the map…') + '</p>';
+      return;
+    }
+    try {
+      KiraMap.attach(slot);
+      var key = ui.place;
+      if (key !== mapKey) { mapKey = key; KiraMap.show(currentRoute()); }
+    } catch (e) { mapFailed = true; mountMap(); }
+  }
+  function markStep(i) {
+    ui.step = i;
+    body.querySelectorAll('.dir-step').forEach(function (el) { el.classList.toggle('on', +el.dataset.step === i); });
+  }
+  window.addEventListener('kira-map-ready', function () {
+    KiraMap.onStep = markStep;
+    KiraMap.setTheme(document.documentElement.classList.contains('theme-light'));
+    render();
+  });
+  setTimeout(function () { if (!window.KiraMap) { mapFailed = true; render(); } }, 12000);
+
+  /* ---------------- Render ---------------- */
+
+  function render() {
+    var active = document.activeElement, focusId = active && active.id, selStart = null;
+    try { selStart = active && active.selectionStart; } catch (e) {}
+    var scrolls = {};
+    body.querySelectorAll('[data-scroll]').forEach(function (el) { scrolls[el.dataset.scroll] = [el.scrollTop, el.scrollLeft]; });
+
+    ensureShell();
+    var v = ui.view === 'home' ? null : VIEWS[ui.view](); // a view can send us home (returns null)
+    var mode = modeOf(ui.view), viewChanged = ui.view !== lastView;
+    ['home', 'service', 'kira'].forEach(function (m) { body.classList.toggle('mode-' + m, m === mode); });
+    var ai = document.getElementById('panel-ai'), svc = document.getElementById('panel-svc');
+    var aiKey = mode === 'kira' ? 'voice' : 'home', svcKey = mode === 'service' ? 'flow' : 'list';
+    if (panelKeys.ai !== aiKey) { panelKeys.ai = aiKey; ai.innerHTML = aiKey === 'voice' ? voiceShellHTML() : homeKiraHTML(); kiraKey = ''; play(ai, 'swap', 1100); }
+    var svcSwapped = panelKeys.svc !== svcKey;
+    if (svcSwapped) { panelKeys.svc = svcKey; svc.innerHTML = svcKey === 'flow' ? flowShellHTML() : placesPanelHTML(); kiraKey = ''; play(svc, 'swap', 1100); }
+
+    if (mode === 'home') {
+      setMood('idle'); lastLine = '';
+    } else if (mode === 'kira') {
+      setKira(v.kira, 'kira-big', 'big');
+      var vc = document.getElementById('voice-col');
+      vc.innerHTML = v.html;
+      if (viewChanged) play(vc, 'enter');
+    } else {
+      document.getElementById('flow-title').textContent = v.context;
+      setKira(v.kira, 'kira-mini', 'mini');
+      var tc = document.getElementById('task-col');
+      tc.innerHTML = v.html;
+      if (viewChanged && !svcSwapped) play(tc, 'enter');
+    }
+    lastView = ui.view;
+    mountMap();
+
+    body.querySelectorAll('[data-scroll]').forEach(function (el) { var p = scrolls[el.dataset.scroll]; if (p) { el.scrollTop = p[0]; el.scrollLeft = p[1]; } });
+    if (focusId) {
+      var el = document.getElementById(focusId);
+      if (el && el !== document.activeElement) { el.focus(); try { if (selStart != null) el.setSelectionRange(selStart, selStart); } catch (e) {} }
+    }
+    renderOverlay();
+    renderNav();
+  }
+
+  var SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
+  var MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
+
+  /* ---------------- Time & weather (top bar) — same source as the guest tablet ---------------- */
+
+  var WX = {
+    sunny: { file: 'wx-sunny', label: 'Sunny' }, clear: { file: 'wx-clear', label: 'Clear' }, partly: { file: 'wx-partly', label: 'Partly cloudy' },
+    cloudy: { file: 'wx-cloudy', label: 'Cloudy' }, rain: { file: 'wx-rain', label: 'Rain' }, storm: { file: 'wx-storm', label: 'Thunderstorm' }
+  };
+  var weather = { code: null, temp: 24, isDay: null };
+  var WX_FORCE = ((/[?&]weather=(\w+)/.exec(location.search) || [])[1] || '').toLowerCase();
+  function wxKind() {
+    if (WX[WX_FORCE]) return WX_FORCE;
+    var day = weather.isDay != null ? weather.isDay : (function (h) { return h >= 6 && h < 18; })(new Date().getHours());
+    var c = weather.code;
+    if (c == null || c <= 1) return day ? 'sunny' : 'clear';
+    if (c >= 95) return 'storm';
+    if ((c >= 51 && c <= 67) || (c >= 80 && c <= 82)) return 'rain';
+    if (c === 2) return day ? 'partly' : 'cloudy';
+    return 'cloudy';
+  }
+  function loadWeather() {
+    if (!window.fetch) return;
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=25.08&longitude=55.14&current=temperature_2m,weather_code,is_day')
+      .then(function (r) { return r.json(); })
+      .then(function (d) { if (!d || !d.current) return; weather.code = d.current.weather_code; weather.temp = Math.round(d.current.temperature_2m); weather.isDay = !!d.current.is_day; renderNav(); })
+      .catch(function () {});
+  }
+  var wxKey = '';
+  function renderWeather() {
+    var kind = wxKind(), info = WX[kind], key = kind + '|' + weather.temp + '|' + F.time();
+    if (key === wxKey) return;
+    wxKey = key;
+    document.getElementById('wx-time').textContent = F.time();
+    var img = document.getElementById('wx-icon');
+    img.src = ICON + info.file + '.png';
+    document.getElementById('wx-temp').textContent = weather.temp + '°C';
+    document.getElementById('nav-weather').setAttribute('aria-label', F.time() + ', ' + info.label + ', ' + weather.temp + ' degrees');
+    img.title = info.label;
+  }
+  function weatherText() { return 'It’s ' + weather.temp + '°C and ' + WX[wxKind()].label.toLowerCase() + ' in Dubai Marina right now.'; }
+
+  var navEl = document.querySelector('.tablet-navbar');
+  function fitNav() {
+    navEl.classList.remove('c1', 'c2', 'c3', 'c4');
+    ['c1', 'c2', 'c3', 'c4'].forEach(function (c) { if (navEl.scrollWidth > navEl.clientWidth + 1) navEl.classList.add(c); });
+  }
+
+  function renderNav() {
+    renderWeather();
+    var light = document.documentElement.classList.contains('theme-light');
+    var tb = document.getElementById('theme-btn');
+    tb.innerHTML = light ? MOON : SUN;
+    tb.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
+    tb.title = tb.getAttribute('aria-label');
+    renderVolume();
+    document.getElementById('where-text').textContent = KIOSK.label + ' · ' + floorShort(KIOSK.floor);
+    fitNav();
+  }
+
+  /* ---------------- Volume (speaker → slider + mute, folds back after 3 s) ---------------- */
+
+  var SPK = '<path d="M11 5 6 9H2v6h4l5 4V5Z"/>';
+  function speakerIcon(level) {
+    var waves = level === 'off' ? '<path d="m22 9-6 6M16 9l6 6"/>' : level === 'low' ? '<path d="M15.5 8.5a5 5 0 0 1 0 7"/>' : '<path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/>';
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + SPK + waves + '</svg>';
+  }
+  var volEl = document.getElementById('vol'), volBtn = document.getElementById('vol-btn'), volRange = document.getElementById('vol-range'), muteBtn = document.getElementById('mute-btn');
+  var volTimer = null, volKey = '';
+  function renderVolume() {
+    var silent = ui.muted || ui.volume <= 0, pct = Math.round(ui.volume * 100);
+    var level = silent ? 'off' : ui.volume < 0.5 ? 'low' : 'high';
+    var key = level + '|' + pct + '|' + ui.muted;
+    if (key === volKey) return;
+    volKey = key;
+    volBtn.innerHTML = speakerIcon(level);
+    volBtn.setAttribute('aria-label', silent ? 'Volume — muted' : 'Volume ' + pct + '%');
+    if (document.activeElement !== volRange) volRange.value = pct;
+    volRange.style.setProperty('--val', (ui.muted ? 0 : pct) + '%');
+    volRange.setAttribute('aria-valuetext', ui.muted ? 'Muted' : pct + '%');
+    volEl.classList.toggle('is-muted', silent);
+    muteBtn.innerHTML = speakerIcon(ui.muted ? 'high' : 'off');
+    muteBtn.setAttribute('aria-pressed', String(ui.muted));
+    muteBtn.setAttribute('aria-label', ui.muted ? 'Unmute Kira' : 'Mute Kira');
+    muteBtn.title = muteBtn.getAttribute('aria-label');
+  }
+  function volKeepOpen() { clearTimeout(volTimer); volTimer = setTimeout(volClose, 3000); }
+  function volOpen() { volEl.classList.add('open'); volBtn.setAttribute('aria-expanded', 'true'); volKeepOpen(); }
+  function volClose() { clearTimeout(volTimer); volEl.classList.remove('open'); volBtn.setAttribute('aria-expanded', 'false'); }
+  function saveVolume() { try { localStorage.setItem('kira-kiosk-volume', String(ui.volume)); localStorage.setItem('kira-kiosk-muted', ui.muted ? '1' : '0'); } catch (e) {} }
+  volBtn.addEventListener('click', function () { if (volEl.classList.contains('open')) volClose(); else { sound('tick'); volOpen(); } });
+  volRange.addEventListener('input', function () {
+    ui.volume = volRange.value / 100;
+    if (ui.volume > 0 && ui.muted) ui.muted = false;
+    saveVolume(); renderVolume(); volKeepOpen();
+  });
+  volRange.addEventListener('change', function () { sound('tick'); volKeepOpen(); });
+  ['pointerdown', 'pointermove', 'keydown', 'focusin'].forEach(function (ev) {
+    volEl.addEventListener(ev, function () { if (volEl.classList.contains('open')) volKeepOpen(); });
+  });
+  document.addEventListener('pointerdown', function (e) { if (volEl.classList.contains('open') && !volEl.contains(e.target)) volClose(); });
+
+  /* ---------------- Help (sends a staff alert to the front desk) ---------------- */
+
+  var overlayKey = '';
+  function renderOverlay() {
+    var hr = ui.helpId && S.find(ui.helpId);
+    var key = (ui.overlay || '') + '|' + (hr ? hr.status : '');
+    if (key === overlayKey) return;
+    overlayKey = key;
+    if (!ui.overlay) { overlay.innerHTML = ''; return; }
+    var h = '';
+    if (ui.overlay === 'help') {
+      h = '<p class="task-title">How can we help?</p><p class="task-note">A member of our team can come to you here, at the ' + esc(KIOSK.label.toLowerCase()) + ' kiosk.</p>' +
+        '<button class="btn btn-ghost-dark" data-act="help-assist">Ask a team member to come here</button>' +
+        '<button class="btn btn-danger" data-act="help-emergency">Emergency — alert security now</button>' +
+        btn('Close', 'overlay-close');
+    } else if (ui.overlay === 'help-confirm') {
+      h = '<p class="task-title">Alert security and the duty manager?</p><p class="task-note">They’ll come to this kiosk (' + esc(KIOSK_NAME) + ') immediately.</p>' +
+        '<div class="btn-row">' + btn('Cancel', 'overlay-close') + '<button class="btn btn-danger" data-act="help-send" data-arg="emergency">Yes, alert them</button></div>';
+    } else if (ui.overlay === 'help-sent') {
+      var resolved = hr && hr.status === 'resolved';
+      h = ui.helpKind === 'emergency'
+        ? banner(resolved ? 'good' : 'warn', resolved ? 'The front desk has handled your alert' : 'Help is on the way', resolved ? '' : 'Security and the duty manager are coming to this kiosk. If you are in danger, dial 999.')
+        : banner(resolved ? 'good' : 'pending', resolved ? 'A team member has seen your request' : 'A team member is on the way', resolved ? '' : 'Usually within 3 minutes — please stay near this screen.');
+      h += '<button class="btn btn-brass" data-act="overlay-close">Close</button>';
+    } else if (ui.overlay === 'lang') {
+      var langs = [['English', 'EN', true], ['العربية', 'AR'], ['Русский', 'RU'], ['中文', 'ZH'], ['Français', 'FR'], ['Deutsch', 'DE']];
+      h = '<p class="task-title">Language</p><p class="task-note">Kira understands visitors in any of these by voice. The on-screen translation isn’t part of this prototype yet.</p><div class="lang-list">' +
+        langs.map(function (l) { return '<button class="quick-chip' + (l[2] ? ' selected' : '') + '"' + (l[2] ? ' data-act="overlay-close"' : ' disabled') + '><span>' + l[0] + '</span><span>' + (l[2] ? '✓' : 'Soon') + '</span></button>'; }).join('') +
+        '</div>' + btn('Close', 'overlay-close');
+    }
+    overlay.innerHTML = '<div class="sheet-scrim" data-act="scrim"><div class="sheet" role="dialog" aria-modal="true">' + h + '</div></div>';
+  }
+
+  /* ---------------- Understand a question ---------------- */
+
+  var WAY = /\bwheres?\b|how (do|can|would) i (get|find|reach)|take me|directions?|way to|find (the|a)\b|go to|get to|show me|looking for|nearest|closest|which floor/;
+
+  function understand(text) {
+    var t = ' ' + text.toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9: -]/g, ' ').replace(/\s+/g, ' ') + ' ';
+    if (/emergency|help me|ambulance|\bfire\b|danger|police|security/.test(t)) return { type: 'help' };
+    if (/weather|temperature|how hot|raining/.test(t)) return { type: 'answer', title: 'Weather', text: weatherText() };
+    if (/what time is it|the time now|time is it/.test(t)) return { type: 'answer', title: 'Time', text: 'It’s ' + F.time() + ' here in Dubai.' };
+    var faq = H.FAQ.filter(function (f) { return f.re.test(t); })[0];
+    var place = H.PLACES.filter(function (p) { return p.kw.test(t) || (/check ?-?in\b/.test(t) && p.id === 'frontdesk'); })[0];
+    if (WAY.test(t) && place) return { type: 'route', place: place.id };
+    if (faq) return { type: 'answer', title: faq.title, text: faq.text, place: faq.place };
+    if (place) return { type: 'answer', title: place.name, text: placeAnswer(place), place: place.id };
+    return { type: 'unknown' };
+  }
+
+  function act(intent, heard) {
+    ui.heard = heard; ui.reply = ''; ui.answer = null;
+    if (intent.type === 'help') { ui.overlay = 'help'; ui.view = 'home'; return; }
+    if (intent.type === 'route') { openPlace(intent.place, true); return; }
+    if (intent.type === 'answer') { ui.view = 'voice'; ui.reply = intent.text; ui.answer = { title: intent.title, place: intent.place }; return; }
+    ui.view = 'voice';
+    ui.reply = 'I can show you the way to anywhere in the hotel, or tell you about it — try “Where’s the pool?” or “What’s the Wi-Fi?”';
+  }
+
+  // Simulated speech: the words appear under Kira as she listens, she thinks, then answers.
+  function hear(text) {
+    text = String(text || '').trim();
+    if (!text || ui.voice.busy) return;
+    ui.view = 'voice'; ui.reply = ''; ui.answer = null; ui.voice.text = ''; ui.voice.busy = 'listening'; ui.voice.typing = '';
+    var words = text.split(/\s+/), i = 0;
+    (function next() {
+      if (ui.view !== 'voice') { ui.voice.busy = false; return; }
+      ui.voice.typing = words.slice(0, ++i).join(' ');
+      render();
+      if (i < words.length) return setTimeout(next, 140);
+      ui.voice.busy = 'thinking'; render();
+      setTimeout(function () {
+        ui.voice.busy = false; ui.voice.typing = '';
+        if (ui.view !== 'voice') return;
+        act(understand(text), text);
+        render();
+      }, 650);
+    })();
+  }
+
+  var recognizer = null, heardSomething = false;
+  function toggleMic() {
+    if (!Recognition) return;
+    if (recognizing && recognizer) { recognizer.stop(); return; }
+    try {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel(); // don't let the mic hear Kira
+      heardSomething = false; ui.reply = ''; ui.answer = null;
+      recognizer = new Recognition();
+      recognizer.lang = 'en-GB'; recognizer.interimResults = true; recognizer.maxAlternatives = 1;
+      recognizer.onresult = function (e) {
+        var res = e.results[e.results.length - 1], txt = res[0].transcript;
+        heardSomething = true; touched();
+        if (res.isFinal) { recognizing = false; hear(txt); }
+        else { ui.voice.typing = txt; render(); }
+      };
+      recognizer.onerror = function (e) {
+        recognizing = false;
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { ui.reply = 'I can’t use the microphone here — tap a question or type instead.'; heardSomething = true; }
+        if (ui.view === 'voice') render();
+      };
+      recognizer.onend = function () {
+        recognizing = false;
+        if (ui.view !== 'voice') return;
+        if (!heardSomething && !ui.voice.busy) { ui.voice.typing = ''; ui.reply = 'I didn’t catch that — tap “Talk to Kira” to try again.'; }
+        render();
+      };
+      recognizer.start(); recognizing = true; render();
+    } catch (e) { recognizing = false; ui.reply = 'The microphone isn’t available here — tap a question or type instead.'; render(); }
+  }
+  function stopMic() { if (recognizing && recognizer) { try { recognizer.abort(); } catch (e) {} recognizing = false; } }
+
+  /* ---------------- Tap sounds (WebAudio; silent when muted) ---------------- */
+
+  var audio = null;
+  var TICK_ACTS = { say: 1, back: 1, replay: 1, places: 1 };
+  function sound(kind) {
+    if (ui.muted || ui.volume <= 0) return;
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state === 'suspended') audio.resume();
+      var t = audio.currentTime + 0.005;
+      var notes = kind === 'select' ? [[660, 0, 0.11, 0.08], [990, 0.06, 0.14, 0.06]] : [[1320, 0, 0.05, 0.035]];
+      notes.forEach(function (n) {
+        var o = audio.createOscillator(), g = audio.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(n[0], t + n[1]);
+        o.frequency.exponentialRampToValueAtTime(n[0] * 0.85, t + n[1] + n[2]);
+        g.gain.setValueAtTime(0.0001, t + n[1]);
+        g.gain.exponentialRampToValueAtTime(Math.max(0.0002, n[3] * ui.volume * 1.25), t + n[1] + 0.008);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + n[1] + n[2]);
+        o.connect(g); g.connect(audio.destination);
+        o.start(t + n[1]); o.stop(t + n[1] + n[2] + 0.02);
+      });
+    } catch (e) {}
+  }
+
+  /* ---------------- Actions ---------------- */
+
+  function go(view) { if (view !== 'voice') stopMic(); ui.view = view; render(); }
+  function openPlace(id, fromVoice) {
+    if (!H.place(id)) return;
+    stopMic();
+    if (!fromVoice) { ui.heard = ''; ui.reply = ''; ui.answer = null; }
+    if (ui.place !== id) ui.step = 0;
+    ui.place = id; ui.view = 'directions';
+    render();
+  }
+
+  var HANDLERS = {
+    home: function () { ui.heard = ''; ui.reply = ''; ui.answer = null; ui.overlay = null; ui.place = null; go('home'); },
+    back: function () {
+      stopMic();
+      if (ui.view === 'voice' && ui.voiceFrom && ui.voiceFrom !== 'home' && ui.voiceFrom !== 'voice' && VIEWS[ui.voiceFrom]) { ui.reply = ''; go(ui.voiceFrom); return; }
+      if (ui.view === 'directions' && ui.placesBack) { ui.placesBack = false; go('places'); return; }
+      HANDLERS.home();
+    },
+    go: function (id) { ui.placesBack = ui.view === 'places'; openPlace(id, false); },
+    places: function () { go('places'); },
+    replay: function () { markStep(0); if (window.KiraMap) KiraMap.replay(); },
+    voice: function () {
+      if (ui.view === 'voice') return;
+      ui.voiceFrom = ui.view; ui.reply = ''; ui.answer = null; ui.voice.text = ''; ui.voice.typing = '';
+      go('voice');
+      if (Recognition) toggleMic();
+    },
+    say: function (a) { hear(a); },
+    mic: toggleMic,
+    'overlay-close': function () { ui.overlay = null; render(); },
+    scrim: function () { if (ui.overlay !== 'help-confirm') { ui.overlay = null; render(); } },
+    'help-assist': function () { HANDLERS['help-send']('assist'); },
+    'help-emergency': function () { ui.overlay = 'help-confirm'; render(); },
+    'help-send': function (kind) {
+      var r = S.createRequest({ dept: 'help', room: KIOSK.label, kiosk: KIOSK_NAME, kind: kind, channel: 'kiosk',
+        title: kind === 'emergency' ? 'Emergency at the ' + KIOSK.label.toLowerCase() + ' kiosk' : 'Staff asked to the ' + KIOSK.label.toLowerCase() + ' kiosk' });
+      ui.helpKind = kind; ui.helpId = r.id; ui.overlay = 'help-sent';
+      speak(kind === 'emergency' ? 'Help is on the way.' : 'A member of our team is on the way to you.');
+      render();
+    }
+  };
+
+  tablet.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-act]');
+    if (!el || el.disabled || !tablet.contains(el)) return;
+    if (el.dataset.act === 'scrim' && e.target !== el) return; // clicks inside the sheet
+    var fn = HANDLERS[el.dataset.act];
+    if (!fn) return;
+    if (el.classList.contains('place-tile') || el.classList.contains('place-row') || el.classList.contains('all-row')) sound('select');
+    else if (TICK_ACTS[el.dataset.act]) sound('tick');
+    e.preventDefault(); fn(el.dataset.arg);
+  });
+  tablet.addEventListener('wheel', function (e) {
+    var row = e.target.closest && e.target.closest('.home-active');
+    if (!row || row.scrollWidth <= row.clientWidth || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    row.scrollLeft += e.deltaY; e.preventDefault();
+  }, { passive: false });
+  tablet.addEventListener('input', function (e) {
+    var path = e.target.dataset && e.target.dataset.model;
+    if (!path) return;
+    var parts = path.split('.'), obj = ui;
+    while (parts.length > 1) obj = obj[parts.shift()];
+    obj[parts[0]] = e.target.value;
+  });
+  tablet.addEventListener('submit', function (e) {
+    if (e.target.dataset.form === 'voice') { e.preventDefault(); hear(ui.voice.text); }
+  });
+
+  muteBtn.addEventListener('click', function () {
+    ui.muted = !ui.muted;
+    if (!ui.muted && ui.volume <= 0) ui.volume = 0.5;
+    if (ui.muted && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+    saveVolume(); renderVolume(); volKeepOpen();
+    if (!ui.muted) sound('tick');
+  });
+  document.getElementById('theme-btn').addEventListener('click', function () {
+    var light = document.documentElement.classList.toggle('theme-light');
+    try { localStorage.setItem('kira-kiosk-theme', light ? 'light' : 'dark'); } catch (e) {}
+    if (window.KiraMap) KiraMap.setTheme(light);
+    renderNav();
+  });
+  document.getElementById('text-up').addEventListener('click', function () { setTextScale(ui.textScale + 1); });
+  document.getElementById('text-down').addEventListener('click', function () { setTextScale(ui.textScale - 1); });
+  document.getElementById('lang-btn').addEventListener('click', function () { ui.overlay = 'lang'; render(); });
+  document.getElementById('help-btn').addEventListener('click', function () { ui.overlay = 'help'; render(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && ui.overlay) { ui.overlay = null; render(); } });
+
+  var TEXT_STEPS = [1, 1.12, 1.25], TEXT_NAMES = ['Default', 'Large', 'Larger'];
+  function setTextScale(n, quiet) {
+    ui.textScale = Math.max(0, Math.min(TEXT_STEPS.length - 1, n));
+    var f = TEXT_STEPS[ui.textScale];
+    document.documentElement.style.setProperty('--ts', f);
+    document.documentElement.style.fontSize = (16 * f) + 'px';
+    document.getElementById('text-down').disabled = ui.textScale <= 0;
+    document.getElementById('text-up').disabled = ui.textScale >= TEXT_STEPS.length - 1;
+    fitNav();
+    if (!quiet) {
+      sound('tick');
+      document.querySelectorAll('.proto-toast').forEach(function (t) { if (/^Text size:/.test(t.textContent)) t.remove(); }); // replace, don't stack
+      ui$.toast('Text size: ' + TEXT_NAMES[ui.textScale]);
+    }
+  }
+
+  /* ---------------- A public screen resets itself ----------------
+     After a minute untouched it returns to the welcome screen with default text size, so the
+     next visitor never lands on someone else's directions or question. */
+
+  var lastTouch = Date.now();
+  function touched() { lastTouch = Date.now(); }
+  ['pointerdown', 'keydown', 'input', 'wheel'].forEach(function (ev) { document.addEventListener(ev, touched, true); });
+  setInterval(function () {
+    if (Date.now() - lastTouch < IDLE_MS || ui.voice.busy || recognizing) return;
+    var helpOpen = ui.overlay === 'help-sent' && ui.helpId && S.find(ui.helpId) && S.find(ui.helpId).status === 'open';
+    if (helpOpen) return; // someone is on their way here — keep that on screen
+    if (ui.view === 'home' && !ui.overlay && ui.textScale === 0) return;
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    ui.view = 'home'; ui.place = null; ui.answer = null; ui.reply = ''; ui.heard = ''; ui.overlay = null; ui.placesBack = false;
+    ui.voice = { text: '', typing: '', busy: false };
+    setTextScale(0, true);
+    render();
+  }, 5000);
+
+  /* ---------------- Fit the 960×600 tablet to the window ---------------- */
+
+  var stage = document.getElementById('stage');
+  function fit() {
+    var pad = ui$.inFrame ? 0 : (window.innerWidth < 600 ? 12 : 40);
+    var s = Math.min((window.innerWidth - pad) / 960, (window.innerHeight - pad) / 600);
+    tablet.style.transform = 'scale(' + s + ')';
+    stage.style.width = (960 * s) + 'px';
+    stage.style.height = (600 * s) + 'px';
+  }
+  window.addEventListener('resize', fit);
+  fit();
+
+  /* ---------------- Boot ---------------- */
+
+  setTextScale(0, true);
+  try {
+    ui.muted = localStorage.getItem('kira-kiosk-muted') === '1';
+    var savedVol = parseFloat(localStorage.getItem('kira-kiosk-volume'));
+    if (!isNaN(savedVol)) ui.volume = Math.max(0, Math.min(1, savedVol));
+  } catch (e) {}
+  var placeHash = /^#to=(\w+)/.exec(location.hash);
+  if (placeHash && H.place(placeHash[1])) { ui.place = placeHash[1]; ui.view = 'directions'; }
+
+  S.subscribe(function (s) {
+    if (s.seededAt !== seededAt) { seededAt = s.seededAt; ui.helpId = null; if (ui.overlay === 'help-sent') ui.overlay = null; }
+    renderOverlay();
+  });
+  render();
+  loadWeather();
+  setInterval(loadWeather, 15 * 60000);
+  ui$.every(function () { if (!ui.voice.busy) renderNav(); }, 15000);
+  ui$.launcherPill('../index.html');
+})();

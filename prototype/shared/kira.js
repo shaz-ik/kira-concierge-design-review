@@ -262,7 +262,7 @@
         r.total = round2(r.subtotal * (1 + SERVICE_RATE));
         r.guestAllergies = r.guestAllergies || [];
       }
-      var via = r.channel === 'voice' ? 'voice' : 'in-room tablet';
+      var via = r.channel === 'voice' ? 'voice' : r.channel === 'kiosk' ? 'public kiosk' : 'in-room tablet';
       r.history.push({ at: now, text: (r.dept === 'dining' ? 'Placed by guest via ' : 'Requested via ') + via });
       if (r.dept === 'dining') r.history.push({ at: now, text: 'Printed at kitchen pass' });
       s.requests.push(r);
@@ -344,7 +344,7 @@
     if (r.dept === 'dining') return r.items.map(function (i) { return i.qty + '× ' + i.name + (i.note ? ' (' + i.note.toLowerCase() + ')' : ''); }).join(', ');
     if (r.dept === 'checkout') return 'Late checkout → ' + r.to;
     if (r.dept === 'valet') return r.vehicle ? r.vehicle.model + ' — ' + r.vehicle.plate : 'Car to entrance';
-    if (r.dept === 'help') return r.kind === 'emergency' ? 'Emergency — help requested' : 'Call-back requested';
+    if (r.dept === 'help') return r.kind === 'emergency' ? 'Emergency — help requested' : r.kind === 'assist' ? 'Staff asked to come to the kiosk' : 'Call-back requested';
     return r.title + (r.detail ? ' — ' + r.detail : '');
   }
 

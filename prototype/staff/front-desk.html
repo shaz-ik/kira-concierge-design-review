@@ -135,7 +135,7 @@
     </main>
   </div>
 
-<script src="../shared/kira.js?v=4"></script>
+<script src="../shared/kira.js?v=5"></script>
 <script>
 (function () {
   'use strict';
@@ -315,7 +315,7 @@
         seen.add(k);
         newUntil[k] = Date.now() + NEW_MS;
         if (r.dept === 'help' && r.status === 'open') {
-          toast(r.kind === 'emergency' ? `Room ${r.room} — Emergency, guest pressed Help` : `Room ${r.room} — guest asked for a call-back`, 'err');
+          toast(helpHeadline(r), 'err');
           sound = 'urgent';
         } else if (r.dept === 'checkout' && r.status === 'pending') {
           toast(`New request — Room ${r.room}, late checkout → ${r.to}`, 'warn');
@@ -333,7 +333,7 @@
           else if (r.status === 'declined') toast(`Room ${r.room} declined the fee — checkout stays at ${fromOf(state, r)}`);
           else if (r.status === 'cancelled') toast(`Room ${r.room} withdrew the late checkout request`, 'warn');
         } else if (r.dept === 'help' && r.status === 'resolved') {
-          toast(`Room ${r.room} help alert resolved`, 'ok');
+          toast(`${r.kiosk ? r.kiosk : 'Room ' + r.room} help alert resolved`, 'ok');
         }
       }
       prevStatus[k] = r.status;
@@ -368,6 +368,12 @@
     return `<div class="dnd-strip" role="status"><span class="dnd-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M7.5 12h9"/></svg>Do not disturb</span>${chips}</div>`;
   }
 
+  // Help alerts come from a room's tablet or from a public kiosk in the halls (r.kiosk names it)
+  function helpHeadline(r) {
+    if (r.kiosk) return r.kind === 'emergency' ? `${r.kiosk} — Emergency, someone pressed Help` : `${r.kiosk} — a visitor asked for a team member`;
+    return r.kind === 'emergency' ? `Room ${r.room} — Emergency, guest pressed Help` : `Room ${r.room} — Call-back requested from the guest tablet`;
+  }
+
   function alertsHTML(state) {
     const open = state.requests
       .filter(r => r.dept === 'help' && r.status === 'open')
@@ -375,7 +381,7 @@
     return open.map(r => {
       const room = roomOf(state, r);
       const emergency = r.kind === 'emergency';
-      const headline = emergency ? `Room ${r.room} — Emergency, guest pressed Help` : `Room ${r.room} — Call-back requested from the guest tablet`;
+      const headline = helpHeadline(r);
       const meta = [room && room.guest, room && room.type, F.ago(r.createdAt) + ' · ' + F.time(r.createdAt)].filter(Boolean).join(' · ');
       return `<div class="help-alert ${emergency ? 'err' : 'warn'}${isFresh(keyOf(r)) ? ' is-new' : ''}" role="alert">
           <span class="pulse" aria-hidden="true"></span>

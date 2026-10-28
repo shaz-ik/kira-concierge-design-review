@@ -16,3 +16,20 @@ wx-partly.png       Sun behind cloud
 wx-cloudy.png       Cloud
 wx-rain.png         Cloud with rain
 wx-storm.png        Cloud with lightning and rain
+
+Public kiosk (hall tablet) — places:
+place-frontdesk.png   Bellhop bell
+place-concierge.png   Luggage
+place-lounge.png      Hot beverage
+place-restrooms.png   Restroom
+place-entrance.png    Oncoming taxi
+place-lifts.png       Elevator
+place-meeting.png     Briefcase
+place-ballroom.png    Party popper
+place-prayer.png      Prayer beads
+place-gym.png         Person lifting weights (default tone)
+place-spa.png         Person in steamy room (default tone)
+place-kids.png        Teddy bear
+place-pool.png        Person swimming (default tone)
+place-poolbar.png     Tropical drink
+place-all.png         Compass

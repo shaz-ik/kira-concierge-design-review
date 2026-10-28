@@ -15,6 +15,8 @@
   .hero p { color: var(--muted-on-sand); }
 
   .feature { display: grid; grid-template-columns: 1.3fr 1fr; gap: var(--sp-4); margin-bottom: var(--sp-4); }
+  .stack { display: flex; flex-direction: column; gap: var(--sp-4); }
+  .stack .card { flex: 1; }
   .card { position: relative; display: flex; flex-direction: column; gap: var(--sp-2); background: var(--paper); border: 1px solid rgba(19,19,19,.1); border-radius: var(--radius-tool); padding: var(--sp-5); text-decoration: none; color: var(--ink-on-sand); transition: border-color .15s, box-shadow .15s, transform .15s; }
   .card:hover { border-color: var(--brass); box-shadow: 0 10px 30px -18px rgba(19,19,19,.45); transform: translateY(-1px); }
   .card .tag { font-size: 12px; color: var(--brass-deep); font-weight: 600; letter-spacing: .02em; }
@@ -92,19 +94,28 @@
       <div class="card dark">
         <div class="tag">Start here</div>
         <h2>Live demo</h2>
-        <p>Two full-size sides of one live hotel, switched with the tab at the top. Order on the guest tablet, then work it through the kitchen, waiter, housekeeping, valet or front desk on the staff side.</p>
+        <p>Three full-size sides of one live hotel, switched with the tab at the top: the guest’s in-room tablet, the public kiosk in the halls, and the staff apps. Order on the guest tablet, then work it through the kitchen, waiter, housekeeping, valet or front desk.</p>
         <div class="faces"><img src="assets/kira-idle.jpg" alt=""><img src="assets/kira-listening.jpg" alt=""><img src="assets/kira-speaking.jpg" alt=""><img src="assets/kira-wake.jpg" alt=""></div>
         <div class="cta-row">
           <a class="btn btn-hero cta" href="demo.html#guest">Guest demo</a>
+          <a class="btn btn-ghost-dark cta" href="demo.html#kiosk">Kiosk demo</a>
           <a class="btn btn-ghost-dark cta" href="demo.html#staff">Staff demo</a>
         </div>
       </div>
-      <a class="card" href="guest/index.html">
-        <div class="tag">Guest · in-room tablet</div>
-        <h2>Guest tablet</h2>
-        <p>Idle home, in-room dining, housekeeping, late checkout and valet — plus voice (tap Kira), Help / Emergency, text size and mute.</p>
-        <div class="live" data-live="guest"></div>
-      </a>
+      <div class="stack">
+        <a class="card" href="guest/index.html">
+          <div class="tag">Guest · in-room tablet</div>
+          <h2>Guest tablet</h2>
+          <p>Idle home, in-room dining, housekeeping, late checkout and valet — plus voice (tap Kira), Help / Emergency, text size and mute.</p>
+          <div class="live" data-live="guest"></div>
+        </a>
+        <a class="card" href="public/index.html">
+          <div class="tag">Public · hall kiosk</div>
+          <h2>Public kiosk</h2>
+          <p>For anyone in the halls, not tied to a room. Ask Kira about the hotel, or pick a place and follow the route on a 3D map of the building.</p>
+          <div class="live" data-live="kiosk"></div>
+        </a>
+      </div>
     </div>
 
     <h2 class="section-title">Staff apps</h2>
@@ -141,6 +152,7 @@
           <li>In <em>Waiter</em>, <em>Claim delivery</em> → <em>Mark delivered</em>. The tablet’s tracker follows every step.</li>
           <li>Ask for a 5 PM late checkout. In <em>Front desk</em>, approve it (the guest confirms the AED 90 fee) or deny it with a reason.</li>
           <li>In <em>Admin → Menu</em>, pause the burger. It disappears from the tablet menu at once.</li>
+          <li>Switch to <em>Public kiosk</em> and ask “Where’s the pool?”. The 3D map draws the route: lifts at the back of the lobby, up to Level 8.</li>
         </ol>
       </div>
     </div>
@@ -148,7 +160,7 @@
     <p class="note">This prototype runs entirely in your browser. There’s no backend. The shared hotel lives in this browser’s local storage, so apps open in other tabs of the same browser stay in sync, but other people’s browsers don’t. Voice is simulated: tap a phrase or type, or use the microphone where the browser supports it.</p>
   </main>
 
-<script src="shared/kira.js?v=4"></script>
+<script src="shared/kira.js?v=5"></script>
 <script>
 (function () {
   var S = Kira.store;
@@ -164,6 +176,7 @@
       housekeeping: [count(function (r) { return r.dept === 'housekeeping' && r.status === 'received'; }) + ' new · ' + count(function (r) { return r.dept === 'housekeeping' && r.status === 'progress'; }) + ' in progress', count(function (r) { return r.dept === 'housekeeping' && r.status === 'received'; }) > 0],
       valet: [count(function (r) { return (r.dept === 'valet' || r.dept === 'concierge') && r.status === 'received'; }) + ' waiting to be accepted', count(function (r) { return (r.dept === 'valet' || r.dept === 'concierge') && r.status === 'received'; }) > 0],
       frontdesk: [plural(count(function (r) { return r.dept === 'checkout' && r.status === 'pending'; }), 'approval') + ' pending' + (count(function (r) { return r.dept === 'help' && r.status === 'open'; }) ? ' · help alert open' : ''), count(function (r) { return (r.dept === 'checkout' && r.status === 'pending') || (r.dept === 'help' && r.status === 'open'); }) > 0],
+      kiosk: ['Lobby · ' + (count(function (r) { return r.dept === 'help' && r.kiosk && r.status === 'open'; }) ? 'a visitor asked for help' : '15 places on the map'), count(function (r) { return r.dept === 'help' && r.kiosk && r.status === 'open'; }) > 0],
       admin: [plural(count(S.isOpen), 'open request') + ' hotel-wide', false]
     };
     document.querySelectorAll('[data-live]').forEach(function (el) {
