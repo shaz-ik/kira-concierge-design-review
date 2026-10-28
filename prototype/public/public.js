@@ -15,14 +15,16 @@
   };
   var ICON = '../assets/icons/';
   var IDLE_MS = 60000; // a public screen goes back to its welcome after a minute untouched
-  var ASK = ['Where’s the pool?', 'What’s the Wi-Fi?', 'When is breakfast?', 'Taxi to the airport', 'What’s on tonight?', 'Nearest restroom'];
   var PHRASES = ['Where is the gym?', 'What time does the pool close?', 'How do I get to the spa?', 'What’s the Wi-Fi password?', 'Is there a prayer room?', 'How far is JBR Beach?'];
 
   /* ---------------- Local state ---------------- */
 
   var ui = {
-    view: 'home',          // home | directions | places | voice
+    view: 'home',          // home (welcome) | places | info | directions | voice
     place: null,           // place id being shown on the map
+    placeCat: 'popular',   // Find a place filter: popular | G | L1 | L2 | L8
+    topic: null,           // Hotel info topic on show
+    dirFrom: null,         // where Directions was opened from (Back returns there)
     step: 0,               // step the walking light is on
     answer: null,          // { title, place } — Kira's last answer, for "Show me the way"
     heard: '', reply: '',
@@ -89,10 +91,10 @@
       lastLine = k.line;
       if (k.mood !== 'listening' && !k.quiet) {
         // Each line is said once; a short delay drops lines skipped straight past.
-        var said = k.line;
+        var said = k.line, words = k.speech || k.line; // speech: what she says, when it's longer than the subtitle
         clearTimeout(speakDelay);
-        speakDelay = setTimeout(function () { if (lastLine === said) speak(said); }, 400);
-        speakUntil = now + Math.min(7000, 900 + k.line.split(/\s+/).length * 330);
+        speakDelay = setTimeout(function () { if (lastLine === said) speak(words); }, 400);
+        speakUntil = now + Math.min(9000, 900 + words.split(/\s+/).length * 330);
         clearTimeout(speakTimer);
         speakTimer = setTimeout(render, speakUntil - now + 20);
       }
@@ -145,25 +147,52 @@
         '</aside></div>' };
   };
 
-  // All places, grouped by floor; a floor guide and Talk to Kira beside them.
-  VIEWS.places = function () {
-    var list = H.FLOORS.map(function (f) {
-      var rows = H.PLACES.filter(function (p) { return p.floor === f.id; }).map(function (p) {
-        var o = H.openStatus(p);
-        return '<button class="place-row" data-act="go" data-arg="' + p.id + '"><img src="' + ICON + p.icon + '.png" alt="" width="36" height="36">' +
-          '<span class="svc-text"><span class="name">' + esc(p.name) + '</span><span class="info">' + esc(p.info) + '</span></span>' +
-          (o && p.open ? '<span class="place-open">' + openLine(p) + '</span>' : '') + '</button>';
-      }).join('');
-      return '<p class="places-floor"><span class="floor-badge">' + f.short + '</span>' + esc(f.id === 'G' ? 'Ground floor · ' + f.theme : f.name + ' · ' + f.theme) + '</p>' + rows;
-    }).join('');
-    var guide = [['G', 'Lobby', 'front desk, dining, lounge'], ['1', 'Meetings & events', 'ballroom, prayer room'], ['2', 'Wellness', 'fitness, spa, kids club'],
+  // Find a place: popular places or one floor at a time, as tiles; a floor guide and Talk to Kira beside them.
+  var PLACE_CATS = [['popular', 'Popular'], ['G', 'Ground'], ['L1', 'Level 1'], ['L2', 'Level 2'], ['L8', 'Rooftop']];
+  function hotelGuideHTML() {
+    return [['G', 'Lobby', 'front desk, dining, lounge'], ['1', 'Meetings & events', 'ballroom, prayer room'], ['2', 'Wellness', 'fitness, spa, kids club'],
       ['3–7', 'Guest rooms', ''], ['8', 'Rooftop', 'pool and Sky Bar']].map(function (g) {
       return '<div><span class="floor-badge">' + g[0] + '</span><span><b>' + esc(g[1]) + '</b>' + (g[2] ? ' · ' + esc(g[2]) : '') + '</span></div>';
     }).join('');
-    return { context: 'All places', kira: { mood: 'speaking', line: 'Tap a place and I’ll show you the way — or just tell me where you’re going.' },
-      html: '<div class="status-split fill"><section class="status-detail"><div class="places-list" data-scroll="places">' + list + '</div></section>' +
-        '<aside class="status-actions is-summary" aria-label="Hotel guide"><p class="side-heading">Hotel guide</p><div class="floor-guide">' + guide + '</div>' +
+  }
+  VIEWS.places = function () {
+    var cat = ui.placeCat;
+    var list = cat === 'popular' ? H.POPULAR.map(function (id) { return H.place(id); }) : H.PLACES.filter(function (p) { return p.floor === cat; });
+    var chips = PLACE_CATS.map(function (c) {
+      return '<button class="quick-chip' + (c[0] === cat ? ' selected' : '') + '" data-act="place-cat" data-arg="' + c[0] + '" aria-pressed="' + (c[0] === cat) + '">' + esc(c[1]) + '</button>';
+    }).join('');
+    var tiles = list.map(function (p) {
+      return '<button class="place-tile" data-act="go" data-arg="' + p.id + '"><img src="' + ICON + p.icon + '.png" alt="" width="42" height="42">' +
+        '<span class="name">' + esc(p.name) + '</span><span class="info">' + esc(cat === 'popular' ? floorShort(p.floor) : p.info) + '</span></button>';
+    }).join('');
+    return { context: 'Find a place', kira: { mood: 'speaking', line: 'Where would you like to go? Tap a place, or just tell me.' },
+      html: '<div class="status-split fill"><section class="status-detail"><div class="place-filter" data-scroll="cats">' + chips + '</div>' +
+          '<div class="place-grid" data-scroll="places">' + tiles + '</div></section>' +
+        '<aside class="status-actions is-summary" aria-label="Hotel guide"><p class="side-heading">Hotel guide</p><div class="floor-guide">' + hotelGuideHTML() + '</div>' +
         '<div class="side-cta"><div class="status-btns"><button class="btn btn-hero mic-btn" data-act="voice">' + MIC + 'Talk to Kira</button></div></div></aside></div>' };
+  };
+
+  // Hotel info: topics on the left; the answer, and the way there, on the right. Kira reads it out.
+  VIEWS.info = function () {
+    var t = ui.topic && H.topic(ui.topic), place = t && t.place && H.place(t.place);
+    var rows = H.TOPICS.map(function (id) {
+      var f = H.topic(id), on = t && t.id === id;
+      return '<button class="topic-row' + (on ? ' selected' : '') + '" data-act="topic" data-arg="' + id + '" aria-pressed="' + !!on + '"><img src="' + ICON + f.icon + '.png" alt="" width="32" height="32">' +
+        '<span class="svc-text"><span class="name">' + esc(f.title) + '</span><span class="info">' + esc(f.short) + '</span></span></button>';
+    }).join('');
+    var aside = t
+      ? '<div class="dir-head"><img src="' + ICON + t.icon + '.png" alt="" width="46" height="46"><div><p class="side-heading">' + esc(t.title) + '</p>' +
+          (place ? '<p class="dir-floor">' + esc(place.name + ' · ' + floorShort(place.floor)) + '</p>' : '') + '</div></div>' +
+        '<p class="topic-answer">' + esc(t.text) + '</p>' +
+        '<div class="side-cta"><div class="status-btns">' + (place ? btn('Show me the way', 'go', { hero: true, arg: place.id })
+          : '<button class="btn btn-ghost-dark mic-btn" data-act="voice">' + MIC + 'Ask Kira something else</button>') + '</div></div>'
+      : '<p class="side-heading">Choose a topic</p><p class="topic-answer muted">Tap a topic, or ask Kira anything about the hotel and the area around it.</p>' +
+        '<div class="side-cta"><div class="status-btns"><button class="btn btn-hero mic-btn" data-act="voice">' + MIC + 'Talk to Kira</button></div></div>';
+    return { context: 'Hotel info',
+      kira: t ? { mood: 'speaking', line: t.title + ' — ' + t.short.charAt(0).toLowerCase() + t.short.slice(1) + '.', speech: t.text }
+              : { mood: 'speaking', line: 'What would you like to know? Pick a topic, or just ask me.' },
+      html: '<div class="status-split fill"><section class="status-detail"><div class="topic-list" data-scroll="topics">' + rows + '</div></section>' +
+        '<aside class="status-actions is-summary info-side" aria-label="' + (t ? esc(t.title) : 'Answer') + '">' + aside + '</aside></div>' };
   };
 
   var Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -192,19 +221,19 @@
         (Recognition ? '<button class="btn mic-btn ' + (recognizing ? 'btn-ghost-dark live' : a ? 'btn-ghost-dark' : 'btn-hero') + '" data-act="mic"' + (v.busy ? ' disabled' : '') + '>' + MIC + (recognizing ? 'Listening… tap to stop' : 'Talk to Kira') + '</button>' : '') + '</div>' };
   };
 
-  /* ---------------- One bento grid, three modes ----------------
-     home    → Kira 60% | places 40%
-     service → the places panel grows to full width (directions, all places)
-     kira    → the Kira panel grows to full width for talking */
+  /* ---------------- One bento grid, two panels ----------------
+     home  → the Kira panel fills the screen: the welcome, the building turning behind it
+     voice → the Kira panel stays full width and becomes the conversation
+     flows → the other panel grows to full width (find a place, hotel info, directions) */
 
-  var panelKeys = { ai: '', svc: '' }, lastView = null;
-  function modeOf(view) { return view === 'home' ? 'home' : view === 'voice' ? 'kira' : 'service'; }
+  var panelKeys = { ai: '' }, lastView = null, lastMode = null;
+  function modeOf(view) { return view === 'home' || view === 'voice' ? 'kira' : 'service'; }
 
   function ensureShell() {
     if (body.dataset.layout === 'bento') return;
     body.dataset.layout = 'bento';
-    body.className = 'tablet-body bento-home mode-home state-idle';
-    body.innerHTML = '<section class="bento bento-ai" id="panel-ai" aria-label="Kira"></section><section class="bento bento-services" id="panel-svc" aria-label="Find your way"></section>';
+    body.className = 'tablet-body bento-home mode-kira state-idle';
+    body.innerHTML = '<section class="bento bento-ai" id="panel-ai" aria-label="Kira"></section><section class="bento bento-services" id="panel-svc" aria-label="Find your way">' + flowShellHTML() + '</section>';
   }
 
   var animTimers = {};
@@ -214,27 +243,49 @@
     animTimers[el.id + cls] = setTimeout(function () { el.classList.remove(cls); }, ms || 900);
   }
 
+  function shortcut(act, icon, name, info) {
+    return '<button class="shortcut" data-act="' + act + '"><img src="' + ICON + icon + '.png" alt="" width="40" height="40">' +
+      '<span class="svc-text"><span class="name">' + esc(name) + '</span><span class="info">' + esc(info) + '</span></span></button>';
+  }
+  // Welcome backdrop: a Dubai Marina skyline in two layers over the water, drawn once (same towers every time)
+  var skyline = null;
+  function skylineSVG() {
+    if (skyline) return skyline;
+    var seed = 7;
+    function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    function layer(base, minH, maxH, minW, maxW, cls) {
+      var x = -10, d = '';
+      while (x < 940) {
+        var w = minW + rnd() * (maxW - minW), h = minH + rnd() * (maxH - minH), top = base - h, kind = rnd();
+        if (kind < 0.18) d += 'M' + x + ' ' + base + 'V' + (top + 14) + 'L' + (x + w / 2) + ' ' + top + 'L' + (x + w) + ' ' + (top + 14) + 'V' + base + 'Z';            // pointed top
+        else if (kind < 0.32) d += 'M' + x + ' ' + base + 'V' + top + 'H' + (x + w * 0.6) + 'L' + (x + w) + ' ' + (top + 18) + 'V' + base + 'Z';                    // sloped crown
+        else if (kind < 0.42) d += 'M' + (x + w / 2 - 1) + ' ' + (top - 22) + 'H' + (x + w / 2 + 1) + 'V' + top + 'H' + (x + w) + 'V' + base + 'H' + x + 'V' + top + 'H' + (x + w / 2 - 1) + 'Z'; // spire
+        else d += 'M' + x + ' ' + base + 'V' + top + 'H' + (x + w) + 'V' + base + 'Z';
+        x += w + 2 + rnd() * 6;
+      }
+      return '<path class="' + cls + '" d="' + d + '"/>';
+    }
+    skyline = '<svg class="skyline" viewBox="0 0 920 260" preserveAspectRatio="xMidYMax slice">' +
+      layer(214, 70, 200, 16, 34, 'far') + layer(214, 30, 120, 22, 44, 'near') +
+      '<rect class="water" x="0" y="214" width="920" height="46"/>' +
+      '<path class="shimmer" d="M60 228h90M240 236h60M420 226h120M640 234h80M780 228h70"/></svg>';
+    return skyline;
+  }
   function homeKiraHTML() {
-    return '<div class="ai-home">' +
-        '<button class="kira-tap" data-act="voice" aria-label="Talk to Kira"><div class="kira-photo-wrap"><img src="' + IMG.idle + '" alt="Kira"></div></button>' +
-        '<p class="home-greeting">' + greeting() + '</p><p class="avatar-sub">Welcome to the Grand Marina. Ask me anything, or tap where you’d like to go.</p>' +
-        '<button class="btn btn-ghost-dark talk-btn" data-act="voice">' + MIC + 'Talk to Kira</button>' +
-        '<div class="home-active ask-row" data-scroll="ask">' + ASK.map(function (q) { return '<button class="quick-chip" data-act="say" data-arg="' + esc(q) + '">' + esc(q) + '</button>'; }).join('') + '</div>' +
+    return '<div class="welcome">' +
+        '<div class="welcome-bg" aria-hidden="true"><span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span>' + skylineSVG() + '</div>' +
+        '<div class="welcome-copy">' +
+          '<button class="kira-tap" data-act="voice" aria-label="Talk to Kira"><div class="kira-photo-wrap"><img src="' + IMG.idle + '" alt="Kira"></div></button>' +
+          '<p class="home-greeting">' + greeting() + '</p>' +
+          '<p class="avatar-sub">Welcome to the Grand Marina. I’m Kira — ask me anything about the hotel, or let me show you the way.</p>' +
+          '<button class="btn btn-hero talk-btn" data-act="voice">' + MIC + 'Talk to Kira</button>' +
+          '<div class="shortcuts">' + shortcut('places', 'place-all', 'Find a place', 'Directions on a 3D map') + shortcut('info', 'info', 'Hotel info', 'Wi-Fi, dining, what’s on') + '</div>' +
+        '</div>' +
       '</div>';
   }
   function voiceShellHTML() {
     return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title">Talk to Kira</p></div>' +
       '<div class="voice-grid"><div class="kira-stage" id="kira-big"></div><div class="voice-side" id="voice-col"></div></div>';
-  }
-  function placesPanelHTML() {
-    return '<p class="bento-label">Where would you like to go?</p>' +
-      '<div class="place-grid">' + H.POPULAR.map(function (id) {
-        var p = H.place(id);
-        return '<button class="place-tile" data-act="go" data-arg="' + p.id + '"><img src="' + ICON + p.icon + '.png" alt="" width="42" height="42">' +
-          '<span class="name">' + esc(p.name) + '</span><span class="info">' + esc(floorShort(p.floor)) + '</span></button>';
-      }).join('') + '</div>' +
-      '<button class="svc-row all-row" data-act="places"><img src="' + ICON + 'place-all.png" alt="" width="44" height="44">' +
-        '<span class="svc-text"><span class="name">All places</span><span class="info">Dining, wellness, meetings and more</span></span></button>';
   }
   function flowShellHTML() {
     return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title" id="flow-title"></p><div class="kira-mini" id="kira-mini"></div></div>' +
@@ -247,16 +298,15 @@
 
   var mapKey = '', mapFailed = false;
   function mountMap() {
-    var slot = document.getElementById('map-slot');
-    if (!slot) { mapKey = ''; return; }
+    var slot = ui.view === 'directions' && document.getElementById('map-slot');
+    if (!slot) return;
     if (mapFailed || !window.KiraMap) {
       slot.innerHTML = '<p class="map-fallback">' + (mapFailed ? 'The 3D map isn’t available on this screen right now — the steps on the right will guide you.' : 'Loading the map…') + '</p>';
       return;
     }
     try {
       KiraMap.attach(slot);
-      var key = ui.place;
-      if (key !== mapKey) { mapKey = key; KiraMap.show(currentRoute()); }
+      if (ui.place !== mapKey) { mapKey = ui.place; KiraMap.show(currentRoute()); }
     } catch (e) { mapFailed = true; mountMap(); }
   }
   function markStep(i) {
@@ -283,14 +333,15 @@
     var mode = modeOf(ui.view), viewChanged = ui.view !== lastView;
     ['home', 'service', 'kira'].forEach(function (m) { body.classList.toggle('mode-' + m, m === mode); });
     var ai = document.getElementById('panel-ai'), svc = document.getElementById('panel-svc');
-    var aiKey = mode === 'kira' ? 'voice' : 'home', svcKey = mode === 'service' ? 'flow' : 'list';
+    var aiKey = ui.view === 'voice' ? 'voice' : 'home';
     if (panelKeys.ai !== aiKey) { panelKeys.ai = aiKey; ai.innerHTML = aiKey === 'voice' ? voiceShellHTML() : homeKiraHTML(); kiraKey = ''; play(ai, 'swap', 1100); }
-    var svcSwapped = panelKeys.svc !== svcKey;
-    if (svcSwapped) { panelKeys.svc = svcKey; svc.innerHTML = svcKey === 'flow' ? flowShellHTML() : placesPanelHTML(); kiraKey = ''; play(svc, 'swap', 1100); }
+    var svcOpened = mode === 'service' && lastMode !== 'service';
+    if (svcOpened) { kiraKey = ''; play(svc, 'swap', 1100); }
+    lastMode = mode;
 
-    if (mode === 'home') {
+    if (ui.view === 'home') {
       setMood('idle'); lastLine = '';
-    } else if (mode === 'kira') {
+    } else if (ui.view === 'voice') {
       setKira(v.kira, 'kira-big', 'big');
       var vc = document.getElementById('voice-col');
       vc.innerHTML = v.html;
@@ -300,7 +351,7 @@
       setKira(v.kira, 'kira-mini', 'mini');
       var tc = document.getElementById('task-col');
       tc.innerHTML = v.html;
-      if (viewChanged && !svcSwapped) play(tc, 'enter');
+      if (viewChanged && !svcOpened) play(tc, 'enter');
     }
     lastView = ui.view;
     mountMap();
@@ -530,7 +581,7 @@
   /* ---------------- Tap sounds (WebAudio; silent when muted) ---------------- */
 
   var audio = null;
-  var TICK_ACTS = { say: 1, back: 1, replay: 1, places: 1 };
+  var TICK_ACTS = { say: 1, back: 1, replay: 1, 'place-cat': 1, topic: 1 };
   function sound(kind) {
     if (ui.muted || ui.volume <= 0) return;
     try {
@@ -565,15 +616,18 @@
   }
 
   var HANDLERS = {
-    home: function () { ui.heard = ''; ui.reply = ''; ui.answer = null; ui.overlay = null; ui.place = null; go('home'); },
+    home: function () { ui.heard = ''; ui.reply = ''; ui.answer = null; ui.overlay = null; ui.place = null; ui.dirFrom = null; go('home'); },
     back: function () {
       stopMic();
       if (ui.view === 'voice' && ui.voiceFrom && ui.voiceFrom !== 'home' && ui.voiceFrom !== 'voice' && VIEWS[ui.voiceFrom]) { ui.reply = ''; go(ui.voiceFrom); return; }
-      if (ui.view === 'directions' && ui.placesBack) { ui.placesBack = false; go('places'); return; }
+      if (ui.view === 'directions' && ui.dirFrom) { var from = ui.dirFrom; ui.dirFrom = null; go(from); return; }
       HANDLERS.home();
     },
-    go: function (id) { ui.placesBack = ui.view === 'places'; openPlace(id, false); },
+    go: function (id) { ui.dirFrom = ui.view === 'places' || ui.view === 'info' ? ui.view : null; openPlace(id, false); },
     places: function () { go('places'); },
+    'place-cat': function (c) { ui.placeCat = c; render(); },
+    info: function () { ui.topic = null; go('info'); },
+    topic: function (id) { ui.topic = id; render(); },
     replay: function () { markStep(0); if (window.KiraMap) KiraMap.replay(); },
     voice: function () {
       if (ui.view === 'voice') return;
@@ -602,7 +656,7 @@
     if (el.dataset.act === 'scrim' && e.target !== el) return; // clicks inside the sheet
     var fn = HANDLERS[el.dataset.act];
     if (!fn) return;
-    if (el.classList.contains('place-tile') || el.classList.contains('place-row') || el.classList.contains('all-row')) sound('select');
+    if (el.classList.contains('place-tile') || el.classList.contains('shortcut')) sound('select');
     else if (TICK_ACTS[el.dataset.act]) sound('tick');
     e.preventDefault(); fn(el.dataset.arg);
   });
@@ -670,7 +724,7 @@
     if (helpOpen) return; // someone is on their way here — keep that on screen
     if (ui.view === 'home' && !ui.overlay && ui.textScale === 0) return;
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    ui.view = 'home'; ui.place = null; ui.answer = null; ui.reply = ''; ui.heard = ''; ui.overlay = null; ui.placesBack = false;
+    ui.view = 'home'; ui.place = null; ui.answer = null; ui.reply = ''; ui.heard = ''; ui.overlay = null; ui.dirFrom = null; ui.topic = null; ui.placeCat = 'popular';
     ui.voice = { text: '', typing: '', busy: false };
     setTextScale(0, true);
     render();

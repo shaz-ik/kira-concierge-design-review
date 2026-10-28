@@ -33,3 +33,16 @@ place-kids.png        Teddy bear
 place-pool.png        Person swimming (default tone)
 place-poolbar.png     Tropical drink
 place-all.png         Compass
+
+Public kiosk — hotel info topics:
+info.png            Information
+topic-wifi.png      Antenna bars
+topic-airport.png   Airplane
+topic-tram.png      Tram
+topic-beach.png     Beach with umbrella
+topic-shopping.png  Shopping bags
+topic-health.png    Pill
+topic-money.png     Money bag
+topic-dress.png     Necktie
+topic-smoking.png   No smoking
+topic-checkin.png   Key

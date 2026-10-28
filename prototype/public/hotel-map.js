@@ -118,51 +118,55 @@
   var POPULAR = ['frontdesk', 'restaurant', 'pool', 'gym', 'spa', 'restrooms'];
 
   // Questions Kira answers at the kiosk. Public answers only — nothing about any guest or room.
-  // place: offers "Show me the way". Answers are short because Kira says them out loud.
+  // Matched top to bottom (first match wins). place: offers "Show me the way".
+  // short + icon: the topic's row under Hotel info. Answers are short because Kira says them out loud.
   var FAQ = [
-    { re: /wi-?fi|internet|password|network/, title: 'Wi-Fi', place: null,
+    { id: 'wifi', re: /wi-?fi|internet|password|network/, title: 'Wi-Fi', icon: 'topic-wifi', short: 'Free everywhere, no password', place: null,
       text: 'Join “GrandMarina-Guest” — there’s no password, just accept the terms on the welcome page. It’s free everywhere in the hotel.' },
-    { re: /breakfast/, title: 'Breakfast', place: 'restaurant',
+    { id: 'breakfast', re: /breakfast/, title: 'Breakfast', icon: 'dining', short: '6:30 – 10:30 AM · Marina Kitchen', place: 'restaurant',
       text: 'Breakfast is served at Marina Kitchen on the ground floor, 6:30 to 10:30 AM every day.' },
-    { re: /check ?-?in time|when.*check ?in|check ?in (at|from|time)|check ?-?out time|when.*check ?out|check ?out (at|by|time)|late check ?out/, title: 'Check-in & check-out', place: 'frontdesk',
+    { id: 'checkin', re: /check ?-?in time|when.*check ?in|check ?in (at|from|time)|check ?-?out time|when.*check ?out|check ?out (at|by|time)|late check ?out/, title: 'Check-in & check-out', icon: 'topic-checkin', short: 'In from 3 PM · out by noon', place: 'frontdesk',
       text: 'Check-in is from 3 PM and check-out is by 12 noon. For a late check-out, use the tablet in your room or ask the front desk.' },
-    { re: /pool.*(open|close|hours|time)|(open|close|hours|time).*pool/, title: 'Rooftop pool', place: 'pool',
+    { id: 'pool', re: /pool.*(open|close|hours|time)|(open|close|hours|time).*pool/, title: 'Rooftop pool', icon: 'place-pool', short: '7 AM – 10 PM · Level 8', place: 'pool',
       text: 'The rooftop pool on Level 8 is open 7 AM to 10 PM. Towels are waiting by the pool.' },
-    { re: /gym.*(open|close|hours|time)|(open|close|hours|time).*gym/, title: 'Fitness centre', place: 'gym',
+    { id: 'gym', re: /gym.*(open|close|hours|time)|(open|close|hours|time).*gym/, title: 'Fitness centre', icon: 'place-gym', short: 'Open 24 hours · Level 2', place: 'gym',
       text: 'The fitness centre on Level 2 is open 24 hours — just tap your room key at the door.' },
-    { re: /spa|massage|sauna/, title: 'Marina Spa', place: 'spa',
+    { id: 'spa', re: /spa|massage|sauna/, title: 'Marina Spa', icon: 'place-spa', short: '10 AM – 10 PM · Level 2', place: 'spa',
       text: 'Marina Spa on Level 2 is open 10 AM to 10 PM. You can book a treatment at the spa reception or at the front desk.' },
-    { re: /airport|dxb|dwc|transfer/, title: 'Airport', place: 'entrance',
+    { id: 'airport', re: /airport|dxb|dwc|transfer/, title: 'Airport', icon: 'topic-airport', short: 'About 35 minutes by taxi', place: 'entrance',
       text: 'Dubai International is about 35 minutes by taxi. Taxis wait at the main entrance, or the concierge can book a private transfer.' },
-    { re: /metro|tram|public transport/, title: 'Metro & tram', place: 'entrance',
+    { id: 'transit', re: /metro|tram|public transport/, title: 'Metro & tram', icon: 'topic-tram', short: 'Tram 4 min · metro 10 min', place: 'entrance',
       text: 'The Dubai Marina tram stop is a 4-minute walk from the main entrance, and DMCC Metro station is about 10 minutes.' },
-    { re: /beach|jbr/, title: 'JBR Beach', place: 'entrance',
+    { id: 'beach', re: /beach|jbr/, title: 'JBR Beach', icon: 'topic-beach', short: '10-minute walk', place: 'entrance',
       text: 'JBR Beach is about a 10-minute walk along the Marina, or 3 minutes by taxi. Beach towels are at the concierge.' },
-    { re: /mall|shopping|shops?\b/, title: 'Shopping', place: 'entrance',
+    { id: 'shopping', re: /mall|shopping|shops?\b/, title: 'Shopping', icon: 'topic-shopping', short: 'Marina Mall, 5-minute walk', place: 'entrance',
       text: 'Dubai Marina Mall is a 5-minute walk from the main entrance. Mall of the Emirates is about 15 minutes by taxi.' },
-    { re: /pharmacy|chemist|doctor|clinic|medicine|sick|unwell/, title: 'Health', place: 'frontdesk',
+    { id: 'health', re: /pharmacy|chemist|doctor|clinic|medicine|sick|unwell/, title: 'Health', icon: 'topic-health', short: 'Pharmacy nearby · doctor on call', place: 'frontdesk',
       text: 'There’s a pharmacy in Marina Mall, 5 minutes away. If you need a doctor, the front desk can arrange one at any hour.' },
-    { re: /atm|cash|currency|exchange|money/, title: 'Money', place: 'frontdesk',
+    { id: 'money', re: /atm|cash|currency|exchange|money/, title: 'Money', icon: 'topic-money', short: 'ATM in the lobby', place: 'frontdesk',
       text: 'There’s an ATM in the lobby beside the lounge, and the front desk can change currency for hotel guests.' },
-    { re: /what.s on|whats on|tonight|event|entertainment|music|live/, title: 'What’s on today', place: 'lounge',
+    { id: 'events', re: /what.s on|whats on|tonight|event|entertainment|music|live/, title: 'What’s on today', icon: 'place-ballroom', short: 'Live oud music from 8 PM', place: 'lounge',
       text: 'Tonight there’s live oud music in the Lobby Lounge from 8 PM, and sunset mocktails at the Sky Bar from 5 PM.' },
-    { re: /luggage|bags|store my|left luggage/, title: 'Luggage', place: 'concierge',
+    { id: 'luggage', re: /luggage|bags|store my|left luggage/, title: 'Luggage', icon: 'place-concierge', short: 'Held free at the bell desk', place: 'concierge',
       text: 'The bell desk by the main doors will hold your luggage for free — before check-in or after check-out.' },
-    { re: /kids|children|child/, title: 'Kids club', place: 'kids',
+    { id: 'kids', re: /kids|children|child/, title: 'Kids club', icon: 'place-kids', short: 'Ages 4 – 12 · 9 AM – 7 PM', place: 'kids',
       text: 'The kids club on Level 2 welcomes ages 4 to 12, 9 AM to 7 PM, with our team looking after them.' },
-    { re: /room service|order food|my room|housekeeping|towels/, title: 'In your room', place: null,
+    { id: 'room', re: /room service|order food|my room|housekeeping|towels/, title: 'In your room', icon: 'housekeeping', short: 'Use the tablet in your room', place: null,
       text: 'For anything to your room — food, towels or a late check-out — use the Kira tablet in your room, or call the front desk.' },
-    { re: /smok/, title: 'Smoking', place: 'entrance',
+    { id: 'smoking', re: /smok/, title: 'Smoking', icon: 'topic-smoking', short: 'Outside the main entrance only', place: 'entrance',
       text: 'The hotel is non-smoking inside. There’s a smoking area outside, to the right of the main entrance.' },
-    { re: /dress code|what to wear/, title: 'Dress code', place: null,
+    { id: 'dress', re: /dress code|what to wear/, title: 'Dress code', icon: 'topic-dress', short: 'Smart casual after 6 PM', place: null,
       text: 'Smart casual in Marina Kitchen and the Sky Bar after 6 PM. Swimwear is welcome on the pool deck only.' }
   ];
+  // Hotel info: the order topics are listed in
+  var TOPICS = ['wifi', 'breakfast', 'checkin', 'events', 'pool', 'gym', 'spa', 'kids', 'airport', 'transit', 'beach', 'shopping', 'luggage', 'money', 'health', 'room', 'dress', 'smoking'];
 
   /* ---------------- Lookups ---------------- */
 
   function floor(id) { return FLOORS.filter(function (f) { return f.id === id; })[0]; }
   function floorY(id) { return floor(id).stack * GAP; }
   function place(id) { return PLACES.filter(function (p) { return p.id === id; })[0]; }
+  function topic(id) { return FAQ.filter(function (f) { return f.id === id; })[0]; }
   function kiosk(id) { return KIOSKS[id] || KIOSKS.lobby; }
   function floorLabel(id) { var f = floor(id); return f.id === 'G' ? 'Ground floor' : f.name + ' · ' + f.theme; }
 
@@ -273,7 +277,7 @@
 
   window.KiraHotel = {
     GAP: GAP, FLOORS: FLOORS, GUEST_FLOORS: GUEST_FLOORS, FOOTPRINT: FOOTPRINT, LIFT_CORE: LIFT_CORE,
-    AREAS: AREAS, NODES: NODES, PLACES: PLACES, POPULAR: POPULAR, FAQ: FAQ, KIOSKS: KIOSKS,
-    floor: floor, floorY: floorY, floorLabel: floorLabel, place: place, kiosk: kiosk, openStatus: openStatus, route: route
+    AREAS: AREAS, NODES: NODES, PLACES: PLACES, POPULAR: POPULAR, FAQ: FAQ, TOPICS: TOPICS, KIOSKS: KIOSKS,
+    floor: floor, floorY: floorY, floorLabel: floorLabel, place: place, topic: topic, kiosk: kiosk, openStatus: openStatus, route: route
   };
 })();
