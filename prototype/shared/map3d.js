@@ -1,8 +1,8 @@
-/* Kira Concierge — 3D hotel map for the public hall kiosk.
+/* Kira Concierge — 3D hotel map for the public hall kiosk and the guest tablet.
    Three.js (jsDelivr, pinned in the page's import map). Every floor of the Grand Marina is
    its own group of glass rooms. For a route, only the floors it uses stay on screen — they
    glide apart so neither hides the other, joined by the lift shaft — and a purple line grows
-   from "You are here" to the destination, then a light keeps walking it.
+   from "You are here" to the destination, then a little person walks it.
    One persistent canvas: the kiosk re-renders its screens, so attach() moves the map into
    whichever slot is on screen instead of building a new one. */
 import * as THREE from 'three';
@@ -19,19 +19,19 @@ let EL = 0.52;              // steeper for a single floor, lower when floors are
 const PAL = {
   dark: {
     slab: [0x2a2433, 0.92], slabEdge: [0xc4a6ff, 0.26], room: [0x8c4ef6, 0.2], roomEdge: [0xc4a6ff, 0.55],
-    dest: [0xa36bff, 0.55], core: [0x8b879a, 0.55], water: [0x38bdf8, 0.75], outdoor: [0x3a3446, 0.8],
+    dest: [0xa36bff, 0.55], core: [0x8b879a, 0.55], water: [0x38bdf8, 0.75], outdoor: [0x3a3446, 0.8], mine: [0x4ade80, 0.24],
     ghost: [0x8c4ef6, 0.05], ghostEdge: [0xc4a6ff, 0.16], shaft: [0xc4a6ff, 0.1],
-    route: 0xd9c7ff, glow: 0x8c4ef6, walker: 0xffffff, here: 0x4ade80, pin: 0xa36bff, shadow: 'rgba(0,0,0,.55)'
+    route: 0xd9c7ff, glow: 0x8c4ef6, outline: 0xffffff, here: 0x4ade80, pin: 0xa36bff, shadow: 'rgba(0,0,0,.55)'
   },
   light: {
     slab: [0xffffff, 0.95], slabEdge: [0x8c4ef6, 0.2], room: [0xd9c8fb, 0.75], roomEdge: [0x8c4ef6, 0.38],
-    dest: [0x8c4ef6, 0.7], core: [0xc9c6d4, 0.85], water: [0x5cc8f5, 0.8], outdoor: [0xeeeaf6, 0.9],
+    dest: [0x8c4ef6, 0.7], core: [0xc9c6d4, 0.85], water: [0x5cc8f5, 0.8], outdoor: [0xeeeaf6, 0.9], mine: [0x86efac, 0.6],
     ghost: [0xb794ff, 0.06], ghostEdge: [0x8c4ef6, 0.14], shaft: [0x8c4ef6, 0.09],
-    route: 0x7a3ff0, glow: 0xb794ff, walker: 0x5b2bb8, here: 0x16a34a, pin: 0x8c4ef6, shadow: 'rgba(60,40,120,.22)'
+    route: 0x7a3ff0, glow: 0xb794ff, outline: 0x5b2bb8, here: 0x16a34a, pin: 0x8c4ef6, shadow: 'rgba(60,40,120,.22)'
   }
 };
 
-let host, renderer, labels, scene, camera, controls;
+let host, renderer, labels, scene, overlay, camera, controls;
 let theme = document.documentElement.classList.contains('theme-light') ? 'light' : 'dark';
 const reg = [];          // { m: material, role, floor, area } — recoloured on theme change, faded per floor
 const floors = {};       // id -> { group, chip, y, toY, dim, toDim }
@@ -94,10 +94,14 @@ function build() {
   host.appendChild(renderer.domElement);
   host.appendChild(labels.domElement);
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0x6b4bb0, 1.25));
-  const sun = new THREE.DirectionalLight(0xffffff, 1.35);
-  sun.position.set(40, 90, 70);
-  scene.add(sun);
+  // the walker is drawn in its own pass on top, so a floor above never hides it
+  overlay = new THREE.Scene();
+  [scene, overlay].forEach((sc) => {
+    sc.add(new THREE.HemisphereLight(0xffffff, 0x6b4bb0, 1.25));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.35);
+    sun.position.set(40, 90, 70);
+    sc.add(sun);
+  });
 
   // soft contact shadow under the lowest floor
   const c = document.createElement('canvas'); c.width = c.height = 128;
@@ -122,8 +126,8 @@ function build() {
     const g = floors[a.floor].group;
     if (a.kind === 'water') rectBox(g, a.rect, 0, 0.5, 'water', a.floor, a.place, 'roomEdge');
     else if (a.kind === 'outdoor') rectBox(g, a.rect, -0.6, 0.6, 'outdoor', a.floor, a.place, 'slabEdge');
-    else rectBox(g, a.rect, 0, 2.2, 'room', a.floor, a.place, 'roomEdge');
-    areaLabels.push({ obj: label(g, a.label, 'map-label', (a.rect[0] + a.rect[2]) / 2, 3.2, (a.rect[1] + a.rect[3]) / 2), floor: a.floor, place: a.place, on: false });
+    else rectBox(g, a.rect, 0, 2.2, a.kind === 'mine' ? 'mine' : 'room', a.floor, a.place, 'roomEdge');
+    if (a.label) areaLabels.push({ obj: label(g, a.label, 'map-label', (a.rect[0] + a.rect[2]) / 2, 3.2, (a.rect[1] + a.rect[3]) / 2), floor: a.floor, place: a.place, on: false });
   });
 
   // guest floors 3–7 (overview only): ghosted plates between Level 2 and the roof
@@ -177,7 +181,7 @@ function layout(routeFloors) {
   const on = routeFloors ? routeFloors.slice().sort((a, b) => H.floor(a).level - H.floor(b).level) : null;
   H.FLOORS.forEach((f) => {
     const F = floors[f.id], i = on ? on.indexOf(f.id) : -1;
-    if (!on) { F.toY = H.floorY(f.id); F.toDim = 1; }
+    if (!on) { F.toY = H.floorY(f.id); F.toDim = f.guest ? 0 : 1; }
     else if (i >= 0) { F.toY = i * ROUTE_GAP; F.toDim = 1; }
     else F.toDim = 0;
   });
@@ -215,7 +219,7 @@ function frame(points, refit) {
 function footprintPoints(ys) {
   const fp = H.FOOTPRINT, pts = [];
   // the floor names sit just left of each floor's front corner — keep them in the frame too
-  ys.forEach((y) => { pts.push(new THREE.Vector3(fp[0] - 17, y, fp[3]), new THREE.Vector3(fp[2], y + 3, fp[1]), new THREE.Vector3(fp[2], y, fp[3])); });
+  ys.forEach((y) => { pts.push(new THREE.Vector3(fp[0] - 22, y, fp[3]), new THREE.Vector3(fp[2], y + 3, fp[1]), new THREE.Vector3(fp[2], y, fp[3])); });
   return pts;
 }
 
@@ -227,6 +231,7 @@ function world(nodeId) { const v = local(nodeId); v.y += floors[H.NODES[nodeId][
 // CSS2DObject only removes its element when it is removed itself, not when its group is — drop label elements here
 function disposeTree(o) { o.traverse((x) => { if (x.geometry) x.geometry.dispose(); if (x.material) x.material.dispose(); if (x.isCSS2DObject) x.element.remove(); }); }
 function clearRoute() {
+  disposeWalker();
   if (walk) { scene.remove(walk.group); disposeTree(walk.group); }
   if (pin) { pin.group.parent.remove(pin.group); disposeTree(pin.group); }
   walk = null; pin = null; destId = null; liftSpan = null; lastStep = -1;
@@ -240,7 +245,7 @@ function placeHere(kiosk) {
   disc.rotation.x = -Math.PI / 2; disc.position.y = 0.05;
   const r = ring(PAL[theme].here);
   group.add(disc, r);
-  label(group, '<i></i>You are here', 'map-here', 0, 2.4, 0);
+  label(group, '<i></i>You are here', 'map-here', 0, 0, 0, [0.5, -0.9]);  // under the ring, so the walker stands clear of it
   floors[kiosk.floor].group.add(group);
   here = { group, disc, ring: r };
 }
@@ -260,6 +265,73 @@ function makePin(place) {
   label(group, '<img src="' + ICON + place.icon + '.png" alt="">' + place.name, 'map-label dest', 0, 6.2, 0);
   floors[place.floor].group.add(group);
   pin = { group, bob, ring: r, mat: m };
+}
+
+// The walker: a little person in Kira purple with a light outline, so it stands out on either theme.
+// The frame loop sizes it by the camera's distance, so it stays about the same size on screen however
+// far out the map is framed. Arms and legs hang from pivots at the shoulders and hips; it faces +z
+// until the frame loop turns it.
+function makeWalker() {
+  const M = (color, roughness) => new THREE.MeshStandardMaterial({ color, roughness });
+  const skin = M(0xe2a882, 0.6), top = M(0xa36bff, 0.45), trousers = M(0x3b2f5c, 0.7), hair = M(0x2a1c16, 0.8), dark = M(0x1b1720, 0.5);
+  const person = new THREE.Group(), body = new THREE.Group();
+  person.add(body);
+  const limb = (r, len, m, x, y, hand) => {
+    const pivot = new THREE.Group();
+    pivot.position.set(x, y, 0);
+    const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 6, 12), m);
+    mesh.position.y = 0.05 - (len / 2 + r);
+    pivot.add(mesh);
+    if (hand) { const h = new THREE.Mesh(new THREE.SphereGeometry(r * 1.05, 12, 10), skin); h.position.y = -(len + r * 1.6); pivot.add(h); }
+    body.add(pivot);
+    return pivot;
+  };
+  const legL = limb(0.21, 0.95, trousers, -0.22, 1.42), legR = limb(0.21, 0.95, trousers, 0.22, 1.42);
+  const armL = limb(0.13, 0.7, top, -0.56, 2.58, true), armR = limb(0.13, 0.7, top, 0.56, 2.58, true);
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.4, 0.62, 6, 16), top);
+  torso.position.y = 2.05;
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.36, 24, 18), skin);
+  head.position.y = 3.02;
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.385, 24, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), hair);
+  cap.position.set(0, 3.05, -0.04); cap.rotation.x = -0.3;
+  const eyes = [-0.12, 0.12].map((x) => { const e = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 8), dark); e.position.set(x, 3.05, 0.32); return e; });
+  body.add(torso, head, cap, ...eyes);
+  // outline: each body part again, a little bigger, back faces only
+  const line = new THREE.MeshBasicMaterial({ color: PAL[theme].outline, side: THREE.BackSide });
+  const parts = [];
+  body.traverse((o) => { if (o.isMesh && o.geometry.type !== 'SphereGeometry' || o === head || o === cap) parts.push(o); });
+  parts.forEach((o) => { const h = new THREE.Mesh(o.geometry, line); h.scale.setScalar(o === head || o === cap ? 1.14 : 1.2); o.add(h); });
+  // a soft glow ring under the feet, so it's easy to spot
+  const glow = ring(PAL[theme].glow);
+  glow.position.y = 0.06;
+  person.add(glow);
+  person.visible = false;
+  return { person, body, legL, legR, armL, armR, glow, line, yaw: 0, amp: 0 };
+}
+
+function disposeWalker() {
+  if (!walk) return;
+  overlay.remove(walk.walker.person); disposeTree(walk.walker.person);
+}
+
+const STRIDE = 2.4, WALK_SPEED = 6, PAUSE = 1600;  // map units per stride, units a second, ms at the destination
+
+// Stand the walker at a point along the route (0–1), turned the way it's going, legs swinging while it walks.
+function poseWalker(u, walking, dt, snap) {
+  const W = walk.walker, p = walk.path.getPointAt(u), tan = walk.path.getTangentAt(u);
+  W.person.position.set(p.x, p.y - 0.45, p.z);
+  if (Math.hypot(tan.x, tan.z) > 0.3) {
+    const want = Math.atan2(tan.x, tan.z);
+    let d = want - W.yaw;
+    d = Math.atan2(Math.sin(d), Math.cos(d));
+    W.yaw += snap ? d : d * Math.min(1, dt / 90);
+  } else walking = false;  // riding the lift
+  W.person.rotation.y = W.yaw;
+  W.amp += ((walking ? 0.6 : 0) - W.amp) * Math.min(1, dt / 120);
+  const ph = (u * walk.total / STRIDE) * Math.PI * 2, s = Math.sin(ph);
+  W.legL.rotation.x = s * W.amp; W.legR.rotation.x = -s * W.amp;
+  W.armL.rotation.x = -s * W.amp * 0.8; W.armR.rotation.x = s * W.amp * 0.8;
+  W.body.position.y = Math.abs(Math.cos(ph)) * 0.12 * (W.amp / 0.6);
 }
 
 function show(route) {
@@ -296,32 +368,31 @@ function show(route) {
   const core = new THREE.Mesh(new THREE.TubeGeometry(path, seg, 0.32, radial, false), new THREE.MeshBasicMaterial({ color: PAL[theme].route }));
   const glow = new THREE.Mesh(new THREE.TubeGeometry(path, seg, 0.85, radial, false),
     new THREE.MeshBasicMaterial({ color: PAL[theme].glow, transparent: true, opacity: 0.32, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending }));
-  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.75, 20, 14), new THREE.MeshBasicMaterial({ color: PAL[theme].walker, depthTest: false }));
-  const halo = new THREE.Mesh(new THREE.SphereGeometry(1.6, 20, 14), new THREE.MeshBasicMaterial({ color: PAL[theme].glow, transparent: true, opacity: 0.35, depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending }));
-  glow.renderOrder = 5; dot.renderOrder = halo.renderOrder = 6;
+  glow.renderOrder = 5;
   const group = new THREE.Group();
-  group.add(core, glow, dot, halo);
+  group.add(core, glow);
   scene.add(group);
   [core, glow].forEach((m) => m.geometry.setDrawRange(0, 0));
-  dot.visible = halo.visible = false;
+  const walker = makeWalker();
+  overlay.add(walker.person);
   makePin(route.place);
 
-  // labels: the other places on the destination's floor, and the lifts on the floor you start from
+  // labels: the other places on the destination's floor, the lifts on the floor you start from, and your own room
   areaLabels.forEach((l) => {
-    l.on = l.place !== destId && (l.place === 'lifts' ? !!liftSpan && l.floor === route.from.floor : l.floor === route.place.floor);
+    l.on = l.place === 'myroom' || (l.place !== destId && (l.place === 'lifts' ? !!liftSpan && l.floor === route.from.floor : l.floor === route.place.floor));
   });
 
   const top = (nodeId, h) => world(nodeId).add(new THREE.Vector3(0, h, 0));
   frame(footprintPoints(route.floors.map((f) => floors[f].toY)).concat(pts, [top(route.place.node, 8), top(route.from.node, 3.5)]));
   walk = {
-    group, path, total, seg, radial, core, glow, dot, halo, legFrac,
-    t0: performance.now() + 1000,                       // let the floors and camera settle first
-    draw: Math.min(3600, Math.max(1500, total * 34)),   // ms to draw the whole line
-    loop: Math.min(9000, Math.max(3500, total * 70))    // ms for the light to walk it
+    group, path, total, seg, radial, core, glow, walker, legFrac, cycle: -1,
+    t0: performance.now() + 1000,                                       // let the floors and camera settle first
+    draw: Math.min(3600, Math.max(1500, total * 34)),                   // ms to draw the whole line
+    loop: Math.min(16000, Math.max(4000, total / WALK_SPEED * 1000))    // ms for the walker to walk it
   };
 }
 
-function replay() { if (walk) { walk.t0 = performance.now() + 150; lastStep = -1; walk.dot.visible = walk.halo.visible = false; } }
+function replay() { if (walk) { walk.t0 = performance.now() + 150; walk.cycle = -1; lastStep = -1; walk.walker.person.visible = false; } }
 
 function overview(kiosk) {
   if (!host) build();
@@ -342,7 +413,7 @@ function setTheme(light) {
   paintShadow();
   if (here) { here.disc.material.color.setHex(PAL[theme].here); here.ring.material.color.setHex(PAL[theme].here); }
   if (pin) { pin.mat.color.setHex(PAL[theme].pin); pin.mat.emissive.setHex(PAL[theme].pin); pin.ring.material.color.setHex(PAL[theme].pin); }
-  if (walk) { walk.core.material.color.setHex(PAL[theme].route); walk.glow.material.color.setHex(PAL[theme].glow); walk.dot.material.color.setHex(PAL[theme].walker); walk.halo.material.color.setHex(PAL[theme].glow); }
+  if (walk) { walk.core.material.color.setHex(PAL[theme].route); walk.glow.material.color.setHex(PAL[theme].glow); walk.walker.glow.material.color.setHex(PAL[theme].glow); walk.walker.line.color.setHex(PAL[theme].outline); }
 }
 
 /* ---------------- Frame loop ---------------- */
@@ -354,7 +425,7 @@ function tick(now) {
   requestAnimationFrame(tick);
   if (!host.isConnected || !host.clientWidth) return;
   // time-based easing, so floors settle in about a second at any frame rate
-  const k = 1 - Math.exp(-Math.min(500, now - (lastNow || now)) / 180);
+  const dt = Math.min(500, now - (lastNow || now)), k = 1 - Math.exp(-dt / 180);
   lastNow = now;
 
   if (camTween) {
@@ -403,26 +474,36 @@ function tick(now) {
     const k2 = ((now + 800) % 1600) / 1600; pin.ring.scale.setScalar(1 + k2 * 2.6); pin.ring.material.opacity = 0.8 * (1 - k2);
   }
 
-  // route: the line grows, then a light walks it on a loop
+  // route: the line grows while the walker waits at the start, then it walks the line, pauses at the
+  // destination, and pops back to the start to go again
   if (walk) {
-    const t = now - walk.t0;
-    let frac = 0, tip = null;
-    if (t >= 0 && t < walk.draw) { frac = ease(t / walk.draw); tip = frac; }
-    else if (t >= walk.draw) { frac = 1; tip = ((t - walk.draw) % walk.loop) / walk.loop; }
+    const t = now - walk.t0, W = walk.walker;
+    const frac = t < 0 ? 0 : t < walk.draw ? ease(t / walk.draw) : 1;
     const n = Math.floor(frac * walk.seg) * walk.radial * 6;
     walk.core.geometry.setDrawRange(0, n); walk.glow.geometry.setDrawRange(0, n);
-    if (tip != null) {
-      const p = walk.path.getPointAt(Math.min(0.9999, tip));
-      walk.dot.position.copy(p); walk.halo.position.copy(p);
-      walk.dot.visible = walk.halo.visible = true;
-      walk.halo.scale.setScalar(1 + 0.25 * Math.sin(now / 160));
+    if (t >= 0) {
+      const lap = walk.loop + PAUSE, c = t < walk.draw ? -1 : (t - walk.draw) % lap, cycle = t < walk.draw ? -1 : Math.floor((t - walk.draw) / lap);
+      const tip = c < 0 ? 0 : Math.min(1, c / walk.loop);
+      const snap = cycle !== walk.cycle;
+      walk.cycle = cycle;
+      poseWalker(Math.min(0.9999, tip), c >= 0 && c < walk.loop, dt, snap || !W.person.visible);
+      const pop = c < 0 ? Math.min(1, t / 300) : cycle > 0 && c < 300 ? c / 300 : c > lap - 300 ? (lap - c) / 300 : 1;
+      const size = THREE.MathUtils.clamp(camera.position.distanceTo(W.person.position) * 0.0115, 1.1, 3.2);
+      W.person.scale.setScalar(size * Math.max(0.001, ease(pop)));
+      W.person.visible = true;
+      const k3 = (now % 1400) / 1400;
+      W.glow.scale.setScalar(0.8 + k3 * 1.2); W.glow.material.opacity = 0.7 * (1 - k3);
       let step = 0;
       walk.legFrac.forEach((f, i) => { if (tip >= f - 1e-6) step = i; });
       if (step !== lastStep) { lastStep = step; if (onStep) onStep(step); }
     }
   }
 
+  renderer.autoClear = true;
   renderer.render(scene, camera);
+  renderer.autoClear = false;
+  renderer.clearDepth();
+  renderer.render(overlay, camera);
   labels.render(scene, camera);
 }
 

@@ -1,6 +1,6 @@
 /* Kira Concierge — guest tablet (working prototype).
    Every screen of the hi-fi guest flows (dining, housekeeping, late checkout,
-   valet), driven by the shared live store: requests the guest sends land on the
+   valet, and directions from the room on the 3D hotel map), driven by the shared live store: requests the guest sends land on the
    staff apps, and staff actions move the guest's trackers in real time. */
 (function () {
   'use strict';
@@ -33,7 +33,8 @@
     { act: 'menu',     icon: 'dining',       name: 'In-room dining', info: 'Order food and drinks, brought to your room' },
     { act: 'hk',       icon: 'housekeeping', name: 'Housekeeping',   info: 'Towels, pillows, toiletries or a room clean' },
     { act: 'checkout', icon: 'checkout',     name: 'Late checkout',  info: 'Ask the front desk to stay a little longer' },
-    { act: 'valet',    icon: 'valet',        name: 'Valet',          info: 'Have your car brought round to the entrance' }
+    { act: 'valet',    icon: 'valet',        name: 'Valet',          info: 'Have your car brought round to the entrance' },
+    { act: 'places',   icon: 'place-all',    name: 'Find a place',   info: 'Directions from your room — pool, gym, spa and more' }
   ];
   var NUM_WORDS = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, couple: 2, pair: 2 };
   var NUM_SAY = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
@@ -54,12 +55,18 @@
     heard: '',             // last thing the guest "said" (shown under Kira)
     reply: '',             // Kira's spoken reply to it
     voice: { text: '', typing: '', busy: false },
+    place: null,           // place being shown on the map
+    placeCat: 'popular',   // Find a place filter: popular | G | L1 | L2 | L8
+    dirFrom: null,         // where Directions was opened from (Back returns there)
+    step: 0,               // step the walker is on
+    answer: null,          // { place } — a voice answer that comes with "Show me the way"
     overlay: null, helpKind: null, helpId: null,
     feedback: {},
     muted: false, volume: 0.8, textScale: 0
   };
   var seededAt = S.get().seededAt;
   var ROOM = S.get().guestRoom;
+  var H = window.KiraHotel, HERE = H.addRoom(ROOM), ICON = '../assets/icons/'; // routes start at this room's door
   var known = {};          // request id -> last status seen (for live notices)
 
   var tablet = document.getElementById('tablet');
@@ -516,26 +523,132 @@
         [btn('Back to home', 'home', { primary: true })]) };
   };
 
-  var PHRASES = ['Two burgers and a Coke, please — no onion', 'Two extra towels and two pillows, please', 'I’d like a late checkout at 5', 'Bring my car around', 'What time does the pool close?'];
+  var PHRASES = ['Two burgers and a Coke, please — no onion', 'Two extra towels and two pillows, please', 'I’d like a late checkout at 5', 'Bring my car around', 'How do I get to the gym?', 'What time does the pool close?'];
   var Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   var recognizing = false;
 
+  // Talk to Kira: one centred column — Kira, what she's saying, one example at a time, then type or talk.
+  // An answer about a place comes with "Show me the way".
   VIEWS.voice = function () {
-    var v = ui.voice;
+    var v = ui.voice, a = !v.busy && !v.typing && ui.answer;
     var kira = v.busy === 'thinking' ? { mood: 'thinking', line: '“' + v.typing + '”', caption: 'Thinking…' }
       : v.typing ? { mood: 'listening', line: '“' + v.typing + '”', caption: 'Listening…' }
       : recognizing ? { mood: 'listening', line: 'I’m listening — what can I do for you?', caption: 'Listening…' }
       : ui.reply ? { mood: 'speaking', line: ui.reply }
-      : { mood: 'idle', line: Recognition ? 'Tap “Talk to Kira” and ask me anything.' : 'Tap a phrase, or type what you’d like.' };
-    var examples = PHRASES.map(function (p) { return '<button class="quick-chip" data-act="say" data-arg="' + esc(p) + '"' + (v.busy ? ' disabled' : '') + '>“' + esc(p) + '”</button>'; }).join('');
+      : { mood: 'idle', line: Recognition ? 'Tap “Talk to Kira” and ask me anything.' : 'Type what you’d like below, or tap the example.' };
+    var place = a && a.place && H.place(a.place), off = v.busy ? ' disabled' : '';
+    var tryLine = '<button class="try-line" id="try-line" data-act="say" data-arg="' + esc(PHRASES[tryIdx]) + '"' + off + '>Try saying <span>“' + esc(PHRASES[tryIdx]) + '”</span></button>';
+    var card = place ? '<div class="voice-answer"><div class="answer-card"><img src="' + ICON + place.icon + '.png" alt="" width="44" height="44"><div><p class="name">' + esc(place.name) + '</p>' +
+      '<p class="info">' + esc(floorShort(place.floor)) + (H.openStatus(place) ? ' · ' + esc(H.openStatus(place).text) : '') + '</p></div></div>' +
+      btn('Show me the way', 'go', { hero: true, arg: place.id }) + '</div>' : '';
     return { context: 'Talk to Kira', kira: kira,
-      html: '<div class="voice-panel">' + head('', 'Just ask') +
-        '<p class="task-note">' + (Recognition ? 'Just speak — or tap a phrase, or type what you’d like.' : 'Tap a phrase, or type what you’d like.') + '</p>' +
-        '<div class="voice-examples">' + examples + '</div>' +
-        '<form class="voice-row" data-form="voice"><input class="text-field" id="voice-text" data-model="voice.text" placeholder="Type to Kira…" value="' + esc(v.text) + '" aria-label="Say something to Kira" autocomplete="off"' + (v.busy ? ' disabled' : '') + '>' +
-        '<button class="btn btn-brass" type="submit"' + (v.busy ? ' disabled' : '') + '>Send</button></form>' +
-        (Recognition ? '<button class="btn mic-btn ' + (recognizing ? 'btn-ghost-dark live' : 'btn-hero') + '" data-act="mic"' + (v.busy ? ' disabled' : '') + '>' + MIC + (recognizing ? 'Listening… tap to stop' : 'Talk to Kira') + '</button>' : '') + '</div>' };
+      html: '<div class="voice-panel">' + (place ? card : tryLine) +
+        '<div class="voice-compose"><form class="voice-row" data-form="voice"><input class="text-field" id="voice-text" data-model="voice.text" placeholder="Or type what you’d like…" value="' + esc(v.text) + '" aria-label="Say something to Kira" autocomplete="off"' + off + '>' +
+        '<button class="send-btn" type="submit" aria-label="Send"' + off + '>' + SEND + '</button></form>' +
+        (Recognition ? '<button class="btn mic-btn ' + (recognizing ? 'btn-ghost-dark live' : place ? 'btn-ghost-dark' : 'btn-hero') + '" data-act="mic"' + off + '>' + MIC + (recognizing ? 'Stop listening' : 'Talk to Kira') + '</button>' : '') + '</div></div>' };
   };
+  var tryIdx = 0;
+  function rotateTry() {
+    var el = ui.view === 'voice' && document.getElementById('try-line');
+    if (!el || el.disabled) return;
+    tryIdx = (tryIdx + 1) % PHRASES.length;
+    el.classList.add('out');
+    setTimeout(function () {
+      el.dataset.arg = PHRASES[tryIdx];
+      el.querySelector('span').textContent = '“' + PHRASES[tryIdx] + '”';
+      el.classList.remove('out');
+    }, 320);
+  }
+  setInterval(rotateTry, 3600);
+
+  /* ---------------- Find a place & directions (from this room, on the 3D map) ---------------- */
+
+  function floorShort(id) { return id === 'G' ? 'Ground floor' : H.floor(id).name; }
+  function openLine(p) {
+    var o = H.openStatus(p);
+    return o ? '<span class="open-dot' + (o.open ? '' : ' off') + '"></span>' + esc(o.text.replace('Open now · until', 'Open until')) : '';
+  }
+  function currentRoute() { return ui.place ? H.route(HERE.id, ui.place) : null; }
+
+  // Directions: the 3D map on the left (60%), the place and its steps on the right (40%).
+  VIEWS.directions = function () {
+    var r = currentRoute();
+    if (!r) { ui.view = 'places'; return VIEWS.places(); }
+    var p = r.place;
+    var steps = r.steps.map(function (st, i) {
+      return '<li class="dir-step' + (i === ui.step ? ' on' : '') + '" data-step="' + i + '"><span class="n">' + (i + 1) + '</span><span>' + esc(st) + '</span></li>';
+    }).join('');
+    return { context: 'Directions · ' + p.name, kira: { mood: 'speaking', line: r.line },
+      html: '<div class="status-split fill way">' +
+        '<section class="status-detail map-card" aria-label="3D map of the hotel with the route from your room to ' + esc(p.name) + '"><div class="map-slot" id="map-slot"></div>' +
+          '<span class="map-hint">' + DRAG + 'Drag to turn · pinch to zoom</span>' +
+          '<button class="nav-btn map-replay" data-act="replay">' + REPLAY + 'Replay</button></section>' +
+        '<aside class="status-actions is-summary dir-side" aria-label="Directions">' +
+          '<div class="dir-head"><img src="' + ICON + p.icon + '.png" alt="" width="52" height="52"><div><p class="side-heading">' + esc(p.name) + '</p><p class="dir-floor">' + esc(H.floorLabel(p.floor)) + '</p></div></div>' +
+          '<div class="dir-facts"><span><b>' + esc(cap(r.time)) + '</b> from your room</span>' + (H.openStatus(p) ? '<span>' + openLine(p) + '</span>' : '') + '</div>' +
+          '<ol class="dir-steps" data-scroll="steps">' + steps + '</ol>' +
+          '<div class="side-cta"><div class="status-btns">' + btn('Done', 'home', { hero: true }) + '</div></div>' +
+        '</aside></div>' };
+  };
+
+  // Find a place: popular places or one floor at a time, as tiles; a floor guide beside them.
+  var PLACE_CATS = [['popular', 'Popular'], ['G', 'Ground'], ['L1', 'Level 1'], ['L2', 'Level 2'], ['L8', 'Rooftop']];
+  function hotelGuideHTML() {
+    var mine = H.floor('R');
+    return [['G', 'Lobby', 'front desk, dining, lounge'], ['1', 'Meetings & events', 'ballroom, prayer room'], ['2', 'Wellness', 'fitness, spa, kids club'],
+      [mine.short, 'Your room', 'Room ' + ROOM], ['8', 'Rooftop', 'pool and Sky Bar']].map(function (g) {
+      return '<div><span class="floor-badge">' + g[0] + '</span><span><b>' + esc(g[1]) + '</b> · ' + esc(g[2]) + '</span></div>';
+    }).join('');
+  }
+  VIEWS.places = function () {
+    var c = ui.placeCat;
+    var list = c === 'popular' ? H.POPULAR.map(function (id) { return H.place(id); }) : H.PLACES.filter(function (p) { return p.floor === c; });
+    var chips = PLACE_CATS.map(function (k) {
+      return '<button class="quick-chip' + (k[0] === c ? ' selected' : '') + '" data-act="place-cat" data-arg="' + k[0] + '" aria-pressed="' + (k[0] === c) + '">' + esc(k[1]) + '</button>';
+    }).join('');
+    var tiles = list.map(function (p) {
+      return '<button class="place-tile" data-act="go" data-arg="' + p.id + '"><img src="' + ICON + p.icon + '.png" alt="" width="42" height="42">' +
+        '<span class="name">' + esc(p.name) + '</span><span class="info">' + esc(c === 'popular' ? floorShort(p.floor) : p.info) + '</span></button>';
+    }).join('');
+    return { context: 'Find a place', kira: { mood: 'speaking', line: 'Where would you like to go? I’ll show you the way from your room.' },
+      html: '<div class="status-split fill way"><section class="status-detail"><div class="place-filter" data-scroll="cats">' + chips + '</div>' +
+          '<div class="place-grid" data-scroll="places">' + tiles + '</div></section>' +
+        '<aside class="status-actions is-summary" aria-label="Hotel guide"><p class="side-heading">Hotel guide</p><div class="floor-guide">' + hotelGuideHTML() + '</div>' +
+        '<div class="side-cta"><div class="status-btns"><button class="btn btn-hero mic-btn" data-act="voice">' + MIC + 'Talk to Kira</button></div></div></aside></div>' };
+  };
+
+  // The 3D map: map3d.js loads after this file and calls back with 'kira-map-ready'.
+  // If WebGL or the CDN isn't available, the steps on the right still guide the way.
+  var mapKey = '', mapFailed = false;
+  function mountMap() {
+    var slot = ui.view === 'directions' && document.getElementById('map-slot');
+    if (!slot) return;
+    if (mapFailed || !window.KiraMap) {
+      slot.innerHTML = '<p class="map-fallback">' + (mapFailed ? 'The 3D map isn’t available on this screen right now — the steps on the right will guide you.' : 'Loading the map…') + '</p>';
+      return;
+    }
+    try {
+      KiraMap.attach(slot);
+      if (ui.place !== mapKey) { mapKey = ui.place; KiraMap.show(currentRoute()); }
+    } catch (e) { mapFailed = true; mountMap(); }
+  }
+  function markStep(i) {
+    ui.step = i;
+    body.querySelectorAll('.dir-step').forEach(function (el) { el.classList.toggle('on', +el.dataset.step === i); });
+  }
+  window.addEventListener('kira-map-ready', function () {
+    KiraMap.onStep = markStep;
+    KiraMap.setTheme(document.documentElement.classList.contains('theme-light'));
+    render();
+  });
+  setTimeout(function () { if (!window.KiraMap) { mapFailed = true; render(); } }, 12000);
+  function openPlace(id, from) {
+    if (!H.place(id)) return;
+    stopMic();
+    if (ui.place !== id) ui.step = 0;
+    ui.place = id; ui.dirFrom = from; ui.view = 'directions';
+    render();
+  }
 
   /* ---------------- One bento grid, three modes ----------------
      home    → Kira 60% | services 40%
@@ -545,6 +658,9 @@
 
   var MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/></svg>';
   var BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
+  var SEND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>';
+  var REPLAY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>';
+  var DRAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>';
   var panelKeys = { ai: '', svc: '' }, lastView = null;
 
   function modeOf(view) { return view === 'home' ? 'home' : view === 'voice' ? 'kira' : 'service'; }
@@ -574,7 +690,7 @@
   }
   function voiceShellHTML() {
     return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title">Talk to Kira</p></div>' +
-      '<div class="voice-grid"><div class="kira-stage" id="kira-big"></div><div class="voice-side" id="voice-col"></div></div>';
+      '<div class="voice-center"><div class="kira-stage" id="kira-big"></div><div class="voice-side" id="voice-col"></div></div>';
   }
   function serviceListHTML() {
     return '<p class="bento-label">Or choose a service</p>' +
@@ -648,6 +764,7 @@
     }
     lastView = ui.view;
     ui.bump = null;
+    mountMap();
 
     body.querySelectorAll('[data-scroll]').forEach(function (el) { var p = scrolls[el.dataset.scroll]; if (p) { el.scrollTop = p[0]; el.scrollLeft = p[1]; } });
     if (focusId) {
@@ -889,9 +1006,15 @@
     return 1;
   }
 
+  var WAY = /\bwheres?\b|how (do|can|would) i (get|find|reach)|take me|directions?|way to|find (the|a)\b|go to|get to|show me|looking for|nearest|closest|which floor/;
+  function placeIn(t) { var p = H.PLACES.filter(function (x) { return x.kw.test(t); })[0]; return p && p.id; }
+
   function understand(text) {
     var t = ' ' + text.toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9: -]/g, ' ').replace(/\s+/g, ' ') + ' ';
     if (/emergency|help me|doctor|ambulance/.test(t)) return { type: 'help' };
+    // Directions: "where's the gym?", "how do I get to the spa?" — from this room, on the map
+    var dest = placeIn(t);
+    if (dest && WAY.test(t)) return { type: 'directions', place: dest };
     // Dining
     var found = [];
     DISH_WORDS.forEach(function (d) {
@@ -929,13 +1052,14 @@
     }
     if (/\bcar\b|valet|vehicle/.test(t)) return { type: 'valet' };
     var ans = kbAnswer(t);
-    if (ans) return { type: 'answer', text: ans };
+    if (ans) return { type: 'answer', text: ans, place: dest };
     if (/menu|hungry|food|eat|order|dinner|lunch/.test(t)) return { type: 'dining', items: [] };
     return { type: 'unknown' };
   }
 
   function act(intent, heard) {
-    ui.heard = heard; ui.reply = '';
+    ui.heard = heard; ui.reply = ''; ui.answer = null;
+    if (intent.type === 'directions') { openPlace(intent.place, 'voice'); return; }
     if (intent.type === 'help') { ui.overlay = 'help'; ui.view = 'home'; return; }
     if (intent.type === 'dining') {
       var added = [], soldOut = [];
@@ -970,16 +1094,16 @@
       ui.view = 'checkout'; return;
     }
     if (intent.type === 'valet') { var ov = openOf('valet'); if (ov) { ui.trackId = ov.id; ui.view = 'valet-track'; } else ui.view = 'valet'; return; }
-    if (intent.type === 'answer') { ui.view = 'voice'; ui.reply = intent.text; return; }
+    if (intent.type === 'answer') { ui.view = 'voice'; ui.reply = intent.text; ui.answer = intent.place ? { place: intent.place } : null; return; }
     ui.view = 'voice';
-    ui.reply = 'I can help with dining, housekeeping, a late checkout or your car — what would you like?';
+    ui.reply = 'I can help with dining, housekeeping, a late checkout, your car, or finding your way — what would you like?';
   }
 
   // Simulate speech: the words appear under Kira as she listens, she thinks, then acts.
   function hear(text) {
     text = String(text || '').trim();
     if (!text || ui.voice.busy) return;
-    ui.view = 'voice'; ui.reply = ''; ui.voice.text = ''; ui.voice.busy = 'listening'; ui.voice.typing = '';
+    ui.view = 'voice'; ui.reply = ''; ui.answer = null; ui.voice.text = ''; ui.voice.busy = 'listening'; ui.voice.typing = '';
     var words = text.split(/\s+/), i = 0;
     (function next() {
       if (ui.view !== 'voice') { ui.voice.busy = false; return; }
@@ -1013,7 +1137,7 @@
       };
       recognizer.onerror = function (e) {
         recognizing = false;
-        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { ui.reply = 'I can’t use the microphone here — tap a phrase or type instead.'; heardSomething = true; }
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { ui.reply = 'I can’t use the microphone here — type what you’d like below instead.'; heardSomething = true; }
         if (ui.view === 'voice') render();
       };
       recognizer.onend = function () {
@@ -1023,7 +1147,7 @@
         render();
       };
       recognizer.start(); recognizing = true; render();
-    } catch (e) { recognizing = false; ui.reply = 'The microphone isn’t available here — tap a phrase or type instead.'; render(); }
+    } catch (e) { recognizing = false; ui.reply = 'The microphone isn’t available here — type what you’d like below instead.'; render(); }
   }
   function stopMic() { if (recognizing && recognizer) { try { recognizer.abort(); } catch (e) {} recognizing = false; } }
 
@@ -1031,7 +1155,7 @@
      'select' — a soft two-note pop when a service is chosen; 'tick' — a light tap for in-flow
      choices (+/−, chips, times, Back). Synthesised with WebAudio, so no audio files; silent when muted. */
   var audio = null;
-  var TICK_ACTS = { inc: 1, dec: 1, 'hk-set': 1, cat: 1, 'co-time': 1, 'co-all': 1, feedback: 1, say: 1, back: 1 };
+  var TICK_ACTS = { inc: 1, dec: 1, 'hk-set': 1, cat: 1, 'co-time': 1, 'co-all': 1, feedback: 1, say: 1, back: 1, 'place-cat': 1, replay: 1 };
   function sound(kind) {
     if (ui.muted || ui.volume <= 0) return;
     try {
@@ -1099,6 +1223,7 @@
     home: function () { ui.heard = ''; ui.reply = ''; ui.overlay = null; go('home'); },
     back: function () {
       stopMic();
+      if (ui.view === 'directions' && ui.dirFrom && ui.dirFrom !== 'home' && VIEWS[ui.dirFrom]) { go(ui.dirFrom); return; }
       if (ui.view === 'voice' && ui.voiceFrom && ui.voiceFrom !== 'home' && ui.voiceFrom !== 'voice' && VIEWS[ui.voiceFrom]) { ui.reply = ''; go(ui.voiceFrom); return; }
       var prev = { review: 'menu', 'send-error': 'review' }[ui.view];
       if (prev) { ui.view = prev; render(); return; }
@@ -1106,6 +1231,10 @@
     },
     menu: function () { if (ui.view === 'review' || ui.view === 'send-error' || ui.view === 'menu-error') { ui.view = 'menu'; render(); } else openMenu(false); },
     'retry-menu': function () { openMenu(false); },
+    places: function () { go('places'); },
+    'place-cat': function (a) { ui.placeCat = a; render(); },
+    go: function (id) { openPlace(id, ui.view); },
+    replay: function () { markStep(0); if (window.KiraMap) KiraMap.replay(); },
     cat: function (a) { ui.cat = a; ui.reply = ''; render(); },
     inc: function (a) { var l = ui.cart[a] || (ui.cart[a] = { qty: 0, note: '' }); l.qty = Math.min(9, l.qty + 1); ui.reply = ''; ui.bump = a; render(); },
     dec: function (a) { var l = ui.cart[a]; if (l) { l.qty--; if (l.qty <= 0) delete ui.cart[a]; } ui.reply = ''; ui.bump = a; render(); },
@@ -1158,7 +1287,7 @@
     },
     voice: function () {
       if (ui.view === 'voice') return;
-      ui.voiceFrom = ui.view; ui.reply = ''; ui.voice.text = ''; ui.voice.typing = '';
+      ui.voiceFrom = ui.view; ui.reply = ''; ui.answer = null; ui.voice.text = ''; ui.voice.typing = '';
       go('voice');
       if (Recognition) toggleMic();
     },
@@ -1182,7 +1311,7 @@
     if (el.dataset.act === 'scrim' && e.target !== el) return; // clicks inside the sheet
     var fn = HANDLERS[el.dataset.act];
     if (!fn) return;
-    if (el.classList.contains('svc-row')) sound('select');
+    if (el.classList.contains('svc-row') || el.classList.contains('place-tile')) sound('select');
     else if (TICK_ACTS[el.dataset.act]) sound('tick');
     e.preventDefault(); fn(el.dataset.arg);
   });
@@ -1213,6 +1342,7 @@
   document.getElementById('theme-btn').addEventListener('click', function () {
     var light = document.documentElement.classList.toggle('theme-light');
     try { localStorage.setItem('kira-guest-theme', light ? 'light' : 'dark'); } catch (e) {}
+    if (window.KiraMap) KiraMap.setTheme(light);
     renderNav();
   });
   document.getElementById('text-up').addEventListener('click', function () { setTextScale(ui.textScale + 1); });

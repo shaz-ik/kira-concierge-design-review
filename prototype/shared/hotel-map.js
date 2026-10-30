@@ -1,5 +1,5 @@
-/* Kira Concierge — the Grand Marina's floor plan, for the public hall kiosk.
-   One source for the 3D map (map3d.js) and the kiosk screens (public.js):
+/* Kira Concierge — the Grand Marina's floor plan, for the public hall kiosk and the guest tablet.
+   One source for the 3D map (map3d.js) and both tablets' screens (public.js, guest.js):
    floors, the areas drawn on each floor, the walking graph, the places a
    visitor can be guided to, and the questions Kira answers at the kiosk.
    Units are metres. x runs left → right as seen from the main entrance,
@@ -190,10 +190,42 @@
   var adj = {};
   function link(a, b, cost) { (adj[a] = adj[a] || []).push({ to: b, cost: cost }); (adj[b] = adj[b] || []).push({ to: a, cost: cost }); }
   function dist2d(a, b) { var A = NODES[a], B = NODES[b]; return Math.sqrt(Math.pow(A[1] - B[1], 2) + Math.pow(A[2] - B[2], 2)); }
-  EDGES.forEach(function (e) { link(e[0], e[1], dist2d(e[0], e[1])); });
-  for (var i = 1; i < LIFTS.length; i++) {
-    var lv = Math.abs(floor(NODES[LIFTS[i]][0]).level - floor(NODES[LIFTS[i - 1]][0]).level);
-    link(LIFTS[i - 1], LIFTS[i], 10 + lv * 3);
+  function buildGraph() {
+    adj = {};
+    EDGES.forEach(function (e) { link(e[0], e[1], dist2d(e[0], e[1])); });
+    LIFTS.sort(function (a, b) { return floor(NODES[a][0]).level - floor(NODES[b][0]).level; });
+    for (var i = 1; i < LIFTS.length; i++) {
+      var lv = Math.abs(floor(NODES[LIFTS[i]][0]).level - floor(NODES[LIFTS[i - 1]][0]).level);
+      link(LIFTS[i - 1], LIFTS[i], 10 + lv * 3);
+    }
+  }
+  buildGraph();
+
+  /* ---------------- A guest's own floor ----------------
+     The tablet in a guest room starts its routes at the room door: addRoom('412') adds Level 4 with
+     its corridor and 18 rooms (01–10 along the front, 11–18 either side of the lifts), and a 'room'
+     start point. Call it once, before the map is built. */
+
+  function addRoom(no) {
+    no = String(no);
+    if (KIOSKS.room) return KIOSKS.room;
+    var lvl = Math.floor(+no / 100) || 4, n = ((+no % 100 || 1) - 1) % 18 + 1;
+    FLOORS.push({ id: 'R', level: lvl, stack: GUEST_FLOORS.stack, name: 'Level ' + lvl, short: String(lvl), theme: 'Guest rooms', guest: true });
+    FLOORS.sort(function (a, b) { return a.level - b.level; });
+    var door = 0;
+    for (var i = 1; i <= 18; i++) {
+      var r = i <= 10 ? [-30 + (i - 1) * 6, 3, -24 + (i - 1) * 6, 19]
+        : i <= 14 ? [-30 + (i - 11) * 5.5, -19, -24.5 + (i - 11) * 5.5, -3]
+        : [8 + (i - 15) * 5.5, -19, 13.5 + (i - 15) * 5.5, -3];
+      var mine = i === n;
+      if (mine) door = (r[0] + r[2]) / 2;
+      AREAS.push({ floor: 'R', place: mine ? 'myroom' : null, label: mine ? 'Room ' + no : '', rect: [r[0] + 0.25, r[1], r[2] - 0.25, r[3]], kind: mine ? 'mine' : 'room' });
+    }
+    NODES.rDoor = ['R', door, 0]; NODES.rHub = ['R', 0, 0]; NODES.rLift = ['R', 0, -9];
+    EDGES.push(['rDoor', 'rHub'], ['rHub', 'rLift']);
+    LIFTS.push('rLift');
+    buildGraph();
+    return (KIOSKS.room = { id: 'room', node: 'rDoor', floor: 'R', label: 'Room ' + no, room: no });
   }
 
   function shortestPath(from, to) {
@@ -216,7 +248,7 @@
   }
 
   function lower(s) { return /^The /.test(s) ? 't' + s.slice(1) : s; }
-  function metres(m) { return m < 8 ? 'a few metres' : 'about ' + Math.max(5, Math.round(m / 5) * 5) + ' m'; }
+  function metres(m) { return m < 8 ? 'a few metres' : 'about ' + Math.max(5, Math.round(m / 5) * 5) + '\u00a0m'; }  // no break before the unit
   function timeText(sec) { return sec < 50 ? 'under a minute' : 'about ' + Math.max(1, Math.round(sec / 60)) + ' min'; }
 
   /**
@@ -260,7 +292,7 @@
         return 'Take a lift ' + (up ? 'up' : 'down') + ' to ' + (l.toFloor === 'G' ? 'the ground floor' : floorLabel(l.toFloor));
       }
       var last = idx === legs.length - 1;
-      if (!last) return (idx === 0 ? 'Walk ' : 'Then walk ') + metres(l.dist) + ' to the lifts' + (l.floor === 'G' ? ' at the back of the lobby' : '');
+      if (!last) return (idx === 0 ? (k.room ? 'Leave your room and walk ' : 'Walk ') : 'Then walk ') + metres(l.dist) + ' to the lifts' + (l.floor === 'G' ? ' at the back of the lobby' : '');
       if (p.id === 'lifts' && idx === 0) return 'Walk ' + metres(l.dist) + ' — the lifts are ' + p.where;
       if (legs.length === 1) return 'Walk ' + metres(l.dist) + ' — ' + lower(subject) + ' ' + verb + ' ' + p.where;
       return 'Out of the lift, ' + p.fromLift + ' (' + metres(l.dist).replace('about ', '') + ')';
@@ -278,6 +310,6 @@
   window.KiraHotel = {
     GAP: GAP, FLOORS: FLOORS, GUEST_FLOORS: GUEST_FLOORS, FOOTPRINT: FOOTPRINT, LIFT_CORE: LIFT_CORE,
     AREAS: AREAS, NODES: NODES, PLACES: PLACES, POPULAR: POPULAR, FAQ: FAQ, TOPICS: TOPICS, KIOSKS: KIOSKS,
-    floor: floor, floorY: floorY, floorLabel: floorLabel, place: place, topic: topic, kiosk: kiosk, openStatus: openStatus, route: route
+    floor: floor, floorY: floorY, floorLabel: floorLabel, place: place, topic: topic, kiosk: kiosk, openStatus: openStatus, route: route, addRoom: addRoom
   };
 })();
