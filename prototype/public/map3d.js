@@ -224,7 +224,8 @@ function footprintPoints(ys) {
 function local(nodeId) { const n = H.NODES[nodeId]; return new THREE.Vector3(n[1], 0.45, n[2]); }
 function world(nodeId) { const v = local(nodeId); v.y += floors[H.NODES[nodeId][0]].toY; return v; }
 
-function disposeTree(o) { o.traverse((x) => { if (x.geometry) x.geometry.dispose(); if (x.material) x.material.dispose(); }); }
+// CSS2DObject only removes its element when it is removed itself, not when its group is — drop label elements here
+function disposeTree(o) { o.traverse((x) => { if (x.geometry) x.geometry.dispose(); if (x.material) x.material.dispose(); if (x.isCSS2DObject) x.element.remove(); }); }
 function clearRoute() {
   if (walk) { scene.remove(walk.group); disposeTree(walk.group); }
   if (pin) { pin.group.parent.remove(pin.group); disposeTree(pin.group); }
