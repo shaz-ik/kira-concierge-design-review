@@ -17,8 +17,10 @@
 
   /* No top bar on the kiosk: the panels take the whole screen. Where / time / weather, language
      and Help sit at the top of the welcome; every other screen keeps Help in its header. */
-  .tablet-body.bento-home { padding-top: 20px; }
-  .welcome-top { position: absolute; z-index: 2; top: 18px; left: 22px; right: 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .tablet-body.bento-home { padding: 0; }
+  .tablet-frame.app::before, .tablet-frame.app::after { display: none; }
+  .tablet-body.bento-home.mode-service .bento-services { padding: 20px 24px 24px; }
+  .welcome-top { position: absolute; z-index: 2; top: 22px; left: 28px; right: 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
   .kiosk-status { display: flex; align-items: center; gap: 16px; font-size: calc(14px * var(--ts, 1)); font-weight: 500; color: var(--ink-on-dark); white-space: nowrap; }
   .kiosk-status .where { display: inline-flex; align-items: center; gap: 6px; color: var(--muted-on-dark); }
   .kiosk-status .where svg { width: 16px; height: 16px; color: var(--brass-soft); }
