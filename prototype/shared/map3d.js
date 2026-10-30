@@ -314,7 +314,7 @@ function disposeWalker() {
   overlay.remove(walk.walker.person); disposeTree(walk.walker.person);
 }
 
-const STRIDE = 2.4, WALK_SPEED = 6, PAUSE = 1600;  // map units per stride, units a second, ms at the destination
+const STRIDE = 2.4, WALK_SPEED = 9, PAUSE = 1600;  // map units per stride, units a second, ms at the destination
 
 // Stand the walker at a point along the route (0–1), turned the way it's going, legs swinging while it walks.
 function poseWalker(u, walking, dt, snap) {
@@ -388,7 +388,7 @@ function show(route) {
     group, path, total, seg, radial, core, glow, walker, legFrac, cycle: -1,
     t0: performance.now() + 1000,                                       // let the floors and camera settle first
     draw: Math.min(3600, Math.max(1500, total * 34)),                   // ms to draw the whole line
-    loop: Math.min(16000, Math.max(4000, total / WALK_SPEED * 1000))    // ms for the walker to walk it
+    loop: Math.min(10700, Math.max(2700, total / WALK_SPEED * 1000))    // ms for the walker to walk it
   };
 }
 
