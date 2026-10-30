@@ -180,6 +180,30 @@
   html.theme-light .floor-badge { background: #E9DEFB; color: #5B2BB8; }
 
   /* Talk to Kira: an answer can come with "Show me the way" */
+  /* Talk to Kira: one centred column — Kira, what she's saying, one rotating example, then type or talk */
+  .voice-center { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 0 24px 12px; text-align: center; }
+  .voice-center .kira-stage { gap: 10px; }
+  .voice-center .kira-stage .avatar-caption { margin-top: 2px; }
+  .tablet-body.bento-home .voice-center .kira-stage .kira-photo-wrap { width: calc(176px * (2.2 - var(--ts)) / 1.2); }
+  .voice-center .kira-stage .subtitle-bar { max-width: 640px; padding: 4px 0 0; border-radius: 0; background: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+    font-size: calc(22px * var(--ts, 1)); font-weight: 500; line-height: 1.35; text-wrap: balance; color: var(--ink-on-dark); }
+  .voice-center .voice-side { width: 100%; max-width: 600px; overflow: visible; text-align: center; }
+  .voice-center .voice-panel { align-items: center; gap: 22px; }
+  .try-line { border: none; background: none; padding: 4px 8px; font: inherit; font-size: calc(16px * var(--ts, 1)); color: var(--muted-on-dark); cursor: pointer; transition: opacity .32s ease, transform .32s ease; }
+  .try-line span { color: var(--ink-on-dark); }
+  .try-line.out { opacity: 0; transform: translateY(6px); }
+  .try-line:disabled { opacity: .4; cursor: default; }
+  .voice-compose { display: flex; gap: 10px; width: 100%; }
+  .voice-compose .voice-row { flex: 1; min-width: 0; position: relative; }
+  .voice-compose .text-field { min-height: 56px; padding-right: 60px; }
+  .send-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border: none; border-radius: 12px; background: var(--brass); color: #FFFFFF; display: grid; place-items: center; cursor: pointer; }
+  .send-btn svg { width: 18px; height: 18px; }
+  .send-btn:disabled { opacity: .4; cursor: default; }
+  .voice-compose .mic-btn { width: auto; flex-shrink: 0; min-height: 56px; padding: 0 22px; border-radius: var(--radius-guest-sm); }
+  .voice-answer { display: flex; align-items: center; justify-content: center; gap: 12px; }
+  .voice-answer .answer-card { text-align: left; }
+  .voice-answer .btn { width: auto; min-height: 56px; border-radius: var(--radius-guest-sm); }
+
   .answer-card { display: flex; align-items: center; gap: 12px; padding: 10px 14px 10px 10px; border-radius: 18px; background: var(--glass); box-shadow: var(--glass-edge), 0 12px 30px -20px rgba(0,0,0,.8); }
   .answer-card img { width: calc(44px * (2.2 - var(--ts)) / 1.2); height: auto; flex-shrink: 0; filter: drop-shadow(0 6px 8px rgba(0,0,0,.35)); }
   .answer-card .name { font-size: calc(16px * var(--ts, 1)); font-weight: 500; }
@@ -201,7 +225,7 @@
   <p class="rotate-hint">Rotate your phone for a bigger tablet view</p>
 <script src="../shared/kira.js?v=5"></script>
 <script src="hotel-map.js?v=4"></script>
-<script src="public.js?v=9"></script>
+<script src="public.js?v=10"></script>
 <script type="module" src="map3d.js?v=9"></script>
 </body>
 </html>

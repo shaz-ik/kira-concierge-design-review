@@ -125,6 +125,7 @@
   var LIFEBUOY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.93 4.93 4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M4.93 19.07l4.24-4.24"/></svg>';
   var HELP_MINI = '<button class="nav-btn nav-help nav-icon-only help-mini" data-act="help" aria-label="Help or emergency" title="Help / Emergency">' + LIFEBUOY + '</button>';
   var REPLAY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>';
+  var SEND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>';
   var DRAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>';
 
   function currentRoute() { return ui.place ? H.route(KIOSK.id, ui.place) : null; }
@@ -207,22 +208,34 @@
       : v.typing ? { mood: 'listening', line: '“' + v.typing + '”', caption: 'Listening…' }
       : recognizing ? { mood: 'listening', line: 'I’m listening — where would you like to go?', caption: 'Listening…' }
       : ui.reply ? { mood: 'speaking', line: ui.reply }
-      : { mood: 'idle', line: Recognition ? 'Ask me anything about the hotel, or where something is.' : 'Tap a question, or type what you’d like to know.' };
+      : { mood: 'idle', line: Recognition ? 'Ask me anything about the hotel, or where something is.' : 'Type what you’d like to know below, or tap the example.' };
     var place = a && a.place && H.place(a.place);
     var card = place
       ? '<div class="answer-card"><img src="' + ICON + place.icon + '.png" alt="" width="44" height="44"><div><p class="name">' + esc(place.name) + '</p><p class="info">' + esc(floorShort(place.floor)) + (H.openStatus(place) ? ' · ' + esc(H.openStatus(place).text) : '') + '</p></div></div>' +
         btn('Show me the way', 'go', { hero: true, arg: place.id })
       : '';
-    var phrases = place ? PHRASES.slice(0, 2) : PHRASES;
-    var examples = phrases.map(function (p) { return '<button class="quick-chip" data-act="say" data-arg="' + esc(p) + '"' + (v.busy ? ' disabled' : '') + '>“' + esc(p) + '”</button>'; }).join('');
+    var off = v.busy ? ' disabled' : '';
+    // one example at a time, in plain text — rotateTry() swaps it every few seconds; tapping it asks it
+    var tryLine = '<button class="try-line" id="try-line" data-act="say" data-arg="' + esc(PHRASES[tryIdx]) + '"' + off + '>Try saying <span>“' + esc(PHRASES[tryIdx]) + '”</span></button>';
     return { context: 'Talk to Kira', kira: kira,
-      html: '<div class="voice-panel">' + (place ? '' : head('', a ? a.title : 'Just ask')) +
-        (a ? card : '<p class="task-note">' + (Recognition ? 'Just speak — or tap a question, or type it.' : 'Tap a question, or type it.') + '</p>') +
-        '<div class="voice-examples">' + examples + '</div>' +
-        '<form class="voice-row" data-form="voice"><input class="text-field" id="voice-text" data-model="voice.text" placeholder="Type to Kira…" value="' + esc(v.text) + '" aria-label="Ask Kira" autocomplete="off"' + (v.busy ? ' disabled' : '') + '>' +
-        '<button class="btn btn-brass" type="submit"' + (v.busy ? ' disabled' : '') + '>Send</button></form>' +
-        (Recognition ? '<button class="btn mic-btn ' + (recognizing ? 'btn-ghost-dark live' : a ? 'btn-ghost-dark' : 'btn-hero') + '" data-act="mic"' + (v.busy ? ' disabled' : '') + '>' + MIC + (recognizing ? 'Listening… tap to stop' : 'Talk to Kira') + '</button>' : '') + '</div>' };
+      html: '<div class="voice-panel">' + (place ? '<div class="voice-answer">' + card + '</div>' : tryLine) +
+        '<div class="voice-compose"><form class="voice-row" data-form="voice"><input class="text-field" id="voice-text" data-model="voice.text" placeholder="Or type your question…" value="' + esc(v.text) + '" aria-label="Ask Kira" autocomplete="off"' + off + '>' +
+        '<button class="send-btn" type="submit" aria-label="Send"' + off + '>' + SEND + '</button></form>' +
+        (Recognition ? '<button class="btn mic-btn ' + (recognizing ? 'btn-ghost-dark live' : place ? 'btn-ghost-dark' : 'btn-hero') + '" data-act="mic"' + off + '>' + MIC + (recognizing ? 'Stop listening' : 'Talk to Kira') + '</button>' : '') + '</div></div>' };
   };
+  var tryIdx = 0;
+  function rotateTry() {
+    var el = ui.view === 'voice' && document.getElementById('try-line');
+    if (!el || el.disabled) return;
+    tryIdx = (tryIdx + 1) % PHRASES.length;
+    el.classList.add('out');
+    setTimeout(function () {
+      el.dataset.arg = PHRASES[tryIdx];
+      el.querySelector('span').textContent = '“' + PHRASES[tryIdx] + '”';
+      el.classList.remove('out');
+    }, 320);
+  }
+  setInterval(rotateTry, 3600);
 
   /* ---------------- One bento grid, two panels ----------------
      home  → the Kira panel fills the screen: the welcome, the building turning behind it
@@ -290,7 +303,7 @@
   }
   function voiceShellHTML() {
     return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title">Talk to Kira</p>' + HELP_MINI + '</div>' +
-      '<div class="voice-grid"><div class="kira-stage" id="kira-big"></div><div class="voice-side" id="voice-col"></div></div>';
+      '<div class="voice-center"><div class="kira-stage" id="kira-big"></div><div class="voice-side" id="voice-col"></div></div>';
   }
   function flowShellHTML() {
     return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title" id="flow-title"></p><div class="kira-mini" id="kira-mini"></div>' + HELP_MINI + '</div>' +
@@ -505,7 +518,7 @@
       };
       recognizer.onerror = function (e) {
         recognizing = false;
-        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { ui.reply = 'I can’t use the microphone here — tap a question or type instead.'; heardSomething = true; }
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { ui.reply = 'I can’t use the microphone here — type your question below instead.'; heardSomething = true; }
         if (ui.view === 'voice') render();
       };
       recognizer.onend = function () {
@@ -515,7 +528,7 @@
         render();
       };
       recognizer.start(); recognizing = true; render();
-    } catch (e) { recognizing = false; ui.reply = 'The microphone isn’t available here — tap a question or type instead.'; render(); }
+    } catch (e) { recognizing = false; ui.reply = 'The microphone isn’t available here — type your question below instead.'; render(); }
   }
   function stopMic() { if (recognizing && recognizer) { try { recognizer.abort(); } catch (e) {} recognizing = false; } }
 
