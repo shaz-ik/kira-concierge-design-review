@@ -125,6 +125,8 @@
   var LIFEBUOY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.93 4.93 4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M4.93 19.07l4.24-4.24"/></svg>';
   var HELP_MINI = '<button class="nav-btn nav-help nav-icon-only help-mini" data-act="help" aria-label="Help or emergency" title="Help / Emergency">' + LIFEBUOY + '</button>';
   var REPLAY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>';
+  var SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
+  var MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
   var SEND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>';
   var DRAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>';
 
@@ -286,9 +288,14 @@
       '<path class="shimmer" d="M60 228h90M240 236h60M420 226h120M640 234h80M780 228h70"/></svg>';
     return skyline;
   }
+  function themeBtnHTML() {
+    var light = document.documentElement.classList.contains('theme-light');
+    return '<button class="nav-btn nav-icon-only" id="theme-btn" data-act="theme" aria-label="' + (light ? 'Switch to dark theme' : 'Switch to light theme') + '">' + (light ? MOON : SUN) + '</button>';
+  }
   function homeKiraHTML() {
     return '<div class="welcome">' +
         '<div class="welcome-top"><div class="kiosk-status" id="kiosk-status" role="status"></div><div class="welcome-actions">' +
+          themeBtnHTML() +
           '<button class="nav-btn" data-act="lang" aria-haspopup="dialog" aria-label="Language: English">' + GLOBE + 'EN</button>' +
           '<button class="nav-btn nav-help" data-act="help">' + LIFEBUOY + 'Help / Emergency</button></div></div>' +
         '<div class="welcome-bg" aria-hidden="true"><span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span>' + skylineSVG() + '</div>' +
@@ -593,6 +600,13 @@
     mic: toggleMic,
     help: function () { ui.overlay = 'help'; render(); },
     lang: function () { ui.overlay = 'lang'; render(); },
+    theme: function () {
+      var light = document.documentElement.classList.toggle('theme-light');
+      try { localStorage.setItem('kira-kiosk-theme', light ? 'light' : 'dark'); } catch (e) {}
+      if (window.KiraMap) KiraMap.setTheme(light);
+      var tb = document.getElementById('theme-btn');
+      if (tb) tb.outerHTML = themeBtnHTML();
+    },
     'overlay-close': function () { ui.overlay = null; render(); },
     scrim: function () { if (ui.overlay !== 'help-confirm') { ui.overlay = null; render(); } },
     'help-assist': function () { HANDLERS['help-send']('assist'); },
