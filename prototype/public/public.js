@@ -31,7 +31,7 @@
     voice: { text: '', typing: '', busy: false },
     voiceFrom: null,
     overlay: null, helpKind: null, helpId: null,
-    muted: false, volume: 0.8
+    muted: (function () { try { return localStorage.getItem('kira-kiosk-muted') === '1'; } catch (e) { return false; } })(), volume: 0.8
   };
   var seededAt = S.get().seededAt;
 
@@ -293,6 +293,12 @@
       '<path class="shimmer" d="M60 228h90M240 236h60M420 226h120M640 234h80M780 228h70"/></svg>';
     return skyline;
   }
+  var SPK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/>';
+  var SOUND_ON = SPK + '<path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
+  var SOUND_OFF = SPK + '<path d="m22 9-6 6M16 9l6 6"/></svg>';
+  function soundBtnHTML() {
+    return '<button class="nav-btn nav-icon-only sound-btn" data-act="mute" aria-pressed="' + ui.muted + '" aria-label="' + (ui.muted ? 'Unmute Kira' : 'Mute Kira') + '">' + (ui.muted ? SOUND_OFF : SOUND_ON) + '</button>';
+  }
   function themeBtnHTML() {
     var light = document.documentElement.classList.contains('theme-light');
     return '<button class="nav-btn nav-icon-only" id="theme-btn" data-act="theme" aria-label="' + (light ? 'Switch to dark theme' : 'Switch to light theme') + '">' + (light ? MOON : SUN) + '</button>';
@@ -300,7 +306,7 @@
   function homeKiraHTML() {
     return '<div class="welcome">' +
         '<div class="welcome-top"><div class="kiosk-status" id="kiosk-status" role="status"></div><div class="welcome-actions">' +
-          themeBtnHTML() +
+          themeBtnHTML() + soundBtnHTML() +
           '<button class="nav-btn" data-act="lang" aria-haspopup="dialog" aria-label="Language: English">' + GLOBE + 'EN</button>' +
           '<button class="nav-btn nav-help" data-act="help">' + LIFEBUOY + 'Help / Emergency</button></div></div>' +
         '<div class="welcome-bg" aria-hidden="true"><span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span>' + skylineSVG() + '</div>' +
@@ -315,11 +321,11 @@
       '</div>';
   }
   function voiceShellHTML() {
-    return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title">Talk to Kira</p>' + HELP_MINI + '</div>' +
+    return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title">Talk to Kira</p>' + soundBtnHTML() + HELP_MINI + '</div>' +
       '<div class="voice-center"><div class="kira-stage" id="kira-big"></div><div class="voice-side" id="voice-col"></div></div>';
   }
   function flowShellHTML() {
-    return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title" id="flow-title"></p><div class="kira-mini" id="kira-mini"></div>' + HELP_MINI + '</div>' +
+    return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title" id="flow-title"></p><div class="kira-mini" id="kira-mini"></div>' + soundBtnHTML() + HELP_MINI + '</div>' +
       '<div class="task-col flow-body" id="task-col"></div>';
   }
 
@@ -614,6 +620,13 @@
       if (window.KiraMap) KiraMap.setTheme(light);
       var tb = document.getElementById('theme-btn');
       if (tb) tb.outerHTML = themeBtnHTML();
+    },
+    mute: function () {
+      ui.muted = !ui.muted;
+      if (ui.muted && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+      try { localStorage.setItem('kira-kiosk-muted', ui.muted ? '1' : '0'); } catch (e) {}
+      Array.prototype.forEach.call(tablet.querySelectorAll('.sound-btn'), function (b) { b.outerHTML = soundBtnHTML(); });
+      sound('tick');
     },
     'overlay-close': function () { ui.overlay = null; render(); },
     scrim: function () { if (ui.overlay !== 'help-confirm') { ui.overlay = null; render(); } },

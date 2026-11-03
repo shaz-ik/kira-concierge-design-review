@@ -32,7 +32,8 @@
   .welcome-actions { display: flex; gap: 8px; }
   .welcome-actions .nav-btn { font-size: calc(14px * var(--ts, 1)); }
   .help-mini { margin-left: 4px; flex-shrink: 0; }
-  .panel-head .panel-title + .help-mini { margin-left: auto; }
+  .panel-head .panel-title + :is(.help-mini, .sound-btn) { margin-left: auto; }
+  .panel-head .sound-btn + .help-mini { margin-left: -6px; }
 
   /* Welcome: the Kira panel fills the screen; drifting glows and the Marina skyline behind */
   .tablet-body.bento-home .bento-ai:has(.welcome) { padding: 0; background: var(--glass); }
@@ -115,7 +116,7 @@
   <p class="rotate-hint">Rotate your phone for a bigger tablet view</p>
 <script src="../shared/kira.js?v=5"></script>
 <script src="../shared/hotel-map.js?v=7"></script>
-<script src="public.js?v=14"></script>
+<script src="public.js?v=15"></script>
 <script type="module" src="../shared/map3d.js?v=14"></script>
 </body>
 </html>
