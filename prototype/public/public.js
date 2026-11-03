@@ -308,8 +308,9 @@
           '<button class="kira-tap" data-act="voice" aria-label="Talk to Kira"><div class="kira-photo-wrap"><img src="' + IMG.idle + '" alt="Kira"></div></button>' +
           '<p class="home-greeting">' + greeting() + '</p>' +
           '<p class="avatar-sub">Welcome to the Grand Marina. I’m Kira — ask me anything about the hotel, or let me show you the way.</p>' +
-          '<button class="btn btn-hero talk-btn" data-act="voice">' + MIC + 'Talk to Kira</button>' +
-          '<div class="shortcuts">' + shortcut('places', 'place-all', 'Find a place') + shortcut('info', 'info', 'Hotel info') + '</div>' +
+          '<div class="shortcuts">' + shortcut('places', 'place-all', 'Find a place') +
+            '<button class="btn btn-hero talk-btn" data-act="voice">' + MIC + 'Talk to Kira</button>' +
+            shortcut('info', 'info', 'Hotel info') + '</div>' +
         '</div>' +
       '</div>';
   }
