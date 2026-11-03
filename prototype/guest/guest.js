@@ -581,7 +581,10 @@
     return { context: 'Directions · ' + p.name, kira: { mood: 'speaking', line: r.line },
       html: '<div class="status-split fill way">' +
         '<section class="status-detail map-card" aria-label="3D map of the hotel with the route from your room to ' + esc(p.name) + '"><div class="map-slot" id="map-slot"></div>' +
-          '<span class="map-hint">' + DRAG + 'Drag to turn · pinch to zoom</span>' +
+          '<div class="map-tools"><div class="nav-seg map-zoom" role="group" aria-label="Zoom">' +
+            '<button class="nav-btn" data-act="zoom-in" aria-label="Zoom in">' + PLUS + '</button>' +
+            '<button class="nav-btn" data-act="zoom-out" aria-label="Zoom out">' + MINUS + '</button></div>' +
+            '<span class="map-hint">' + DRAG + 'Drag to turn · pinch to zoom</span></div>' +
           '<button class="nav-btn map-replay" data-act="replay">' + REPLAY + 'Replay</button></section>' +
         '<aside class="status-actions is-summary dir-side" aria-label="Directions">' +
           '<div class="dir-head"><img src="' + ICON + p.icon + '.png" alt="" width="52" height="52"><div><p class="side-heading">' + esc(p.name) + '</p><p class="dir-floor">' + esc(H.floorLabel(p.floor)) + '</p></div></div>' +
@@ -660,6 +663,8 @@
   var BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>';
   var SEND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>';
   var REPLAY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>';
+  var PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+  var MINUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>';
   var DRAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>';
   var panelKeys = { ai: '', svc: '' }, lastView = null;
 
@@ -1155,7 +1160,7 @@
      'select' — a soft two-note pop when a service is chosen; 'tick' — a light tap for in-flow
      choices (+/−, chips, times, Back). Synthesised with WebAudio, so no audio files; silent when muted. */
   var audio = null;
-  var TICK_ACTS = { inc: 1, dec: 1, 'hk-set': 1, cat: 1, 'co-time': 1, 'co-all': 1, feedback: 1, say: 1, back: 1, 'place-cat': 1, replay: 1 };
+  var TICK_ACTS = { inc: 1, dec: 1, 'hk-set': 1, cat: 1, 'co-time': 1, 'co-all': 1, feedback: 1, say: 1, back: 1, 'place-cat': 1, replay: 1, 'zoom-in': 1, 'zoom-out': 1 };
   function sound(kind) {
     if (ui.muted || ui.volume <= 0) return;
     try {
@@ -1235,6 +1240,8 @@
     'place-cat': function (a) { ui.placeCat = a; render(); },
     go: function (id) { openPlace(id, ui.view); },
     replay: function () { markStep(0); if (window.KiraMap) KiraMap.replay(); },
+    'zoom-in': function () { if (window.KiraMap) KiraMap.zoom(1); },
+    'zoom-out': function () { if (window.KiraMap) KiraMap.zoom(-1); },
     cat: function (a) { ui.cat = a; ui.reply = ''; render(); },
     inc: function (a) { var l = ui.cart[a] || (ui.cart[a] = { qty: 0, note: '' }); l.qty = Math.min(9, l.qty + 1); ui.reply = ''; ui.bump = a; render(); },
     dec: function (a) { var l = ui.cart[a]; if (l) { l.qty--; if (l.qty <= 0) delete ui.cart[a]; } ui.reply = ''; ui.bump = a; render(); },

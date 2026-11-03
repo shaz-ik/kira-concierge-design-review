@@ -392,6 +392,16 @@ function show(route) {
   };
 }
 
+// + / − buttons: glide toward or away from what the camera looks at, within the orbit limits
+function zoom(step) {
+  if (!camera) return;
+  const t = (camTween ? camTween.toT : controls.target).clone();
+  const off = (camTween ? camTween.toP : camera.position).clone().sub(t);
+  off.setLength(THREE.MathUtils.clamp(off.length() * (step > 0 ? 0.72 : 1 / 0.72), controls.minDistance, controls.maxDistance));
+  framing = null; host.classList.add('touched');
+  camTween = { t0: performance.now(), dur: 420, fromP: camera.position.clone(), fromT: controls.target.clone(), toP: t.clone().add(off), toT: t };
+}
+
 function replay() { if (walk) { walk.t0 = performance.now() + 150; walk.cycle = -1; lastStep = -1; walk.walker.person.visible = false; } }
 
 function overview(kiosk) {
@@ -515,7 +525,7 @@ window.KiraMap = {
     if (host.parentNode !== slot) slot.appendChild(host);
     resize();
   },
-  show, overview, replay, setTheme,
+  show, overview, replay, zoom, setTheme,
   set onStep(fn) { onStep = fn; }
 };
 window.dispatchEvent(new Event('kira-map-ready'));

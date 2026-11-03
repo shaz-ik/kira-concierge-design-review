@@ -128,6 +128,8 @@
   var SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
   var MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
   var SEND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>';
+  var PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+  var MINUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>';
   var DRAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>';
 
   function currentRoute() { return ui.place ? H.route(KIOSK.id, ui.place) : null; }
@@ -143,7 +145,10 @@
     return { context: 'Directions · ' + p.name, kira: { mood: 'speaking', line: r.line },
       html: '<div class="status-split fill">' +
         '<section class="status-detail map-card" aria-label="3D map of the hotel with the route to ' + esc(p.name) + '"><div class="map-slot" id="map-slot"></div>' +
-          '<span class="map-hint">' + DRAG + 'Drag to turn · pinch to zoom</span>' +
+          '<div class="map-tools"><div class="nav-seg map-zoom" role="group" aria-label="Zoom">' +
+            '<button class="nav-btn" data-act="zoom-in" aria-label="Zoom in">' + PLUS + '</button>' +
+            '<button class="nav-btn" data-act="zoom-out" aria-label="Zoom out">' + MINUS + '</button></div>' +
+            '<span class="map-hint">' + DRAG + 'Drag to turn · pinch to zoom</span></div>' +
           '<button class="nav-btn map-replay" data-act="replay">' + REPLAY + 'Replay</button></section>' +
         '<aside class="status-actions is-summary dir-side" aria-label="Directions">' +
           '<div class="dir-head"><img src="' + ICON + p.icon + '.png" alt="" width="52" height="52"><div><p class="side-heading">' + esc(p.name) + '</p><p class="dir-floor">' + esc(H.floorLabel(p.floor)) + '</p></div></div>' +
@@ -542,7 +547,7 @@
   /* ---------------- Tap sounds (WebAudio; silent when muted) ---------------- */
 
   var audio = null;
-  var TICK_ACTS = { say: 1, back: 1, replay: 1, 'place-cat': 1, topic: 1 };
+  var TICK_ACTS = { say: 1, back: 1, replay: 1, 'zoom-in': 1, 'zoom-out': 1, 'place-cat': 1, topic: 1 };
   function sound(kind) {
     if (ui.muted || ui.volume <= 0) return;
     try {
@@ -590,6 +595,8 @@
     info: function () { ui.topic = null; go('info'); },
     topic: function (id) { ui.topic = id; render(); },
     replay: function () { markStep(0); if (window.KiraMap) KiraMap.replay(); },
+    'zoom-in': function () { if (window.KiraMap) KiraMap.zoom(1); },
+    'zoom-out': function () { if (window.KiraMap) KiraMap.zoom(-1); },
     voice: function () {
       if (ui.view === 'voice') return;
       ui.voiceFrom = ui.view; ui.reply = ''; ui.answer = null; ui.voice.text = ''; ui.voice.typing = '';

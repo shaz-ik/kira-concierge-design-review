@@ -40,10 +40,13 @@ html.theme-light .place-tile img { filter: drop-shadow(0 6px 8px rgba(60,40,120,
 .map-floor.dim { opacity: .3; }
 .map-floor.ghost { opacity: .55; font-size: calc(10.5px * var(--ts, 1)); }
 .map-hint {
-  position: absolute; left: 14px; bottom: 14px; display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px;
   font-size: calc(12px * var(--ts, 1)); color: var(--muted-on-dark); background: rgba(26,24,30,.6); pointer-events: none; transition: opacity .5s;
 }
 .map-hint svg { width: 15px; height: 15px; }
+.map-tools { position: absolute; left: 14px; bottom: 14px; z-index: 1; display: flex; align-items: flex-end; gap: 10px; }
+.map-zoom { flex-direction: column; border-radius: 16px; }
+.map-zoom .nav-btn { width: 44px; padding: 0; border-radius: 16px; }
 .map-card:has(.map3d.touched) .map-hint { opacity: 0; }
 .map-replay { position: absolute; right: 14px; bottom: 14px; z-index: 1; }
 .map-replay svg { width: 17px; height: 17px; }
