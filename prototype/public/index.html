@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kira — Public Kiosk</title>
+<script>try { if (localStorage.getItem('kira-kiosk-theme') === 'light') document.documentElement.classList.add('theme-light'); } catch (e) {}</script>
+<link rel="stylesheet" href="../shared/tokens.css?v=3">
+<link rel="stylesheet" href="../shared/proto.css?v=3">
+<link rel="stylesheet" href="../shared/tablet.css?v=1">
+<link rel="stylesheet" href="../shared/wayfinding.css?v=2">
+<style>
+  /* =====================================================================
+     Public kiosk (hall tablet): the guest tablet's components, minus anything
+     room-specific. Home is one full-width welcome — Talk to Kira, plus shortcuts
+     to Find a place and Hotel info. A place opens directions on the 3D map (60%)
+     with the steps beside it (40%).
+     ===================================================================== */
+
+  /* No top bar on the kiosk: the panels take the whole screen. Where / time / weather, language
+     and Help sit at the top of the welcome; every other screen keeps Help in its header. */
+  .tablet-body.bento-home { padding: 0; }
+  .tablet-frame.app::before, .tablet-frame.app::after { display: none; }
+  .tablet-body.bento-home.mode-service .bento-services { padding: 20px 24px 24px; }
+  .welcome-top { position: absolute; z-index: 2; top: 22px; left: 28px; right: 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .kiosk-status { display: flex; align-items: center; gap: 16px; font-size: calc(14px * var(--ts, 1)); font-weight: 500; color: var(--ink-on-dark); white-space: nowrap; }
+  .kiosk-status .where { display: inline-flex; align-items: center; gap: 6px; color: var(--muted-on-dark); }
+  .kiosk-status .where svg { width: 16px; height: 16px; color: var(--brass-soft); }
+  .kiosk-status .time { color: var(--muted-on-dark); }
+  .kiosk-status .wx { display: inline-flex; align-items: center; gap: 6px; }
+  .kiosk-status .wx img { width: 26px; height: 26px; filter: drop-shadow(0 3px 5px rgba(0,0,0,.35)); }
+  .welcome-actions { display: flex; gap: 8px; }
+  .welcome-actions .nav-btn { font-size: calc(14px * var(--ts, 1)); }
+  .help-mini { margin-left: 4px; flex-shrink: 0; }
+  .panel-head .panel-title + :is(.help-mini, .sound-btn) { margin-left: auto; }
+  .panel-head .sound-btn + .help-mini { margin-left: -6px; }
+
+  /* Welcome: the Kira panel fills the screen; drifting glows and the Marina skyline behind */
+  .tablet-body.bento-home .bento-ai:has(.welcome) { padding: 0; background: var(--glass); }
+  .welcome { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; }
+  .welcome-bg { position: absolute; inset: 0; pointer-events: none; }
+  .orb { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .55; animation: drift 22s ease-in-out infinite alternate; }
+  .orb.o1 { width: 420px; height: 420px; left: 46%; top: -18%; background: radial-gradient(circle, rgba(140,78,246,.9), transparent 70%); }
+  .orb.o2 { width: 340px; height: 340px; left: 70%; top: 22%; background: radial-gradient(circle, rgba(94,161,243,.7), transparent 70%); animation-duration: 27s; animation-delay: -8s; }
+  .orb.o3 { width: 300px; height: 300px; left: 30%; top: 48%; background: radial-gradient(circle, rgba(201,179,247,.55), transparent 70%); animation-duration: 31s; animation-delay: -15s; }
+  @keyframes drift { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-40px, 26px) scale(1.08); } 100% { transform: translate(30px, -18px) scale(.95); } }
+  .skyline { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 44%; }
+  .skyline .far { fill: rgba(196,166,255,.07); }
+  .skyline .near { fill: rgba(196,166,255,.12); }
+  .skyline .water { fill: rgba(140,78,246,.1); }
+  .skyline .shimmer { stroke: rgba(196,166,255,.35); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 26 18; animation: shimmer 6s linear infinite; }
+  @keyframes shimmer { to { stroke-dashoffset: -88; } }
+  html.theme-light .orb { opacity: .4; }
+  html.theme-light .skyline .far { fill: rgba(140,78,246,.08); }
+  html.theme-light .skyline .near { fill: rgba(140,78,246,.13); }
+  html.theme-light .skyline .water { fill: rgba(140,78,246,.07); }
+  html.theme-light .skyline .shimmer { stroke: rgba(140,78,246,.3); }
+  @media (prefers-reduced-motion: reduce) { .orb, .skyline .shimmer { animation: none; } }
+
+  .welcome-copy { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 72px 40px 40px; text-align: center; }
+  .welcome-copy .kira-photo-wrap { width: calc(132px * (2.2 - var(--ts)) / 1.2); }
+  .welcome-copy .home-greeting { margin-top: 18px; font-size: calc(34px * var(--ts, 1)); }
+  .welcome-copy .avatar-sub { margin-top: 6px; max-width: 560px; text-wrap: balance; font-size: calc(16px * var(--ts, 1)); line-height: 1.45; color: var(--muted-on-dark); }
+  /* one row under the greeting: Find a place · Talk to Kira · Hotel info, equal widths */
+  .shortcuts { width: 100%; max-width: 660px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 30px; }
+  .welcome-copy .talk-btn { margin-top: 0; justify-content: center; gap: 10px; min-height: 60px; padding: 12px 20px; border-radius: var(--radius-guest-sm); font-size: calc(15px * var(--ts, 1)); }
+  .welcome-copy .talk-btn svg { width: 20px; height: 20px; }
+  /* shortcuts: solid filled buttons (not glass) — icon + name only */
+  .shortcut {
+    display: flex; align-items: center; justify-content: center; gap: 10px; min-width: 0; min-height: 60px; padding: 12px 20px;
+    border: none; border-radius: var(--radius-guest-sm); background: #2E2838; box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 12px 28px -14px rgba(0,0,0,.8);
+    color: #FFFFFF; font-family: inherit; cursor: pointer; transition: background-color .2s, transform .14s cubic-bezier(.3,.7,.4,1.4);
+  }
+  .shortcut:hover { background: #383143; }
+  .shortcut:active { transform: scale(.97); }
+  .shortcut img { width: calc(30px * (2.2 - var(--ts)) / 1.2); height: auto; flex-shrink: 0; filter: drop-shadow(0 4px 6px rgba(0,0,0,.35)); }
+  .shortcut .name { font-size: calc(15px * var(--ts, 1)); font-weight: 500; }
+  html.theme-light .shortcut { background: #FFFFFF; color: #131313; box-shadow: 0 10px 26px -14px rgba(60,40,120,.35); }
+  html.theme-light .shortcut:hover { background: #F4EFFD; }
+  html.theme-light .shortcut img { filter: drop-shadow(0 6px 8px rgba(60,40,120,.2)); }
+  .bento.swap .welcome-copy > * { animation: rise-in .55s cubic-bezier(.22,.9,.24,1) both; }
+  .bento.swap .welcome-copy > :nth-child(1) { animation-delay: .18s; } .bento.swap .welcome-copy > :nth-child(2) { animation-delay: .24s; }
+  .bento.swap .welcome-copy > :nth-child(3) { animation-delay: .29s; } .bento.swap .welcome-copy > :nth-child(4) { animation-delay: .34s; }
+  .bento.swap .welcome-copy > :nth-child(5) { animation-delay: .4s; }
+
+  /* Hotel info: topics as a two-column list; the chosen one is filled */
+  .topic-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-content: start; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: rgba(196,166,255,.3) transparent; }
+  .topic-row { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 56px; padding: 8px 12px 8px 8px; border: none; border-radius: 16px; background: rgba(255,255,255,.05); color: var(--ink-on-dark); font-family: inherit; text-align: left; cursor: pointer; transition: background-color .2s; }
+  .topic-row:hover { background: rgba(255,255,255,.1); }
+  .topic-row.selected { background: rgba(140,78,246,.28); }
+  .topic-row img { width: calc(32px * (2.2 - var(--ts)) / 1.2); height: auto; flex-shrink: 0; filter: drop-shadow(0 4px 6px rgba(0,0,0,.35)); }
+  .topic-row .svc-text { min-width: 0; }
+  .topic-row .name { font-size: calc(14px * var(--ts, 1)); font-weight: 500; line-height: 1.25; }
+  .topic-row .info { font-size: calc(12px * var(--ts, 1)); line-height: 1.3; color: var(--muted-on-dark); }
+  .topic-answer { font-size: calc(15px * var(--ts, 1)); line-height: 1.55; color: var(--ink-on-dark); }
+  .topic-answer.muted { color: var(--muted-on-dark); }
+  .status-split.fill { grid-template-rows: minmax(0, 1fr); }
+  .status-split.fill > .info-side { min-height: 0; overflow-y: auto; }
+  html.theme-light .topic-row { background: rgba(19,19,19,.045); }
+  html.theme-light .topic-row:hover { background: rgba(19,19,19,.08); }
+  html.theme-light .topic-row.selected { background: #EFE7FD; }
+  html.theme-light .topic-row img { filter: drop-shadow(0 4px 6px rgba(60,40,120,.2)); }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+</script>
+</head>
+<body class="guest-app">
+  <div class="stage" id="stage">
+    <div class="tablet-frame app" id="tablet">
+      <div class="tablet-context" id="context"></div>
+      <div class="tablet-body" id="body"></div>
+      <div id="overlay"></div>
+    </div>
+  </div>
+  <p class="rotate-hint">Rotate your phone for a bigger tablet view</p>
+<script src="../shared/kira.js?v=5"></script>
+<script src="../shared/hotel-map.js?v=7"></script>
+<script src="public.js?v=16"></script>
+<script type="module" src="../shared/map3d.js?v=14"></script>
+</body>
+</html>

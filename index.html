@@ -14,6 +14,7 @@
   @media (min-width: 640px) { .cards { grid-template-columns: 1fr 1fr; } }
   .card { background: var(--paper); border: 1px solid rgba(36,31,22,.1); border-radius: var(--radius-tool); padding: var(--sp-5); text-decoration: none; color: var(--ink-on-sand); display: block; }
   .card:hover { border-color: var(--brass); }
+  .card.wide { grid-column: 1 / -1; }
   .card .tag { font-size: var(--fs-small); color: var(--brass-deep); font-weight: 600; margin-bottom: var(--sp-2); }
   .card h2 { font-size: var(--fs-h2); margin-bottom: var(--sp-2); }
   .card p { color: var(--muted-on-sand); font-size: var(--fs-small); margin: 0; }
@@ -27,11 +28,12 @@
       <a href="index.html" class="current">Home</a>
       <a href="wireframes/index.html">Wireframes</a>
       <a href="mockups/html/index.html">Hi-Fi Mockups</a>
+      <a href="prototype/index.html">Prototype</a>
     </nav>
   </header>
   <div class="hero">
     <h1>Kira Concierge</h1>
-    <p>In-room AI guest services platform — design review. Two stages: a full low-fidelity flow inventory across guest, staff, and admin surfaces, and the hi-fi visual design pass applied to every one of those screens.</p>
+    <p>In-room AI guest services platform — design review. Three stages: a full low-fidelity flow inventory across guest, staff, and admin surfaces, the hi-fi visual design pass applied to every one of those screens, and a working prototype where every surface is live and connected.</p>
   </div>
   <div class="cards">
     <a class="card" href="wireframes/index.html">
@@ -44,7 +46,12 @@
       <h2>Hi-fi mockups</h2>
       <p>The Lantern avatar, brass/ink/sand palette, and bilingual Arabic/Latin typography, applied across every guest, staff, and admin screen.</p>
     </a>
+    <a class="card wide" href="prototype/index.html">
+      <div class="tag">Stage 3 — working prototype</div>
+      <h2>Working prototype</h2>
+      <p>The hi-fi design as a clickable product: guest tablet, 5 staff apps, and the admin dashboard, all sharing one live hotel. An order placed on the tablet lands on the kitchen screen instantly, and staff actions update the guest in real time.</p>
+    </a>
   </div>
-  <p class="note">Static design reference for review — no backend or live data behind these pages.</p>
+  <p class="note">Wireframes and mockups are static design references. The prototype runs entirely in the browser — no backend.</p>
 </body>
 </html>

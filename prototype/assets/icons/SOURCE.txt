@@ -1,0 +1,48 @@
+Guest tablet icons: Microsoft Fluent Emoji (3D style)
+https://github.com/microsoft/fluentui-emoji — MIT License, see LICENSE-fluent-emoji.txt
+
+dining.png        Fork and knife with plate
+housekeeping.png  Bed
+checkout.png      Alarm clock
+valet.png         Automobile
+
+status-check.png    Check mark button
+status-waiting.png  Hourglass not done
+status-warning.png  Warning
+
+wx-sunny.png        Sun
+wx-clear.png        Crescent moon (clear night)
+wx-partly.png       Sun behind cloud
+wx-cloudy.png       Cloud
+wx-rain.png         Cloud with rain
+wx-storm.png        Cloud with lightning and rain
+
+Public kiosk (hall tablet) — places:
+place-frontdesk.png   Bellhop bell
+place-concierge.png   Luggage
+place-lounge.png      Hot beverage
+place-restrooms.png   Restroom
+place-entrance.png    Oncoming taxi
+place-lifts.png       Elevator
+place-meeting.png     Briefcase
+place-ballroom.png    Party popper
+place-prayer.png      Prayer beads
+place-gym.png         Person lifting weights (default tone)
+place-spa.png         Person in steamy room (default tone)
+place-kids.png        Teddy bear
+place-pool.png        Person swimming (default tone)
+place-poolbar.png     Tropical drink
+place-all.png         Compass
+
+Public kiosk — hotel info topics:
+info.png            Information
+topic-wifi.png      Antenna bars
+topic-airport.png   Airplane
+topic-tram.png      Tram
+topic-beach.png     Beach with umbrella
+topic-shopping.png  Shopping bags
+topic-health.png    Pill
+topic-money.png     Money bag
+topic-dress.png     Necktie
+topic-smoking.png   No smoking
+topic-checkin.png   Key

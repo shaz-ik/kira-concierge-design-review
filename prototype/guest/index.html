@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kira — Guest Tablet</title>
+<script>try { if (localStorage.getItem('kira-guest-theme') === 'light') document.documentElement.classList.add('theme-light'); } catch (e) {}</script>
+<link rel="stylesheet" href="../shared/tokens.css?v=3">
+<link rel="stylesheet" href="../shared/proto.css?v=3">
+<link rel="stylesheet" href="../shared/tablet.css?v=1">
+<link rel="stylesheet" href="../shared/wayfinding.css?v=2">
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+</script>
+</head>
+<body class="guest-app">
+  <div class="stage" id="stage">
+    <div class="tablet-frame app" id="tablet">
+      <div class="tablet-navbar">
+        <div class="nav-group">
+          <span class="nav-room" id="room-chip">Room 412</span>
+          <span class="nav-weather" id="nav-weather" role="status"><span class="wx-time" id="wx-time"></span><img id="wx-icon" alt="" width="28" height="28"><span id="wx-temp"></span></span>
+          <button class="nav-btn" id="lang-btn" aria-haspopup="dialog" aria-label="Language: English"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>EN</button>
+        </div>
+        <div class="nav-group">
+          <button class="nav-btn dnd-btn" id="dnd-btn" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M7.5 12h9"/></svg><span class="dnd-text">Do not disturb</span></button>
+          <button class="nav-btn nav-icon-only" id="theme-btn"></button>
+          <div class="vol" id="vol" role="group" aria-label="Volume">
+            <button class="nav-btn nav-icon-only vol-btn" id="vol-btn" aria-expanded="false" aria-controls="vol-panel"></button>
+            <div class="vol-panel" id="vol-panel">
+              <input type="range" class="vol-range" id="vol-range" min="0" max="100" step="1" aria-label="Kira volume">
+              <button class="vol-mute" id="mute-btn" aria-pressed="false"></button>
+            </div>
+          </div>
+          <span class="nav-seg" role="group" aria-label="Text size"><button class="nav-btn" id="text-down" aria-label="Smaller text"><span class="a-sm">A</span>−</button><button class="nav-btn" id="text-up" aria-label="Larger text"><span class="a-lg">A</span>+</button></span>
+          <button class="nav-btn nav-help" id="help-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.93 4.93 4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M4.93 19.07l4.24-4.24"/></svg><span class="help-long">Help / Emergency</span><span class="help-short">Help</span></button>
+        </div>
+      </div>
+      <div class="tablet-context" id="context"></div>
+      <div class="tablet-body" id="body"></div>
+      <div id="overlay"></div>
+      <div id="notice"></div>
+    </div>
+  </div>
+  <p class="rotate-hint">Rotate your phone for a bigger tablet view</p>
+<script src="../shared/kira.js?v=5"></script>
+<script src="../shared/hotel-map.js?v=7"></script>
+<script src="guest.js?v=22"></script>
+<script type="module" src="../shared/map3d.js?v=14"></script>
+</body>
+</html>
