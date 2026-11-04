@@ -266,6 +266,35 @@
     animTimers[el.id + cls] = setTimeout(function () { el.classList.remove(cls); }, ms || 900);
   }
 
+  /* Talk to Kira opens by growing the round avatar into Kira full screen, and Back shrinks her into it again:
+     the photo layer starts as a circle exactly where the avatar sat, then scales and unclips to fill the panel. */
+  var KIRA_FULL = '<div class="kira-full" aria-hidden="true"><img src="../assets/kira-full.jpg" alt=""></div>';
+  var FULL_RATIO = 1600 / 887; // kira-full.jpg — the round avatar is its centre square
+  function avatarRect() {
+    var host = document.getElementById(lastMode === 'service' ? 'kira-mini' : 'panel-ai');
+    var a = host && host.querySelector('.kira-photo-wrap'), r = a && a.getBoundingClientRect();
+    return r && r.width ? r : null;
+  }
+  function morphKira(panel, layer, r, cls, ms) {
+    var p = panel.getBoundingClientRect(), cs = getComputedStyle(body);
+    var k = p.height / panel.offsetHeight; // the tablet is scaled to fit the window: screen px → layout px
+    var W = body.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), H = panel.clientHeight, imgH = Math.max(H, W / FULL_RATIO);
+    layer.style.width = W + 'px'; // the panel's final width, so the circle lands right while the panel grows
+    layer.style.setProperty('--from', 'translate(' + ((r.left + r.width / 2 - p.left) / k - W / 2) + 'px, ' + ((r.top + r.height / 2 - p.top) / k - H / 2) + 'px) scale(' + r.width / k / imgH + ')');
+    layer.style.setProperty('--r0', imgH / 2 + 'px');
+    layer.style.setProperty('--r1', Math.hypot(W, H) / 2 + 'px');
+    play(layer, cls, ms);
+    setTimeout(function () { layer.style.width = ''; }, ms);
+  }
+  function collapseKira(panel) {
+    var a = panel.querySelector('.kira-photo-wrap'), r = a && a.getBoundingClientRect();
+    if (!r || !r.width) return;
+    panel.insertAdjacentHTML('beforeend', KIRA_FULL);
+    var layer = panel.lastElementChild;
+    morphKira(panel, layer, r, 'collapse', 600);
+    setTimeout(function () { layer.remove(); }, 600);
+  }
+
   function shortcut(act, icon, name) {
     return '<button class="shortcut" data-act="' + act + '"><img src="' + ICON + icon + '.png" alt="" width="36" height="36"><span class="name">' + esc(name) + '</span></button>';
   }
@@ -321,7 +350,8 @@
       '</div>';
   }
   function voiceShellHTML() {
-    return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title">Talk to Kira</p>' + soundBtnHTML() + HELP_MINI + '</div>' +
+    return KIRA_FULL + '<div class="kira-scrim" aria-hidden="true"></div>' +
+      '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title">Talk to Kira</p>' + soundBtnHTML() + HELP_MINI + '</div>' +
       '<div class="voice-center"><div class="kira-stage" id="kira-big"></div><div class="voice-side" id="voice-col"></div></div>';
   }
   function flowShellHTML() {
@@ -371,7 +401,12 @@
     ['home', 'service', 'kira'].forEach(function (m) { body.classList.toggle('mode-' + m, m === mode); });
     var ai = document.getElementById('panel-ai'), svc = document.getElementById('panel-svc');
     var aiKey = ui.view === 'voice' ? 'voice' : 'home';
-    if (panelKeys.ai !== aiKey) { panelKeys.ai = aiKey; ai.innerHTML = aiKey === 'voice' ? voiceShellHTML() : homeKiraHTML(); kiraKey = ''; play(ai, 'swap', 1100); }
+    if (panelKeys.ai !== aiKey) {
+      var from = aiKey === 'voice' && avatarRect(), wasVoice = panelKeys.ai === 'voice';
+      panelKeys.ai = aiKey; ai.innerHTML = aiKey === 'voice' ? voiceShellHTML() : homeKiraHTML(); kiraKey = ''; play(ai, 'swap', 1100);
+      if (from) morphKira(ai, ai.querySelector('.kira-full'), from, 'expand', 900);
+      else if (wasVoice && mode === 'kira') { play(ai, 'landing', 1200); collapseKira(ai); }
+    }
     var svcOpened = mode === 'service' && lastMode !== 'service';
     if (svcOpened) { kiraKey = ''; play(svc, 'swap', 1100); }
     lastMode = mode;
