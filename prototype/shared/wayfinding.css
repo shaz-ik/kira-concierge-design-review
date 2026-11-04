@@ -113,35 +113,42 @@ html.theme-light .floor-badge { background: #E9DEFB; color: #5B2BB8; }
 .voice-answer .btn { width: auto; min-height: 56px; border-radius: var(--radius-guest-sm); }
 
 /* Talk to Kira, full screen: her photo fills the panel; what she says and the type / talk controls sit under her
-   on a scrim. It grows out of the round avatar (.expand) and on the kiosk shrinks back into it (.collapse);
-   --from / --r0 / --r1 come from morphKira() in the app script. */
+   on a scrim. Photo and scrim run 2px past the panel and render as one layer (will-change), so the panel's rounded
+   clip cuts through solid scrim once; clipped layer by layer, the photo leaked through as a light hairline. It grows
+   out of the round avatar (.expand) and on the kiosk shrinks back into it (.collapse); --from / --r0 / --r1 come
+   from morphKira(). */
+@property --scrim { syntax: '<number>'; inherits: true; initial-value: 1; }
 .bento-ai { isolation: isolate; }
-.kira-full { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
-.kira-full img { display: block; width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 30%; animation: kira-drift 18s ease-in-out infinite alternate; }
+.kira-full { position: absolute; inset: 0; z-index: -1; pointer-events: none; will-change: transform; }
+.kira-full::before { content: ''; position: absolute; inset: -2px;
+  background: linear-gradient(to bottom, rgba(14,11,20,calc(.62 * var(--scrim))), rgba(14,11,20,0) 20%, rgba(14,11,20,0) 38%, rgba(14,11,20,calc(.8 * var(--scrim))) 66%, rgba(14,11,20,calc(.96 * var(--scrim)))),
+    url(../assets/kira-full.jpg) center / cover; }
+html.theme-light .kira-full::before {
+  background: linear-gradient(to bottom, rgba(250,248,253,calc(.72 * var(--scrim))), rgba(250,248,253,0) 20%, rgba(250,248,253,0) 38%, rgba(250,248,253,calc(.86 * var(--scrim))) 66%, rgba(250,248,253,calc(.97 * var(--scrim)))),
+    url(../assets/kira-full.jpg) center / cover; }
 .bento.swap > .kira-full.expand, .kira-full.expand { animation: kira-expand .9s cubic-bezier(.65,0,.2,1) both; }
 .bento > .kira-full.collapse { z-index: 3; animation: kira-expand .6s cubic-bezier(.65,0,.2,1) reverse both; }
+/* the scrim stays off while she's still a small circle */
 @keyframes kira-expand {
-  from { transform: var(--from); clip-path: circle(var(--r0) at 50% 50%); }
-  to { transform: none; clip-path: circle(var(--r1) at 50% 50%); }
+  from { transform: var(--from); clip-path: circle(var(--r0) at 50% 50%); --scrim: 0; }
+  40% { --scrim: 0; }
+  to { transform: none; clip-path: circle(var(--r1) at 50% 50%); --scrim: 1; }
 }
-@keyframes kira-drift { to { transform: scale(1.05); } }
-.kira-scrim { position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: linear-gradient(to bottom, rgba(14,11,20,.62), rgba(14,11,20,0) 20%, rgba(14,11,20,0) 38%, rgba(14,11,20,.8) 66%, rgba(14,11,20,.96)); }
-.bento.swap > .kira-scrim { animation: fade-in .6s ease .35s both; }
+/* once she fills the panel, its glass goes dark too, so its own anti-aliased rim can't show light */
+html:not(.theme-light) .tablet-body.bento-home .bento-ai:has(> .kira-full:not(.expand, .collapse)) { background: rgb(14,11,20); backdrop-filter: none; -webkit-backdrop-filter: none; }
 /* listening / thinking: her edges glow */
-.kira-scrim::after { content: ''; position: absolute; inset: 0; border-radius: inherit; opacity: 0; transition: opacity .4s; box-shadow: inset 0 0 90px 6px rgba(140,78,246,.6); }
-.state-listening .kira-scrim::after { opacity: 1; animation: kira-glow 1.4s ease-in-out infinite; }
-.state-thinking .kira-scrim::after { opacity: .6; animation: kira-glow 2.4s ease-in-out infinite; }
+.kira-full::after { content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity .4s; box-shadow: inset 0 0 90px 6px rgba(140,78,246,.6); }
+.state-listening .kira-full::after { opacity: 1; animation: kira-glow 1.4s ease-in-out infinite; }
+.state-thinking .kira-full::after { opacity: .6; animation: kira-glow 2.4s ease-in-out infinite; }
 @keyframes kira-glow { 50% { opacity: .35; } }
 .kira-full ~ .voice-center { justify-content: flex-end; padding-bottom: 4px; }
 .kira-full ~ .voice-center .kira-stage .kira-photo-wrap { display: none; }
 .kira-full ~ .voice-center .kira-stage .subtitle-bar { text-shadow: 0 1px 14px rgba(0,0,0,.45); }
 .bento.swap > .kira-full ~ .voice-center { animation-delay: .5s; }
 .bento.landing > .welcome, .bento.landing .welcome-copy > .kira-tap { animation: none; } /* the shrinking photo lands on the avatar */
-html.theme-light .kira-scrim { background: linear-gradient(to bottom, rgba(250,248,253,.72), rgba(250,248,253,0) 20%, rgba(250,248,253,0) 38%, rgba(250,248,253,.86) 66%, rgba(250,248,253,.97)); }
 html.theme-light .kira-full ~ .voice-center .kira-stage .subtitle-bar { text-shadow: none; }
 @media (prefers-reduced-motion: reduce) {
-  .kira-full img, .kira-scrim::after { animation: none; }
+  .kira-full::after { animation: none; }
   .kira-full.collapse { display: none; }
 }
 

@@ -687,7 +687,8 @@
 
   /* Talk to Kira opens by growing the round avatar into Kira full screen:
      the photo layer starts as a circle exactly where the avatar sat, then scales and unclips to fill the panel. */
-  var KIRA_FULL = '<div class="kira-full" aria-hidden="true"><img src="../assets/kira-full.jpg" alt=""></div>';
+  var KIRA_FULL = '<div class="kira-full" aria-hidden="true"></div>'; // photo + scrim are its CSS background
+  new Image().src = '../assets/kira-full.jpg'; // loaded before she's first opened
   var FULL_RATIO = 1600 / 887; // kira-full.jpg — the round avatar is its centre square
   function avatarRect() {
     var host = document.getElementById(panelKeys.svc === 'flow' ? 'kira-mini' : 'panel-ai');
@@ -715,7 +716,7 @@
       '</div>';
   }
   function voiceShellHTML() {
-    return KIRA_FULL + '<div class="kira-scrim" aria-hidden="true"></div>' +
+    return KIRA_FULL +
       '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title">Talk to Kira</p></div>' +
       '<div class="voice-center"><div class="kira-stage" id="kira-big"></div><div class="voice-side" id="voice-col"></div></div>';
   }
