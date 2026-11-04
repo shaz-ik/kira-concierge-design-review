@@ -10,8 +10,8 @@
   var KIOSK = H.kiosk(((/[?&]kiosk=(\w+)/.exec(location.search)) || [])[1]);
   var KIOSK_NAME = KIOSK.label + ' kiosk · ' + H.floor(KIOSK.floor).name;
   var IMG = {
-    idle: '../assets/kira-idle.jpg', listening: '../assets/kira-listening.jpg', thinking: '../assets/kira-thinking.jpg',
-    speaking: '../assets/kira-speaking.jpg', wake: '../assets/kira-wake.jpg'
+    idle: '../assets/kira-photo.jpg', listening: '../assets/kira-photo.jpg', thinking: '../assets/kira-photo.jpg',
+    speaking: '../assets/kira-photo.jpg', wake: '../assets/kira-photo.jpg'
   };
   var ICON = '../assets/icons/';
   var IDLE_MS = 60000; // a public screen goes back to its welcome after a minute untouched
