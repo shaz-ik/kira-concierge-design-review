@@ -225,6 +225,10 @@
         [btn('Try again', 'retry-menu', { primary: true }), btn('Back to home', 'home')]) };
   };
 
+  // Each dish's photo sits left of its name (assets/menu/<id>.jpg). A dish added in admin has none yet: dining icon instead.
+  function menuThumb(m) {
+    return '<img class="menu-thumb" src="../assets/menu/' + m.id + '.jpg" alt="" width="52" height="52" onerror="this.onerror=null;this.src=\'../assets/icons/dining.png\';this.classList.add(\'icon\')">';
+  }
   VIEWS.menu = function () {
     var items = st().menu.filter(function (m) { return m.cat === ui.cat && m.status !== 'paused'; });
     var cats = Kira.data.MENU_CATS.map(function (c) {
@@ -233,13 +237,13 @@
     var rows = items.map(function (m) {
       var line = ui.cart[m.id], qty = line ? line.qty : 0;
       if (m.status === 'soldout') {
-        return '<div class="menu-item unavailable"><div><div class="menu-item-name">' + esc(m.name) + '</div><div class="menu-item-tag">Sold out for today</div></div>' +
+        return '<div class="menu-item unavailable">' + menuThumb(m) + '<div><div class="menu-item-name">' + esc(m.name) + '</div><div class="menu-item-tag">Sold out for today</div></div>' +
           '<div class="menu-item-end"><span class="menu-item-unavailable-tag">Unavailable</span></div></div>';
       }
       var ctrl = qty > 0
         ? '<span class="qty-ctrl"><button class="add-btn minus" data-act="dec" data-arg="' + m.id + '" aria-label="Remove one ' + esc(m.name) + '">−</button><span class="qty-pill' + (ui.bump === m.id ? ' bump' : '') + '" aria-label="' + qty + ' in order">' + qty + '</span><button class="add-btn" data-act="inc" data-arg="' + m.id + '" aria-label="Add another ' + esc(m.name) + '">+</button></span>'
         : '<button class="add-btn" data-act="inc" data-arg="' + m.id + '" aria-label="Add ' + esc(m.name) + '">+</button>';
-      return '<div class="menu-item"><div><div class="menu-item-name">' + esc(m.name) + '</div>' +
+      return '<div class="menu-item">' + menuThumb(m) + '<div><div class="menu-item-name">' + esc(m.name) + '</div>' +
         '<div class="menu-item-tag allergen">' + (m.allergens ? 'Contains ' + esc(m.allergens.toLowerCase()) : 'No listed allergens') + '</div>' +
         (line && line.note ? '<div class="menu-item-note">' + esc(line.note) + '</div>' : '') + '</div>' +
         '<div class="menu-item-end"><span class="menu-item-price">' + F.moneyShort(m.price) + '</span>' + ctrl + '</div></div>';

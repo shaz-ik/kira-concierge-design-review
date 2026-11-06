@@ -1,0 +1,14 @@
+In-room dining menu photos: AI-generated with Figma AI (model gpt-image-2.5-flare), 2026-11-06.
+Originals (1024×1024) live in the Figma file "Kira menu photos":
+https://www.figma.com/design/lRmephmoQV4Ygw5rciL3QL
+Here: 240×240 JPEG, named by menu item id (shared/kira.js seed menu). A dish without a file shows the dining icon.
+
+Shared style prompt: luxury hotel room-service food photography, matte charcoal ceramic plate,
+45-degree angle, dish centred, dark slate table, deep dark background, soft warm side light,
+shallow depth of field, square, no text / logos / hands.
+
+m1  Fattoush salad            m6  Chicken shawarma plate        m11 Lemon mint
+m2  Hummus & warm bread       m7  Grilled hammour, saffron rice m12 Arabic coffee
+m3  Lentil soup               m8  Arabic breakfast platter      m13 Umm Ali
+m4  Garden salad              m9  Coke (unbranded can)          m14 Kunafa
+m5  Wagyu smash burger        m10 Fresh orange juice            m15 Dates platter

@@ -19,6 +19,11 @@ html.in-frame .rotate-hint { display: none; }
 .menu-item { align-items: center; }
 .menu-item .allergen { color: #fde68a; }
 .menu-item-end { display: flex; align-items: center; gap: var(--sp-3); }
+.menu-thumb { width: 52px; height: 52px; flex-shrink: 0; border-radius: 13px; object-fit: cover; background: rgba(255,255,255,.06); }
+.menu-thumb.icon { object-fit: contain; padding: 10px; }
+.menu-thumb + div { flex: 1; min-width: 0; }
+.menu-card .menu-item:has(.menu-thumb) { padding: 8px 0; }
+.menu-item.unavailable .menu-thumb { filter: grayscale(1); }
 .add-btn { width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--brass); color: var(--brass-soft); font-weight: 700; font-size: calc(17px * var(--ts, 1)); line-height: 1; background: none; padding: 0; }
 .qty-pill { min-width: 30px; height: 30px; padding: 0 var(--sp-2); border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: var(--brass); color: #ffffff; font-weight: 700; font-size: var(--fs-small); }
 .cart-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); background: rgba(196,166,255,.1); border: 1px solid rgba(196,166,255,.3); border-radius: var(--radius-guest-sm); padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4); font-size: var(--fs-small); }
@@ -357,6 +362,7 @@ html.theme-light .track-chip .dot { background: #8C4EF6; box-shadow: 0 0 8px rgb
 html.theme-light .g-banner-good { background: rgba(22,163,74,.12); color: #15803D; }
 html.theme-light .g-banner-warn { background: rgba(180,83,9,.12); color: #B45309; }
 html.theme-light .menu-item .allergen { color: #B45309; }
+html.theme-light .menu-thumb { background: rgba(19,19,19,.05); }
 html.theme-light .nav-help { background: rgba(220,38,38,.1); color: #B91C1C; }
 html.theme-light .nav-help:hover { background: rgba(220,38,38,.16); }
 html.theme-light .btn-danger { background: #DC2626; }
