@@ -7,7 +7,7 @@
 <script>try { if (localStorage.getItem('kira-kiosk-theme') === 'light') document.documentElement.classList.add('theme-light'); } catch (e) {}</script>
 <link rel="stylesheet" href="../shared/tokens.css?v=3">
 <link rel="stylesheet" href="../shared/proto.css?v=3">
-<link rel="stylesheet" href="../shared/tablet.css?v=3">
+<link rel="stylesheet" href="../shared/tablet.css?v=4">
 <link rel="stylesheet" href="../shared/wayfinding.css?v=7">
 <style>
   /* =====================================================================
@@ -85,7 +85,7 @@
 
   /* Hotel info: topics as a two-column list; the chosen one is filled */
   .topic-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-content: start; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: rgba(196,166,255,.3) transparent; }
-  .topic-row { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 56px; padding: 8px 12px 8px 8px; border: none; border-radius: 16px; background: rgba(255,255,255,.05); color: var(--ink-on-dark); font-family: inherit; text-align: left; cursor: pointer; transition: background-color .2s; }
+  .topic-row { display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 68px; padding: 12px 16px 12px 14px; border: none; border-radius: 16px; background: rgba(255,255,255,.05); color: var(--ink-on-dark); font-family: inherit; text-align: left; cursor: pointer; transition: background-color .2s; }
   .topic-row:hover { background: rgba(255,255,255,.1); }
   .topic-row.selected { background: rgba(140,78,246,.28); }
   .topic-row img { width: calc(32px * (2.2 - var(--ts)) / 1.2); height: auto; flex-shrink: 0; filter: drop-shadow(0 4px 6px rgba(0,0,0,.35)); }

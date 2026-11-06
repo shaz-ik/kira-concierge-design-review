@@ -342,6 +342,7 @@ html.theme-light :is(.guest-card, .home-tile, .cart-bar, .nav-btn, .nav-seg, .qu
 html.theme-light .nav-seg .nav-btn { box-shadow: none; }
 html.theme-light .nav-seg .nav-btn:hover { background: rgba(19,19,19,.05); }
 html.theme-light .subtitle-bar { background: var(--glass-strong); color: #131313; }
+html.theme-light .proto-toast { background: #FFFFFF; color: #131313; border-color: rgba(140,78,246,.25); box-shadow: 0 12px 30px -12px rgba(60,40,120,.35); } /* --ink-on-dark turns dark here */
 html.theme-light .sheet, html.theme-light .kira-notice { background: linear-gradient(180deg, rgba(255,255,255,.97), rgba(255,255,255,.9)); box-shadow: var(--glass-edge), 0 30px 70px -24px rgba(60,40,120,.35); color: #131313; }
 html.theme-light .sheet-scrim { background: rgba(40,30,70,.22); }
 html.theme-light .text-field { color: #131313; }
