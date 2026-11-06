@@ -227,7 +227,7 @@
 
   // Each dish's photo sits left of its name (assets/menu/<id>.jpg). A dish added in admin has none yet: dining icon instead.
   function menuThumb(m) {
-    return '<img class="menu-thumb" src="../assets/menu/' + m.id + '.jpg" alt="" width="52" height="52" onerror="this.onerror=null;this.src=\'../assets/icons/dining.png\';this.classList.add(\'icon\')">';
+    return '<img class="menu-thumb" src="../assets/menu/' + m.id + '.jpg?v=2" alt="" width="52" height="52" onerror="this.onerror=null;this.src=\'../assets/icons/dining.png\';this.classList.add(\'icon\')">';
   }
   VIEWS.menu = function () {
     var items = st().menu.filter(function (m) { return m.cat === ui.cat && m.status !== 'paused'; });

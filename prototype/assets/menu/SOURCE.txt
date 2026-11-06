@@ -3,9 +3,10 @@ Originals (1024×1024) live in the Figma file "Kira menu photos":
 https://www.figma.com/design/lRmephmoQV4Ygw5rciL3QL
 Here: 240×240 JPEG, named by menu item id (shared/kira.js seed menu). A dish without a file shows the dining icon.
 
-Shared style prompt: luxury hotel room-service food photography, matte charcoal ceramic plate,
-45-degree angle, dish centred, dark slate table, deep dark background, soft warm side light,
-shallow depth of field, square, no text / logos / hands.
+Shared style prompt (white version, 2026-11-06 — replaced the first dark set): bright, clean hotel
+room-service food photography on a pure white background, simple white ceramic plate, 45-degree angle,
+dish centred, seamless white backdrop and table, high-key soft studio light, gentle shadow, square,
+no text / logos / hands. Files are loaded as <id>.jpg?v=2 so browsers drop the old dark ones.
 
 m1  Fattoush salad            m6  Chicken shawarma plate        m11 Lemon mint
 m2  Hummus & warm bread       m7  Grilled hammour, saffron rice m12 Arabic coffee
