@@ -448,6 +448,13 @@
     setTimeout(function () { t.remove(); }, 3000);
   }
 
+  /** A dish's photo: one uploaded in admin (a data URL kept on the item), else the bundled photo for the
+      sample menu (m1–m15), else '' for none. Removing a photo in admin stores photo: ''. */
+  function menuPhoto(m) {
+    if (m.photo != null) return m.photo;
+    return /^m([1-9]|1[0-5])$/.test(m.id) ? '../assets/menu/' + m.id + '.jpg?v=2' : '';
+  }
+
   var inFrame = (function () { try { return window.self !== window.top; } catch (e) { return true; } })();
 
   /** Small floating link back to the prototype launcher; hidden inside the side-by-side demo. */
@@ -487,6 +494,7 @@
       setAutopilot: setAutopilot
     },
     data: { DEPTS: DEPTS, STATUS: STATUS, MENU_CATS: MENU_CATS, STAFF: STAFF, SERVICE_RATE: SERVICE_RATE, LATE_FEE: LATE_FEE },
+    menuPhoto: menuPhoto,
     fmt: { money: money, moneyShort: moneyShort, time: time, clock: clock, ago: ago, hourOf: hourOf, esc: esc },
     ui: { toast: toast, launcherPill: launcherPill, every: every, inFrame: inFrame }
   };

@@ -225,6 +225,14 @@
         [btn('Try again', 'retry-menu', { primary: true }), btn('Back to home', 'home')]) };
   };
 
+  // Each dish's photo sits left of its name: the one uploaded in admin, or the sample menu's own. None: the dining icon.
+  var DISH_ICON = '../assets/icons/dining.png';
+  function menuThumb(m) {
+    var src = Kira.menuPhoto(m);
+    return src
+      ? '<img class="menu-thumb" src="' + esc(src) + '" alt="" width="52" height="52" onerror="this.onerror=null;this.src=\'' + DISH_ICON + '\';this.classList.add(\'icon\')">'
+      : '<img class="menu-thumb icon" src="' + DISH_ICON + '" alt="" width="52" height="52">';
+  }
   VIEWS.menu = function () {
     var items = st().menu.filter(function (m) { return m.cat === ui.cat && m.status !== 'paused'; });
     var cats = Kira.data.MENU_CATS.map(function (c) {
@@ -233,13 +241,13 @@
     var rows = items.map(function (m) {
       var line = ui.cart[m.id], qty = line ? line.qty : 0;
       if (m.status === 'soldout') {
-        return '<div class="menu-item unavailable"><div><div class="menu-item-name">' + esc(m.name) + '</div><div class="menu-item-tag">Sold out for today</div></div>' +
+        return '<div class="menu-item unavailable">' + menuThumb(m) + '<div><div class="menu-item-name">' + esc(m.name) + '</div><div class="menu-item-tag">Sold out for today</div></div>' +
           '<div class="menu-item-end"><span class="menu-item-unavailable-tag">Unavailable</span></div></div>';
       }
       var ctrl = qty > 0
         ? '<span class="qty-ctrl"><button class="add-btn minus" data-act="dec" data-arg="' + m.id + '" aria-label="Remove one ' + esc(m.name) + '">−</button><span class="qty-pill' + (ui.bump === m.id ? ' bump' : '') + '" aria-label="' + qty + ' in order">' + qty + '</span><button class="add-btn" data-act="inc" data-arg="' + m.id + '" aria-label="Add another ' + esc(m.name) + '">+</button></span>'
         : '<button class="add-btn" data-act="inc" data-arg="' + m.id + '" aria-label="Add ' + esc(m.name) + '">+</button>';
-      return '<div class="menu-item"><div><div class="menu-item-name">' + esc(m.name) + '</div>' +
+      return '<div class="menu-item">' + menuThumb(m) + '<div><div class="menu-item-name">' + esc(m.name) + '</div>' +
         '<div class="menu-item-tag allergen">' + (m.allergens ? 'Contains ' + esc(m.allergens.toLowerCase()) : 'No listed allergens') + '</div>' +
         (line && line.note ? '<div class="menu-item-note">' + esc(line.note) + '</div>' : '') + '</div>' +
         '<div class="menu-item-end"><span class="menu-item-price">' + F.moneyShort(m.price) + '</span>' + ctrl + '</div></div>';
@@ -685,6 +693,28 @@
     animTimers[el.id + cls] = setTimeout(function () { el.classList.remove(cls); }, ms || 900);
   }
 
+  /* Talk to Kira opens by growing the round avatar into Kira full screen:
+     the photo layer starts as a circle exactly where the avatar sat, then scales and unclips to fill the panel. */
+  var KIRA_FULL = '<div class="kira-full" aria-hidden="true"></div>'; // photo + scrim are its CSS background
+  new Image().src = '../assets/kira-full.jpg'; // loaded before she's first opened
+  var FULL_RATIO = 1600 / 887; // kira-full.jpg — the round avatar is its centre square
+  function avatarRect() {
+    var host = document.getElementById(panelKeys.svc === 'flow' ? 'kira-mini' : 'panel-ai');
+    var a = host && host.querySelector('.kira-photo-wrap'), r = a && a.getBoundingClientRect();
+    return r && r.width ? r : null;
+  }
+  function morphKira(panel, layer, r, cls, ms) {
+    var p = panel.getBoundingClientRect(), cs = getComputedStyle(body);
+    var k = p.height / panel.offsetHeight; // the tablet is scaled to fit the window: screen px → layout px
+    var W = body.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), H = panel.clientHeight, imgH = Math.max(H, W / FULL_RATIO);
+    layer.style.width = W + 'px'; // the panel's final width, so the circle lands right while the panel grows
+    layer.style.setProperty('--from', 'translate(' + ((r.left + r.width / 2 - p.left) / k - W / 2) + 'px, ' + ((r.top + r.height / 2 - p.top) / k - H / 2) + 'px) scale(' + r.width / k / imgH + ')');
+    layer.style.setProperty('--r0', imgH / 2 + 'px');
+    layer.style.setProperty('--r1', Math.hypot(W, H) / 2 + 'px');
+    play(layer, cls, ms);
+    setTimeout(function () { layer.style.width = ''; }, ms);
+  }
+
   function homeKiraHTML() {
     return '<div class="ai-home">' +
         '<button class="kira-tap" data-act="voice" aria-label="Talk to Kira"><div class="kira-photo-wrap"><img src="' + IMG.idle + '" alt="Kira"></div></button>' +
@@ -694,7 +724,8 @@
       '</div>';
   }
   function voiceShellHTML() {
-    return '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title">Talk to Kira</p></div>' +
+    return KIRA_FULL +
+      '<div class="panel-head"><button class="nav-btn back-btn" data-act="back">' + BACK + 'Back</button><p class="panel-title">Talk to Kira</p></div>' +
       '<div class="voice-center"><div class="kira-stage" id="kira-big"></div><div class="voice-side" id="voice-col"></div></div>';
   }
   function serviceListHTML() {
@@ -745,7 +776,11 @@
     ['home', 'service', 'kira'].forEach(function (m) { body.classList.toggle('mode-' + m, m === mode); });
     var ai = document.getElementById('panel-ai'), svc = document.getElementById('panel-svc');
     var aiKey = mode === 'kira' ? 'voice' : 'home', svcKey = mode === 'service' ? 'flow' : 'list';
-    if (panelKeys.ai !== aiKey) { panelKeys.ai = aiKey; ai.innerHTML = aiKey === 'voice' ? voiceShellHTML() : homeKiraHTML(); kiraKey = ''; play(ai, 'swap', 1100); }
+    if (panelKeys.ai !== aiKey) {
+      var from = aiKey === 'voice' && avatarRect();
+      panelKeys.ai = aiKey; ai.innerHTML = aiKey === 'voice' ? voiceShellHTML() : homeKiraHTML(); kiraKey = ''; play(ai, 'swap', 1100);
+      if (from) morphKira(ai, ai.querySelector('.kira-full'), from, 'expand', 900);
+    }
     var svcSwapped = panelKeys.svc !== svcKey;
     if (svcSwapped) { panelKeys.svc = svcKey; svc.innerHTML = svcKey === 'flow' ? flowShellHTML() : serviceListHTML(); kiraKey = ''; play(svc, 'swap', 1100); }
 
