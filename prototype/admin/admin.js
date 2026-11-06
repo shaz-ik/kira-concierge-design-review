@@ -467,9 +467,8 @@
 
   function menuRow(m) {
     var st = m.status || 'available', on = st !== 'paused';
-    var thumb = ['', ' sand', ' cool'][hashIdx(m.id) % 3];
     return trOpen('', 'menu:' + m.id) +
-      '<td><div class="adm-cell"><span class="adm-thumb' + thumb + '" aria-hidden="true"></span><div><div class="adm-cell-title">' + esc(m.name) + '</div>' +
+      '<td><div class="adm-cell">' + dishThumb(K.menuPhoto(m), m.id, '') + '<div><div class="adm-cell-title">' + esc(m.name) + '</div>' +
       '<div class="adm-cell-meta"><bdi lang="ar">' + esc(m.nameAr || '—') + '</bdi></div></div></div></td>' +
       '<td>' + esc(catLabel(m.cat)) + '</td><td class="adm-cell-meta">' + esc(m.allergens || '—') + '</td><td class="adm-num">' + K.fmt.money(m.price) + '</td>' +
       '<td><button type="button" class="adm-switch' + (st === 'soldout' ? ' is-soldout' : '') + '" role="switch" aria-checked="' + on + '" aria-label="Show ' + esc(m.name) + ' to guests" title="' + (on ? 'Pause — hide from guests' : 'Make available to guests') +
@@ -477,12 +476,40 @@
       '<td class="adm-cell-actions"><button type="button" class="btn-tool btn-tool-secondary adm-row-action" data-act="menu-edit" data-v="' + esc(m.id) + '" data-key="edit-' + esc(m.id) + '">Edit<span class="adm-sr"> ' + esc(m.name) + '</span></button></td></tr>';
   }
 
+  // A dish's photo, or the patterned placeholder when it has none
+  function dishThumb(src, id, size) {
+    return src ? '<img class="adm-thumb' + size + '" src="' + esc(src) + '" alt="">'
+      : '<span class="adm-thumb' + size + ['', ' sand', ' cool'][hashIdx(id || 'new') % 3] + '" aria-hidden="true"></span>';
+  }
+  function photoBlock(src, id) {
+    return dishThumb(src, id, ' lg') + '<div><div class="adm-photo-actions">' +
+        '<button type="button" class="btn-tool btn-tool-secondary adm-row-action" data-act="menu-photo">' + (src ? 'Replace photo' : 'Upload photo') + '</button>' +
+        (src ? '<button type="button" class="btn-tool btn-tool-secondary adm-row-action" data-act="menu-photo-remove">Remove</button>' : '') + '</div>' +
+      '<div class="adm-hint">JPG or PNG. It’s cropped square and shown next to the dish on guest tablets.</div></div>';
+  }
+  // Uploads are cropped to the centre square and shrunk to a 320 px JPEG, small enough to keep with the menu
+  function squarePhoto(file, done) {
+    var url = URL.createObjectURL(file), img = new Image();
+    img.onload = function () {
+      var side = Math.min(img.naturalWidth, img.naturalHeight), out = Math.min(320, side);
+      var c = document.createElement('canvas');
+      c.width = c.height = out;
+      var g = c.getContext('2d');
+      g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, out, out); // transparent PNGs land on white
+      g.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, out, out);
+      URL.revokeObjectURL(url);
+      done(c.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); done(null); };
+    img.src = url;
+  }
+
   function openMenuDrawer(id, openerKey) {
     var s = store.get();
     var m = id ? s.menu.filter(function (x) { return x.id === id; })[0] : null;
     if (id && !m) { toast('That item no longer exists', 'warn'); return; }
     var d = m ? Object.assign({}, m) : { name: '', nameAr: '', cat: ui.menu.cat !== 'all' ? ui.menu.cat : 'mains', allergens: '', price: '', status: 'available' };
-    drawer = { id: id, openerKey: openerKey };
+    drawer = { id: id, openerKey: openerKey, photo: undefined }; // photo: undefined = unchanged, '' = removed, else a new data URL
     var have = parseAllergens(d.allergens).map(lower);
     var known = ALLERGENS.map(lower);
     var extras = parseAllergens(d.allergens).filter(function (x) { return known.indexOf(lower(x)) < 0; });
@@ -495,8 +522,6 @@
       return '<button type="button" class="tab-chip' + (on ? ' active' : '') + '" aria-pressed="' + on + '" data-act="menu-status" data-v="' + o.id + '">' + o.label + '</button>';
     }).join('');
     var hint = (AVAIL.filter(function (o) { return o.id === (d.status || 'available'); })[0] || AVAIL[0]).hint;
-    var thumb = id ? ['', ' sand', ' cool'][hashIdx(id) % 3] : ' sand';
-
     $('adm-drawer-host').innerHTML =
       '<div class="adm-scrim" data-act="drawer-close"></div>' +
       '<aside class="adm-drawer" role="dialog" aria-modal="true" aria-labelledby="adm-drawer-title">' +
@@ -504,9 +529,8 @@
         '<p class="adm-sub">' + (m ? esc(m.name) + ' · changes go live on guest tablets when you save' : 'New items appear on guest tablets when you save') + '</p></div>' +
         '<button type="button" class="btn-tool btn-tool-secondary adm-row-action" data-act="drawer-close">Close</button></div>' +
         '<form class="adm-drawer-body" id="adm-menu-form" data-submit="menu-save" novalidate data-extra="' + esc(extras.join(', ')) + '" data-orig="' + esc(d.allergens || '') + '">' +
-          '<div class="adm-photo"><span class="adm-thumb lg' + thumb + '" aria-hidden="true"></span><div>' +
-            '<button type="button" class="btn-tool btn-tool-secondary adm-row-action" data-act="menu-photo">Upload photo</button>' +
-            '<div class="adm-hint">Square JPG or PNG, at least 800 px</div></div></div>' +
+          '<div class="adm-photo" id="adm-photo">' + photoBlock(m ? K.menuPhoto(m) : '', id) + '</div>' +
+          '<input type="file" id="adm-photo-file" accept="image/jpeg,image/png,image/webp" data-ch="menu-photo-file" hidden>' +
           field('Name (English)', '<input class="tool-input" name="f-name" maxlength="60" autocomplete="off" value="' + esc(d.name) + '">', 'name') +
           field('Name (Arabic)', '<input class="tool-input" name="f-ar" maxlength="60" lang="ar" dir="rtl" autocomplete="off" value="' + esc(d.nameAr || '') + '">') +
           '<div class="adm-form-grid">' +
@@ -1242,7 +1266,14 @@
       var o = AVAIL.filter(function (x) { return x.id === t.getAttribute('data-v'); })[0];
       $('adm-avail-hint').textContent = o ? o.hint : '';
     },
-    'menu-photo': function () { toast('Photo upload isn’t part of the prototype — a placeholder image is used'); },
+    'menu-photo': function () { var f = $('adm-photo-file'); if (f) f.click(); },
+    'menu-photo-remove': function () {
+      if (!drawer) return;
+      drawer.photo = '';
+      $('adm-photo').innerHTML = photoBlock('', drawer.id);
+      var up = document.querySelector('[data-act="menu-photo"]');
+      if (up) up.focus();
+    },
     'drawer-close': function () { closeDrawer(); },
 
     /* ---- Knowledge base ---- */
@@ -1452,6 +1483,7 @@
         allergens: allergens, price: Math.round(price * 100) / 100,
         status: statusBtn ? statusBtn.getAttribute('data-v') : 'available'
       };
+      if (drawer && drawer.photo !== undefined) fields.photo = drawer.photo;
       var id = drawer && drawer.id, newId = 'm' + Date.now();
       store.update(function (s) {
         if (id) s.menu.forEach(function (m) { if (m.id === id) Object.assign(m, fields); });
@@ -1569,6 +1601,20 @@
   };
 
   var CHANGES = {
+    'menu-photo-file': function (el) {
+      var file = el.files && el.files[0];
+      el.value = '';
+      if (!file || !drawer) return;
+      if (!/^image\//.test(file.type)) { toast('That file isn’t a photo — use a JPG or PNG', 'warn'); return; }
+      squarePhoto(file, function (src) {
+        if (!drawer) return;
+        if (!src) { toast('Couldn’t read that photo — try another file', 'warn'); return; }
+        drawer.photo = src;
+        $('adm-photo').innerHTML = photoBlock(src, drawer.id);
+        var up = document.querySelector('[data-act="menu-photo"]');
+        if (up) up.focus();
+      });
+    },
     'staff-dept': function (el) {
       var r = el.form.querySelector('[name="f-routing"]');
       if (r) r.value = deptRouting(store.get(), el.value);
@@ -1611,7 +1657,7 @@
     }
     if (e.key === 'Tab' && drawer) {
       var panel = document.querySelector('.adm-drawer');
-      var f = panel ? panel.querySelectorAll('button:not([disabled]), input:not([readonly]), select, textarea') : [];
+      var f = panel ? panel.querySelectorAll('button:not([disabled]), input:not([readonly]):not([hidden]), select, textarea') : [];
       if (!f.length) return;
       var first = f[0], last = f[f.length - 1];
       if (!panel.contains(document.activeElement)) { e.preventDefault(); first.focus(); }

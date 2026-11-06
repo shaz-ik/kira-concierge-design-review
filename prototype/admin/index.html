@@ -335,6 +335,8 @@
   .adm-photo { display: flex; align-items: center; gap: var(--sp-3); }
   .adm-photo .adm-hint { margin-top: var(--sp-1); }
   .adm-thumb.lg { width: 64px; height: 64px; border-radius: var(--radius-tool); }
+  img.adm-thumb { display: block; object-fit: cover; background: #FFFFFF; }
+  .adm-photo-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
   @keyframes adm-fade { from { opacity: 0; } to { opacity: 1; } }
   @keyframes adm-slide { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 
@@ -428,7 +430,7 @@
   </div>
   <div id="adm-drawer-host"></div>
 
-<script src="../shared/kira.js?v=5"></script>
-<script src="admin.js?v=2"></script>
+<script src="../shared/kira.js?v=6"></script>
+<script src="admin.js?v=3"></script>
 </body>
 </html>

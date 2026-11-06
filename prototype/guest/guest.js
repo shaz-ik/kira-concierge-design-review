@@ -225,9 +225,13 @@
         [btn('Try again', 'retry-menu', { primary: true }), btn('Back to home', 'home')]) };
   };
 
-  // Each dish's photo sits left of its name (assets/menu/<id>.jpg). A dish added in admin has none yet: dining icon instead.
+  // Each dish's photo sits left of its name: the one uploaded in admin, or the sample menu's own. None: the dining icon.
+  var DISH_ICON = '../assets/icons/dining.png';
   function menuThumb(m) {
-    return '<img class="menu-thumb" src="../assets/menu/' + m.id + '.jpg?v=2" alt="" width="52" height="52" onerror="this.onerror=null;this.src=\'../assets/icons/dining.png\';this.classList.add(\'icon\')">';
+    var src = Kira.menuPhoto(m);
+    return src
+      ? '<img class="menu-thumb" src="' + esc(src) + '" alt="" width="52" height="52" onerror="this.onerror=null;this.src=\'' + DISH_ICON + '\';this.classList.add(\'icon\')">'
+      : '<img class="menu-thumb icon" src="' + DISH_ICON + '" alt="" width="52" height="52">';
   }
   VIEWS.menu = function () {
     var items = st().menu.filter(function (m) { return m.cat === ui.cat && m.status !== 'paused'; });
